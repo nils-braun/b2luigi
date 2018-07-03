@@ -6,6 +6,8 @@ import pickle
 import os
 import collections
 
+import luigi
+
 PREFIX = "B2LUIGI_PARAM_"
 
 
@@ -43,14 +45,6 @@ def get_basf2_git_hash():
 
     return basf2_release
 
-def flatten(l):
-    if not l:
-        return l
-
-    if isinstance(l[0], list):
-        return flatten([sub_item for item in l for sub_item in item])
-
-    return l
 
 def flatten_to_file_paths(inputs):
     if not inputs:
@@ -60,6 +54,6 @@ def flatten_to_file_paths(inputs):
         return {key: flatten_to_file_paths(i) for key, i in inputs.items()}
 
     if isinstance(inputs, collections.Iterable):
-        return flatten([flatten_to_file_paths(i) for i in inputs])
+        return luigi.task.flatten([flatten_to_file_paths(i) for i in inputs])
 
     return inputs.path

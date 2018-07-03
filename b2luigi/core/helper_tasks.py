@@ -1,4 +1,5 @@
-from . import core
+from b2luigi import ROOTLocalTarget
+from b2luigi.core import tasks
 
 import luigi
 import basf2
@@ -8,7 +9,7 @@ import inspect
 import subprocess
 
 
-class Basf2Task(core.DispatchableTask):
+class Basf2Task(tasks.DispatchableTask):
     num_processes = luigi.IntParameter(significant=False, default=0)
     max_event = luigi.IntParameter(default=0)
 
@@ -30,8 +31,22 @@ class Basf2Task(core.DispatchableTask):
         print(basf2.statistics)
 
 
-class Basf2PathCreatorTask(Basf2Task):
-    path_creator_function = core.FunctionParameter()
+class SimplifiedOutputBasf2Task(Basf2Task):
+    def output(self):
+        path = self.create_path()
+        outputs = []
+
+        for module in path.modules():
+            if module.type() == "RootOutput":
+                for param in module.available_params():
+                    if param.name == "outputFileName":
+                        outputs.append(ROOTLocalTarget(param.values))
+
+        return outputs
+
+
+class Basf2PathCreatorTask(SimplifiedOutputBasf2Task):
+    path_creator_function = tasks.FunctionParameter()
 
     def create_path(self):
         path_creator_function = self.path_creator_function
@@ -44,17 +59,15 @@ class Basf2PathCreatorTask(Basf2Task):
 
         return path_creator_function(**path_function_parameters)
 
-    def complete(self):
-        return False
 
-class Basf2PathTask(Basf2Task):
+class Basf2PathTask(SimplifiedOutputBasf2Task):
     basf2_path = None
     
     def create_path(self):
         return self.basf2_path
 
 
-class HaddTask(core.Task):
+class HaddTask(tasks.Task):
     def output(self):
         output_targets = {}
 

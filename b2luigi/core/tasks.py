@@ -1,7 +1,6 @@
-from . import utils
-from .settings import SettingsObject
+from b2luigi.core import utils
+from b2luigi.core.settings import get_setting
 
-import basf2
 import ROOT
 import luigi
 
@@ -17,12 +16,10 @@ class NonParseableParameter(luigi.Parameter):
     def parse(self, value):
         raise NotImplementedError()
 
+
 class FunctionParameter(NonParseableParameter):
     def serialize(self, value):
         return value.__name__
-
-def log_task_status(*args, **kwargs):
-    pass
 
 
 class ROOTLocalTarget(luigi.LocalTarget):
@@ -35,7 +32,7 @@ class ROOTLocalTarget(luigi.LocalTarget):
         return tfile and len(tfile.GetListOfKeys()) > 0
 
 
-class Task(luigi.Task, SettingsObject):
+class Task(luigi.Task):
     git_hash = luigi.Parameter(default=utils.get_basf2_git_hash())
 
     def __init__(self, *args, **kwargs):
@@ -51,8 +48,7 @@ class Task(luigi.Task, SettingsObject):
 
         self.log_files = {"stdout":  stdout_file_name,
                           "stderr": stderr_file_name,
-                          "log_folder": log_folder,
-                          }
+                          "log_folder": log_folder}
 
         self.check_complete = True
 
@@ -127,7 +123,7 @@ class Task(luigi.Task, SettingsObject):
         serialized_parameters = self.get_serialized_parameters()
 
         if not result_path:
-            result_path = self.get_setting("result_path", ".")
+            result_path = get_setting("result_path", ".")
 
         filename = os.path.join(result_path,
                                 *[f"{key}={value}" for key,
@@ -184,7 +180,7 @@ class DispatchableTask(Task):
         self.dispatch(os.path.realpath(sys.argv[0]), env_list)
 
     def run(self):
-        if os.environ.get("B2LUIGI_EXECUTION", False) or not self.get_setting("dispatch", True):
+        if os.environ.get("B2LUIGI_EXECUTION", False) or not get_setting("dispatch", True):
             self.run_local()
         else:
             self.run_remote()
@@ -222,7 +218,6 @@ class DispatchableTask(Task):
 
             env[f"{utils.PREFIX}{key}"] = utils.encode_value(value)
         return env
-
 
 
 def run_task_from_env():
