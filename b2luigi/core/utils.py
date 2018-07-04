@@ -57,3 +57,9 @@ def flatten_to_file_paths(inputs):
         return luigi.task.flatten([flatten_to_file_paths(i) for i in inputs])
 
     return inputs.path
+
+
+def task_iterator(task):
+    yield task
+    for dep in task.deps():
+        yield from task_iterator(dep)
