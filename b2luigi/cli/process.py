@@ -1,5 +1,5 @@
 from b2luigi.cli.arguments import get_cli_arguments
-from b2luigi.cli.runner import run_as_batch_worker, run_local, run_test_mode, run_batched
+from b2luigi.cli.runner import run_local, run_test_mode
 from b2luigi.core import tasks, helper_tasks, utils
 
 import basf2
