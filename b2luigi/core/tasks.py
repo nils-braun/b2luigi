@@ -1,5 +1,3 @@
-import time
-
 from b2luigi.core import utils
 from b2luigi.core.settings import get_setting
 
@@ -179,13 +177,7 @@ class DispatchableTask(Task):
 
     def run_remote(self):
         env_list = self._prepare_env()
-        while True:
-            try:
-                self.dispatch(os.path.realpath(sys.argv[0]), env_list)
-                break
-            except (BlockingIOError, OSError):
-                time.sleep(1)
-                continue
+        self.dispatch(os.path.realpath(sys.argv[0]), env_list)
 
     def run(self):
         if os.environ.get("B2LUIGI_EXECUTION", False) or not get_setting("dispatch", True):
