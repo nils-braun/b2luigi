@@ -80,10 +80,6 @@ def process(task_like_elements, **kwargs):
         show_all_outputs(task_list)
     elif cli_args.test:
         run_test_mode(task_list, cli_args, kwargs)
-    elif cli_args.batch:
-        run_batched(task_list, cli_args, kwargs)
-    elif cli_args.batch_runner:
-        run_as_batch_worker(task_list, cli_args, kwargs)
     else:
         run_local(task_list, cli_args, kwargs)
 
