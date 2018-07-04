@@ -24,15 +24,22 @@ def get_cli_arguments():
                         type=int,
                         default=0)
 
+    parser.add_argument("--worker-id",
+                        help="EXPERT.", default="")
+    parser.add_argument("--task-id",
+                        help="EXPERT.", default="")
+    parser.add_argument("--scheduler-url",
+                        help="EXPERT.", default="")
+
     args = parser.parse_args()
 
     if args.test and (args.scheduler_host or args.scheduler_port):
         raise AttributeError("Can not test while using a central scheduler!")
     if args.batch and (not args.scheduler_host and not args.scheduler_port):
         raise AttributeError("If you want to use the batch submission, you have to start a central scheduler first.")
-    if args.batch_runner and (not args.scheduler_host or not args.scheduler_port):
+    if args.batch_runner and (not args.scheduler_url or not args.task_id or not args.worker_id):
         raise AttributeError("A batch runner should always have a fully qualified port and "
-                             "host name for the central scheduler.")
+                             "host name for the central scheduler and the task and worker information.")
     if args.show_output and (args.scheduler_host or args.scheduler_port or args.batch or args.test):
         print("Ignoring all other parameters, as you have given the --show-output parameter.")
 
