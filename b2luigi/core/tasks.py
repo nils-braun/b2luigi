@@ -46,7 +46,7 @@ class Task(luigi.Task):
         stderr_file_name = self.get_output_file_name(self.get_task_family() + "_stderr", create_folder=True,
                                                      result_path=log_folder)
 
-        self.log_files = {"stdout": stdout_file_name,
+        self.log_files = {"stdout":  stdout_file_name,
                           "stderr": stderr_file_name,
                           "log_folder": log_folder}
 
@@ -127,7 +127,7 @@ class Task(luigi.Task):
 
         filename = os.path.join(result_path,
                                 *[f"{key}={value}" for key,
-                                                       value in serialized_parameters.items()],
+                                    value in serialized_parameters.items()],
                                 base_filename)
 
         if create_folder:
@@ -189,23 +189,19 @@ class DispatchableTask(Task):
         stdout_file_name = self.log_files["stdout"]
         stderr_file_name = self.log_files["stderr"]
 
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(stdout_file_name)
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(stderr_file_name)
+
         process_env = os.environ.copy()
         process_env.update(env)
 
-        if get_setting("batch", False):
-            return_code = subprocess.call(["bsub", "-K", "-env all", "-eo", stderr_file_name, "-oo", stdout_file_name] +
-                                          self.cmd_prefix + [sys.executable, os.path.basename(filename)])
-        else:
-            with contextlib.suppress(FileNotFoundError):
-                os.remove(stdout_file_name)
-            with contextlib.suppress(FileNotFoundError):
-                os.remove(stderr_file_name)
-
-            with open(stdout_file_name, "w") as stdout_file:
-                with open(stderr_file_name, "w") as stderr_file:
-                    return_code = subprocess.call(self.cmd_prefix + [sys.executable, os.path.basename(filename)],
-                                                  stdout=stdout_file, stderr=stderr_file,
-                                                  env=process_env, cwd=os.path.dirname(filename))
+        with open(stdout_file_name, "w") as stdout_file:
+            with open(stderr_file_name, "w") as stderr_file:
+                return_code = subprocess.call(self.cmd_prefix + [sys.executable, os.path.basename(filename)],
+                                              stdout=stdout_file, stderr=stderr_file,
+                                              env=process_env, cwd=os.path.dirname(filename))
 
         if return_code:
             raise RuntimeError(
@@ -238,3 +234,5 @@ def run_task_from_env():
 
     task = task_class(**params)
     task.run()
+
+
