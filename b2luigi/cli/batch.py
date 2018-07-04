@@ -25,10 +25,10 @@ class SendJobWorker(luigi.worker.Worker):
 
         print("Scheduling new job", task_id)
         # TODO: correct schedule
-        subprocess.Popen(["python3", "example.py", "--batch-runner",
+        subprocess.Popen(["bsub", "-env all", "python3", "example.py", "--batch-runner",
                           "--scheduler-url", self._scheduler._url,
                           "--worker-id", self._id, "--task-id", task_id],
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                         #stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                          )
 
     def run(self):
