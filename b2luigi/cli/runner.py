@@ -22,7 +22,7 @@ def run_as_batch_worker(task_list, cli_args, kwargs):
                     expl = task.on_success()
                 except BaseException as ex:
                     status = "FAILED"
-                    expl = task.task.on_failure(ex)
+                    expl = task.on_failure(ex)
 
                 # TODO: Use a TaskProcess here?
 

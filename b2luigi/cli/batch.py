@@ -41,4 +41,4 @@ class SendJobWorker(luigi.worker.Worker):
 
 class SendJobWorkerSchedulerFactory(luigi.interface._WorkerSchedulerFactory):
     def create_worker(self, scheduler, worker_processes, assistant=False):
-        return SendJobWorker(scheduler=scheduler, assistant=assistant)
+        return SendJobWorker(scheduler=scheduler, worker_processes=worker_processes, assistant=assistant)
