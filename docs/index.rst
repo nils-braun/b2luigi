@@ -1,20 +1,30 @@
-.. b2luigi documentation master file, created by
-   sphinx-quickstart on Thu Jul  5 08:48:49 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+b2luigi
+=======
 
-Welcome to b2luigi's documentation!
-===================================
+``b2luigi`` is a helper package constructed around ``luigi``, that helps you schedule working packages (so called tasks)
+locally or on the batch system.
+It includes a simple dependency management system, an easy to user interface and build-in support for the LSF queue
+on the KEKCC.
+
+Please find more information in the :ref:`quick-start-label`.
+
+If you find any bugs or want to improve the documentation, please send me a merge request on gitlab_.
+
+Unfortunately, this project is still unfinished and in beta.
+You can help me by working with one of the todo items described in :ref:`todo-label`.
+
+Content
+=======
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :maxdepth: 2
+
+    usage/installation
+    usage/quickstart
+    usage/batch
+    advanced/examples
+    advanced/faq
+    advanced/todo
 
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. _gitlab: https://gitlab.ekp.kit.edu/B-Group/b2luigi
