@@ -19,10 +19,9 @@ def run_as_batch_worker(task_list, cli_args, kwargs):
             try:
                 task.run()
                 task.on_success()
-                exit(0)
             except BaseException as ex:
                 task.on_failure(ex)
-                exit(1)
+                raise ex
 
 
 def run_batched(task_list, cli_args, kwargs):
