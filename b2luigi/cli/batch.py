@@ -2,6 +2,7 @@ import json
 import os
 import re
 import sys
+import time
 
 import luigi
 import luigi.interface
@@ -24,7 +25,7 @@ class BatchProcess:
         self.use_multiprocessing = False
         self.exitcode = 0
         self.task = task
-        self.timeout_time = worker_timeout
+        self.timeout_time = time.time() + worker_timeout if worker_timeout else None
 
         self._result_queue = result_queue
         self._scheduler = scheduler
@@ -60,14 +61,14 @@ class LSFProcess(BatchProcess):
 
         output = subprocess.check_output(["bjobs", "-json", "-o", "stat exit_code", self._batch_job_id])
         output = output.decode()
-        output = json.loads(output)["RECORDS"]
+        output = json.loads(output)["RECORDS"][0]
 
-        if not "STAT" in output:
+        if "STAT" not in output:
             self.exitcode = -1
             return False
 
         job_status = output["STAT"]
-        self.exitcode = job_status["EXIT_CODE"]
+        self.exitcode = output["EXIT_CODE"]
 
         if job_status == "DONE":
             self.put_to_result_queue()
