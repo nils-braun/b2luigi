@@ -8,7 +8,7 @@ on the KEKCC.
 
 Please find more information in the :ref:`quick-start-label`.
 
-If you find any bugs or want to improve the documentation, please send me a merge request on gitlab_.
+If you find any bugs or want to improve the documentation, please send me a merge request on github_.
 
 Unfortunately, this project is still unfinished and in beta.
 You can help me by working with one of the todo items described in :ref:`todo-label`.
@@ -27,4 +27,4 @@ Content
     advanced/todo
 
 
-.. _gitlab: https://gitlab.ekp.kit.edu/B-Group/b2luigi
+.. _github: https://github.com/nils-braun/b2luigi
