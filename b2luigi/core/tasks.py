@@ -55,9 +55,9 @@ class Task(luigi.Task):
     def get_filled_params(self):
         return {key: getattr(self, key) for key, _ in self.get_params()}
 
-    def get_output_dict(self, output_file_names):
-        assert not isinstance(output_file_names, str)
-        return {key: self.get_output_file_target(key) for key in output_file_names}
+    def add_to_output(self, output_file_name):
+        assert isinstance(output_file_name, str)
+        return {output_file_name: self.get_output_file_target(output_file_name, create_folder=True)}
 
     def get_log_output_files(self):
         return self.log_files
@@ -68,7 +68,7 @@ class Task(luigi.Task):
         if not input_file_names:
             return
 
-        if not isinstance(input_file_names, list):
+        if not isinstance(input_file_names, collections.Iterable):
             raise TypeError
 
         return_dict = collections.defaultdict(list)
@@ -77,13 +77,18 @@ class Task(luigi.Task):
             for key, file_name in file_names.items():
                 return_dict[key].append(file_name)
 
-        return [(key, value) for key, value in return_dict.items()]
+        return {key: value for key, value in return_dict.items()}
 
     def get_input_file_names(self):
-        return utils.flatten_to_file_paths(self.input())
+        for i in self.input():
+            yield utils.flatten_to_file_paths(
+                utils.flatten_to_dict(i)
+                )
 
     def get_output_file_names(self):
-        return utils.flatten_to_file_paths(self.output())
+        return utils.flatten_to_file_paths(
+            utils.flatten_to_dict(self.output())
+            )
 
     def get_output_file_target(self, *args, **kwargs):
         file_name = self.get_output_file_name(*args, **kwargs)
@@ -154,11 +159,8 @@ class Task(luigi.Task):
         return True
 
     def create_output_dirs(self):
-        output_list = self.output()
-
-        # TODO: this is a hack!
-        if isinstance(output_list, dict):
-            output_list = output_list.values()
+        output_list = utils.flatten_to_dict(self.output())
+        output_list = output_list.values()
 
         for output in output_list:
             output.makedirs()

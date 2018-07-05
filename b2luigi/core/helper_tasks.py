@@ -11,7 +11,7 @@ import subprocess
 
 class Basf2Task(tasks.DispatchableTask):
     num_processes = luigi.IntParameter(significant=False, default=0)
-    max_event = luigi.IntParameter(default=0)
+    max_event = luigi.IntParameter(significant=False, default=0)
 
     def create_path(self):
         raise NotImplementedError()
@@ -71,18 +71,16 @@ class HaddTask(tasks.Task):
     def output(self):
         output_targets = {}
 
-        for key, _ in self.get_transposed_input_file_names():
+        for key, _ in self.get_transposed_input_file_names().items():
             if hasattr(self, "keys") and key not in self.keys:
                 continue
 
-            output_targets.update(self.get_output_dict([key]))
-
-        return output_targets
+            yield self.add_to_output(key)
 
     def run(self):
         self.create_output_dirs()
 
-        for key, file_list in self.get_transposed_input_file_names():
+        for key, file_list in self.get_transposed_input_file_names().items():
             if hasattr(self, "keys") and key not in self.keys:
                 continue
 
@@ -94,7 +92,7 @@ class Basf2FileMergeTask(HaddTask):
     def run(self):
         self.create_output_dirs()
 
-        for key, file_list in self.get_transposed_input_file_names():
+        for key, file_list in self.get_transposed_input_file_names().items():
             if hasattr(self, "keys") and key not in self.keys:
                 continue
             args = ["b2file-merge", "-f", self.get_output_file_name(key)] + file_list

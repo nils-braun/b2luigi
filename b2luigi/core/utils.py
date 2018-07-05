@@ -50,13 +50,19 @@ def flatten_to_file_paths(inputs):
     if not inputs:
         return None
 
+    return {key: value.path for key, value in inputs.items()}
+
+def flatten_to_dict(inputs):
     if isinstance(inputs, dict):
-        return {key: flatten_to_file_paths(i) for key, i in inputs.items()}
+        return inputs
 
     if isinstance(inputs, collections.Iterable):
-        return luigi.task.flatten([flatten_to_file_paths(i) for i in inputs])
+        joined_dict = {}
+        for i in inputs:
+            joined_dict.update(**i)
+        return joined_dict
 
-    return inputs.path
+    return {inputs: inputs}
 
 
 def task_iterator(task):
