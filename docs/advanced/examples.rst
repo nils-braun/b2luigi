@@ -3,4 +3,7 @@
 Advanced Examples
 =================
 
-TODO
+.. toctree::
+    :maxdepth: 2
+
+    basf2
