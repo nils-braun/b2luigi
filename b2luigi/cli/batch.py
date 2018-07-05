@@ -1,42 +1,129 @@
+import json
 import os
+import re
 import sys
-import time
 
 import luigi
 import luigi.interface
 
 import subprocess
 
+from b2luigi.core.settings import get_setting
 
-class SendJobWorker(luigi.worker.Worker):
-    def _handle_next_task(self):
-        # Update out own list of "running" tasks
-        task_list = self._scheduler.task_list()
-        for key, task in task_list.items():
-            if task["status"] not in ["PENDING", "RUNNING"] and key in self._running_tasks:
-                del self._running_tasks[key]
-                sched_task = self._scheduled_tasks.get(key)
-                self._add_task_history.append((sched_task, task["status"], True))
+import enum
 
-        time.sleep(1)
 
-    def _run_task(self, task_id):
-        if task_id in self._running_tasks:
-            next(self._sleeper())
+class BatchSystems(enum.Enum):
+    lsf = "lsf"
+    htcondor = "htcondor"
+    local = "local"
+
+
+class BatchProcess:
+    def __init__(self, result_queue, worker_timeout, task, scheduler):
+        self.use_multiprocessing = False
+        self.exitcode = 0
+        self.task = task
+        self.timeout_time = worker_timeout
+
+        self._result_queue = result_queue
+        self._scheduler = scheduler
+
+        self.task_cmd = [sys.executable, os.path.realpath(sys.argv[0]),
+                         "--batch-runner",
+                         "--task-id", task.task_id]
+
+    def run(self):
+        raise NotImplementedError
+
+    def is_alive(self):
+        raise NotImplementedError
+
+    def terminate(self):
+        raise NotImplementedError
+
+    def put_to_result_queue(self):
+        expl = ""
+        missing = []
+        new_deps = []
+        self._result_queue.put((self.task.task_id, luigi.scheduler.DONE, expl, missing, new_deps))
+
+
+class LSFProcess(BatchProcess):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._batch_job_id = None
+
+    def is_alive(self):
+        assert self._batch_job_id
+
+        output = subprocess.check_output(["bjobs", "-json", "-o", "stat exit_code", self._batch_job_id])
+        output = output.decode()
+        output = json.loads(output)["RECORDS"]
+
+        if not "STAT" in output:
+            self.exitcode = -1
+            return False
+
+        job_status = output["STAT"]
+        self.exitcode = job_status["EXIT_CODE"]
+
+        if job_status == "DONE":
+            self.put_to_result_queue()
+            return False
+        elif job_status == "EXIT":
+            return False
+
+        return True
+
+    def run(self):
+        prefix = ["bsub", "-env all"]
+
+        try:
+            prefix += ["-q", self.task.queue]
+        except AttributeError:
+            pass
+
+        # Automatic requeing?
+
+        try:
+            stdout_log_file = self.task.log_files["stdout"]
+            stderr_log_file = self.task.log_files["stderr"]
+            prefix += ["-eo", stderr_log_file, "-oo", stdout_log_file]
+        except AttributeError:
+            pass
+
+        output = subprocess.check_output(prefix + self.task_cmd)
+        output = output.decode()
+
+        # Output of the form Job <72065926> is submitted to default queue <s>.
+        match = re.search(r"<[0-9]+>", output)
+        if not match:
+            raise RuntimeError("Batch submission failed with output " + output)
+
+        self._batch_job_id = match.group(0)[1:-1]
+
+    def terminate(self):
+        if not self._batch_job_id:
             return
 
-        # TODO: Depend on job whether to send this to the queue or not
-        task = self._scheduled_tasks[task_id]
+        subprocess.check_call(["bkill", self._batch_job_id], stdout=subprocess.DEVNULL)
 
-        # TODO: use this information
-        self._running_tasks[task_id] = "task"
 
-        print("Scheduling new job", task_id)
-        subprocess.call(["bsub", "-env all",
-                         "python3", os.path.realpath(sys.argv[0]), "--batch-runner",
-                          "--scheduler-url", self._scheduler._url,
-                          "--worker-id", self._id, "--task-id", task_id],
-                         )
+class SendJobWorker(luigi.worker.Worker):
+    def _create_task_process(self, task):
+        batch_system = get_setting("batch_system", BatchSystems.lsf)
+
+        # TODO: also use the task to choose the batch system!
+
+        if batch_system == BatchSystems.lsf:
+            return LSFProcess(task=task, scheduler=self._scheduler,
+                              result_queue=self._task_result_queue, worker_timeout=self._config.timeout)
+        elif batch_system == BatchSystems.htcondor:
+            raise NotImplementedError
+        else:
+            return super()._create_task_process(task)
 
 
 class SendJobWorkerSchedulerFactory(luigi.interface._WorkerSchedulerFactory):
