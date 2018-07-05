@@ -16,13 +16,13 @@ Installation
 
     .. code-block:: bash
 
-        pip3 install --user git+https://gitlab.ekp.kit.edu/nbraun/b2luigi.git
+        pip3 install --user git+https://github.com/nils-braun/b2luigi.git
 
     b.  If you have a local installation, you can also use the normal setup command
 
     .. code-block:: bash
 
-        pip3 install git+https://gitlab.ekp.kit.edu/nbraun/b2luigi.git
+        pip3 install git+https://github.com/nils-braun/b2luigi.git
 
 This will automatically also install `luigi` into your current environment.
 Please make sure to always setup basf2 correctly before using `b2luigi`.
