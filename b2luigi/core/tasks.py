@@ -65,27 +65,18 @@ class Task(luigi.Task, TaskWithDataSupport):
         return self.log_files
 
     def get_transposed_input_file_names(self):
-        input_file_names = self.get_input_file_names()
+        return self.get_input_file_names()
 
-        if not input_file_names:
-            return
-
-        if not isinstance(input_file_names, collections.Iterable):
-            raise TypeError
-
+    def get_input_file_names(self):
         return_dict = collections.defaultdict(list)
 
-        for file_names in input_file_names:
+        for i in self.input():
+            file_names = utils.flatten_to_file_paths(utils.flatten_to_dict(i))
+
             for key, file_name in file_names.items():
                 return_dict[key].append(file_name)
 
         return {key: value for key, value in return_dict.items()}
-
-    def get_input_file_names(self):
-        for i in self.input():
-            yield utils.flatten_to_file_paths(
-                utils.flatten_to_dict(i)
-                )
 
     def get_output_file_names(self):
         return utils.flatten_to_file_paths(
