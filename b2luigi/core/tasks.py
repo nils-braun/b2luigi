@@ -165,6 +165,12 @@ class Task(luigi.Task):
         for output in output_list:
             output.makedirs()
 
+class ExternalTask(Task, luigi.ExternalTask):
+    pass
+
+class WrapperTask(Task, luigi.WrapperTask):
+    pass
+
 
 class DispatchableTask(Task):
     cmd_prefix = []
