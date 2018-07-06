@@ -7,5 +7,5 @@ setup(
     description='Luigi for Basf2',
     author='Nils Braun',
     author_email='nils.braun@kit.edu',
-    install_requires=["luigi"],
+    install_requires=["luigi", "parse"],
 )
