@@ -11,6 +11,8 @@ import enum
 import contextlib
 import subprocess
 
+from b2luigi.helpers import TaskWithDataSupport
+
 
 class NonParseableParameter(luigi.Parameter):
     def parse(self, value):
@@ -32,7 +34,7 @@ class ROOTLocalTarget(luigi.LocalTarget):
         return tfile and len(tfile.GetListOfKeys()) > 0
 
 
-class Task(luigi.Task):
+class Task(luigi.Task, TaskWithDataSupport):
     git_hash = luigi.Parameter(default=utils.get_basf2_git_hash())
 
     def __init__(self, *args, **kwargs):

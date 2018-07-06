@@ -6,7 +6,6 @@ import pickle
 import os
 import collections
 
-import luigi
 
 PREFIX = "B2LUIGI_PARAM_"
 
@@ -16,6 +15,18 @@ def product_dict(**kwargs):
     vals = kwargs.values()
     for instance in itertools.product(*vals):
         yield dict(zip(keys, instance))
+
+
+def fill_kwargs_with_lists(**kwargs):
+    return_kwargs = {}
+    for key, value in kwargs.items():
+        if value is None:
+            value = []
+        if not isinstance(value, list):
+            value = [value]
+        return_kwargs[key] = value
+
+    return return_kwargs
 
 
 def encode_value(value):
