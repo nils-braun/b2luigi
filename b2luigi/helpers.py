@@ -10,13 +10,13 @@ from parse import parse
 
 
 MDST_DIR_STRUCTURE = "/hsm/belle2/bdata/Data/release-{p.release}/DB{p.database:08d}/prod{p.prod:08d}/" + \
-                     "e{p.experiment:04d}/4S/r{p.run:05d}/all/mdst/sub00/" + \
-                     "mdst.{p.prefix}.{p.experiment:04d}.{p.run:05d}.{p.file_name}.root"
+                     "e{p.experiment_number:04d}/4S/r{p.run_number:05d}/all/mdst/sub00/" + \
+                     "mdst.{p.prefix}.{p.experiment_number:04d}.{p.run_number:05d}.{p.file_name}.root"
 CDST_DIR_STRUCTURE = "/hsm/belle2/bdata/Data/release-{p.release}/DB{p.database:08d}/prod{p.prod:08d}/" + \
-                     "e{p.experiment:04d}/4S/r{p.run:05d}/all/cdst/sub00/" + \
-                     "cdst.{p.prefix}.{p.experiment:04d}.{p.run:05d}.{p.file_name}.root"
-RAW_DIR_STRUCTURE = "/ghi/fs01/belle2/bdata/Data/Raw/e{p.experiment:04d}/r{p.run:05d}/sub00/" + \
-                    "{p.prefix}.{p.experiment:04d}.{p.run:05d}.{p.file_name}.root"
+                     "e{p.experiment_number:04d}/4S/r{p.run_number:05d}/all/cdst/sub00/" + \
+                     "cdst.{p.prefix}.{p.experiment_number:04d}.{p.run_number:05d}.{p.file_name}.root"
+RAW_DIR_STRUCTURE = "/ghi/fs01/belle2/bdata/Data/Raw/e{p.experiment_number:04d}/r{p.run_number:05d}/sub00/" + \
+                    "{p.prefix}.{p.experiment_number:04d}.{p.run_number:05d}.{p.file_name}.root"
 
 
 class DataMode(enum.Enum):
@@ -27,8 +27,8 @@ class DataMode(enum.Enum):
 
 class DataTask(b2luigi.ExternalTask):
     data_mode = b2luigi.EnumParameter(enum=DataMode)
-    experiment = b2luigi.IntParameter()
-    run = b2luigi.IntParameter()
+    experiment_number = b2luigi.IntParameter()
+    run_number = b2luigi.IntParameter()
     prefix = b2luigi.Parameter()
     file_name = b2luigi.Parameter()
 
@@ -88,14 +88,14 @@ def _parse_data_path(data_mode, data_path):
     return extracted_kwargs
 
 
-def _get_data_kwargs(data_mode, experiment, run, prefix=None, file_name=None, **other_kwargs):
+def _get_data_kwargs(data_mode, experiment_number, run_number, prefix=None, file_name=None, **other_kwargs):
     if file_name is None:
         file_name = "*"
 
     if prefix is None:
         prefix = "*"
 
-    all_kwargs = fill_kwargs_with_lists(data_mode=data_mode, experiment=experiment, run=run, prefix=prefix,
+    all_kwargs = fill_kwargs_with_lists(data_mode=data_mode, experiment_number=experiment_number, run_number=run_number, prefix=prefix,
                                         file_name=file_name, **other_kwargs)
 
     for kwargs in product_dict(**all_kwargs):
@@ -106,21 +106,21 @@ def _get_data_kwargs(data_mode, experiment, run, prefix=None, file_name=None, **
 
 
 class TaskWithDataSupport:
-    def clone_on_mdst(self, task_class, experiment, run, release, prod, database, prefix=None, file_name=None,
+    def clone_on_mdst(self, task_class, experiment_number, run_number, release, prod, database, prefix=None, file_name=None,
                       **additional_kwargs):
         # TODO: make database not needed
-        for kwargs in _get_data_kwargs(data_mode=DataMode.mdst, experiment=experiment, run=run, release=release,
+        for kwargs in _get_data_kwargs(data_mode=DataMode.mdst, experiment_number=experiment_number, run_number=run_number, release=release,
                                        prod=prod, database=database, prefix=prefix, file_name=file_name):
             yield self.clone(task_class, **kwargs, **additional_kwargs)
 
-    def clone_on_cdst(self, task_class, experiment, run, release, prod, database, prefix=None, file_name=None,
+    def clone_on_cdst(self, task_class, experiment_number, run_number, release, prod, database, prefix=None, file_name=None,
                       **additional_kwargs):
         # TODO: make database not needed
-        for kwargs in _get_data_kwargs(data_mode=DataMode.cdst, experiment=experiment, run=run, release=release,
+        for kwargs in _get_data_kwargs(data_mode=DataMode.cdst, experiment_number=experiment_number, run_number=run_number, release=release,
                                        prod=prod, database=database, prefix=prefix, file_name=file_name):
             yield self.clone(task_class, **kwargs, **additional_kwargs)
 
-    def clone_on_raw(self, task_class, experiment, run, prefix=None, file_name=None, **additional_kwargs):
-        for kwargs in _get_data_kwargs(data_mode=DataMode.raw, experiment=experiment, run=run, prefix=prefix,
+    def clone_on_raw(self, task_class, experiment_number, run_number, prefix=None, file_name=None, **additional_kwargs):
+        for kwargs in _get_data_kwargs(data_mode=DataMode.raw, experiment_number=experiment_number, run_number=run_number, prefix=prefix,
                                        file_name=file_name):
             yield self.clone(task_class, **kwargs, **additional_kwargs)
