@@ -3,28 +3,38 @@
 Installation
 ============
 
-1.  Setup your basf2 environment. You can use a local environment (installed on your machine) or a release on cvmfs.
+1.  Setup your local environment. If you are using basf2: You can use a local environment (installed on your machine)
+    or a release on cvmfs.
     For example, run:
 
     .. code-block:: bash
 
         source /cvmfs/belle.cern.ch/tools/b2setup prerelease-02-00-00c
 
-2.  Install b2luigi from gitlab directly into your basf2 environment.
-
-    a.  If you are using a central release from cvmfs, you need to do this into your user folder:
+    Or you setup the virtual environment of your project:
 
     .. code-block:: bash
 
-        pip3 install --user git+https://github.com/nils-braun/b2luigi.git
+        source venv/bin/activate
 
-    b.  If you have a local installation, you can also use the normal setup command
+2.  Install b2luigi from gitlab directly into your environment.
+
+    a.  If you have a local installation, you can use the normal setup command
 
     .. code-block:: bash
 
         pip3 install git+https://github.com/nils-braun/b2luigi.git
 
-This will automatically also install `luigi` into your current environment.
-Please make sure to always setup basf2 correctly before using `b2luigi`.
+
+    b.  If this fails because you do not have write access to where your virtual environment lives, you can also install
+        b2luigi locally:
+
+    .. code-block:: bash
+
+        pip3 install --user git+https://github.com/nils-braun/b2luigi.git
+
+
+    This will automatically also install `luigi` into your current environment.
+    Please make sure to always setup your environment (e.g. basf2) correctly before using `b2luigi`.
 
 Now you can go on with the :ref:`quick-start-label`.
