@@ -1,0 +1,12 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[tool.flit.metadata]
+module = "b2luigi"
+author = "Nils Braun"
+author-email = "nils.braun@kit.edu"
+home-page = "https://github.com/nils-braun/b2luigi"
+classifiers = ["License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)"]
+
+requires=['luigi', 'parse']

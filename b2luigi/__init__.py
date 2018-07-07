@@ -1,3 +1,7 @@
+"""Task scheduling and batch running for basf2 jobs made simple"""
+from setuptools_scm import get_version
+__version__ = get_version(root='..', relative_to=__file__)
+
 from luigi import *
 
 from luigi.util import requires, inherits
