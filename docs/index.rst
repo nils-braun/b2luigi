@@ -29,6 +29,7 @@ Content
     advanced/examples
     advanced/faq
     advanced/todo
+    advanced/development
 
 
 .. _github: https://github.com/nils-braun/b2luigi

@@ -3,6 +3,8 @@
 TODO items
 ==========
 
+Make sure to check out :ref:`development-label` for an introduction into developing ``b2luigi``.
+
 * Add support for different batch systems, e.g. htcondor
 * Integrate gbasf2 as another batch system
 * Document the API of the task class
