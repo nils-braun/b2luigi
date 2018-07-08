@@ -61,6 +61,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
         .. code-block:: bash
 
+            git push 
             git push --tags
 
     d. Publish to pipy
