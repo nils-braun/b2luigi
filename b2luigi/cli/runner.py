@@ -42,3 +42,6 @@ def run_local(task_list, cli_args, kwargs):
 def run_test_mode(task_list, cli_args, kwargs):
     set_setting("dispatch", False)
     luigi.build(task_list, log_level="DEBUG", local_scheduler=True, **kwargs)
+
+def show_all_outputs(*args, **kwargs):
+    raise NotImplementedError

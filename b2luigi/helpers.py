@@ -55,7 +55,6 @@ class CdstDataTask(DstDataTask):
 
 
 
-
 requires_raw_data = b2luigi.requires(RawDataTask)
 requires_mdst_data = b2luigi.requires(MdstDataTask)
 requires_cdst_data = b2luigi.requires(CdstDataTask)

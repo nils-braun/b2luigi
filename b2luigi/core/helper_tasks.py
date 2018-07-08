@@ -2,8 +2,6 @@ from b2luigi import ROOTLocalTarget
 from b2luigi.core import tasks
 
 import luigi
-import basf2
-import ROOT
 
 import inspect
 import subprocess
@@ -17,6 +15,12 @@ class Basf2Task(tasks.DispatchableTask):
         raise NotImplementedError()
 
     def process(self):
+        try:
+            import basf2
+            import ROOT
+        except ImportError:
+            raise ImportError("Can not find ROOT or basf2. Can not use the basf2 task.")
+
         if self.num_processes:
             basf2.set_nprocesses(self.num_processes)
 

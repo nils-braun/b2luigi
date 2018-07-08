@@ -1,7 +1,6 @@
 from b2luigi.core import utils
 from b2luigi.core.settings import get_setting
 
-import ROOT
 import luigi
 
 import os
@@ -28,6 +27,11 @@ class ROOTLocalTarget(luigi.LocalTarget):
     def exists(self):
         if not super().exists():
             return False
+
+        try:
+            import ROOT
+        except ImportError:
+            raise ImportError("Can not import ROOT. The ROOTLocalTarget can not be used!")
 
         path = self.path
         tfile = ROOT.TFile.Open(path)
