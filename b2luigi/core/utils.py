@@ -63,6 +63,7 @@ def flatten_to_file_paths(inputs):
 
     return {key: value.path for key, value in inputs.items()}
 
+
 def flatten_to_dict(inputs):
     if isinstance(inputs, dict):
         return inputs
@@ -80,3 +81,47 @@ def task_iterator(task):
     yield task
     for dep in task.deps():
         yield from task_iterator(dep)
+
+
+def get_all_output_files_in_tree(root_module, key=None):
+    if key:
+        return get_all_output_files_in_tree(root_module)[key]
+
+    all_output_files = collections.defaultdict(list)
+    for task in task_iterator(root_module):
+        output_dict = task.get_output_file_names()
+        if not output_dict:
+            continue
+
+        for file_key, file_name in output_dict.items():
+            all_output_files[file_key].append(dict(parameters=task.get_filled_params(),
+                                                   file_name=os.path.abspath(file_name)))
+
+    return all_output_files
+
+
+def filter_from_params(output_files, **kwargs):
+    kwargs_list = fill_kwargs_with_lists(**kwargs)
+
+    if not kwargs_list:
+        return output_files
+
+    file_names = set()
+
+    for kwargs in product_dict(**kwargs_list):
+        for output_dict in output_files:
+            parameters = output_dict["parameters"]
+            file_name = output_dict["file_name"]
+
+            not_use = False
+            for key, value in kwargs.items():
+                if key in parameters and parameters[key] != value:
+                    not_use = True
+                    break
+
+            if not_use:
+                continue
+
+            file_names.add(file_name)
+
+    return list(file_names)
