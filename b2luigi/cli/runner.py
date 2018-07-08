@@ -4,7 +4,7 @@ import luigi
 import luigi.server
 import luigi.configuration
 
-from b2luigi.cli.batch import SendJobWorkerSchedulerFactory
+from b2luigi.batch.workers import SendJobWorkerSchedulerFactory
 from b2luigi.core.settings import set_setting
 from b2luigi.core.utils import task_iterator
 
