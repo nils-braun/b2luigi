@@ -17,13 +17,13 @@ Installation
 
         source venv/bin/activate
 
-2.  Install b2luigi from gitlab directly into your environment.
+2.  Install b2luigi from pipy into your environment.
 
     a.  If you have a local installation, you can use the normal setup command
 
     .. code-block:: bash
 
-        pip3 install git+https://github.com/nils-braun/b2luigi.git
+        pip3 install b2luigi
 
 
     b.  If this fails because you do not have write access to where your virtual environment lives, you can also install
@@ -31,7 +31,7 @@ Installation
 
     .. code-block:: bash
 
-        pip3 install --user git+https://github.com/nils-braun/b2luigi.git
+        pip3 install --user b2luigi
 
 
     This will automatically also install `luigi` into your current environment.
