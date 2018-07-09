@@ -67,3 +67,10 @@ def show_all_outputs(task_list, *args, **kwargs):
                 print("\t", Fore.RED, file_name, Style.RESET_ALL)
         print()
 
+
+def dry_run(task_list):
+    for task in task_list:
+        if not task.complete():
+            exit(1)
+
+    exit(0)
