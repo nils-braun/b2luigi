@@ -17,6 +17,9 @@ def get_cli_arguments():
     parser.add_argument("--batch-runner",
                         help="Expert option to mark this worker as a batch runner.",
                         action="store_true")
+    parser.add_argument("--dry-run",
+                        help="Do not run any task but set the return value to 0, if the tasks are complete.",
+                        action="store_true")
     parser.add_argument("--scheduler-host",
                         help="If given, use this host as a central scheduler instead of a local one.", default="")
     parser.add_argument("--scheduler-port",
@@ -29,7 +32,7 @@ def get_cli_arguments():
 
     args = parser.parse_args()
 
-    if args.test and (args.scheduler_host or args.scheduler_port):
+    if (args.test or args.dry_run) and (args.scheduler_host or args.scheduler_port):
         raise AttributeError("Can not test while using a central scheduler!")
     if args.batch_runner and not args.task_id :
         raise AttributeError("A batch runner should always have a fully qualified task id.")

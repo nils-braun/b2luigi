@@ -1,5 +1,5 @@
 from b2luigi.cli.arguments import get_cli_arguments
-from b2luigi.cli.runner import run_as_batch_worker, run_local, run_test_mode, run_batched, show_all_outputs
+from b2luigi.cli.runner import run_as_batch_worker, run_local, run_test_mode, run_batched, show_all_outputs, dry_run
 from b2luigi.core import tasks
 
 import os
@@ -30,6 +30,8 @@ def process(task_like_elements, **kwargs):
 
     if cli_args.show_output:
         show_all_outputs(task_list)
+    elif cli_args.dry_run:
+        dry_run(task_list)
     elif cli_args.test:
         run_test_mode(task_list, cli_args, kwargs)
     elif cli_args.batch:
