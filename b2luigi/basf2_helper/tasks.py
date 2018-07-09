@@ -61,7 +61,10 @@ class Basf2PathTask(Basf2Task):
         print(basf2.statistics)
 
 
-class SimplifiedOutputBasf2Task(Basf2Task):
+class SimplifiedOutputBasf2Task(Basf2PathTask):
+    def create_path(self):
+        raise NotImplementedError()
+
     def output(self):
         path = self.create_path()
         outputs = []
@@ -75,31 +78,28 @@ class SimplifiedOutputBasf2Task(Basf2Task):
         return outputs
 
 
-class HaddTask(Basf2Task):
+class MergerTask(Basf2Task):
+    cmd = []
+
     def output(self):
-        for key, _ in self.get_transposed_input_file_names().items():
+        for key, _ in self.get_input_file_names().items():
             if hasattr(self, "keys") and key not in self.keys:
                 continue
 
             yield self.add_to_output(key)
 
-    def run(self):
+    def process(self):
         self.create_output_dirs()
 
-        for key, file_list in self.get_transposed_input_file_names().items():
+        for key, file_list in self.get_input_file_names().items():
             if hasattr(self, "keys") and key not in self.keys:
                 continue
 
-            args = ["hadd", "-f", self.get_output_file_name(key)] + file_list
+            args = self.cmd + [self.get_output_file_name(key)] + file_list
             subprocess.check_call(args)
 
+class HaddTask(MergerTask):
+    cmd = ["hadd", "-f"]
 
-class Basf2FileMergeTask(HaddTask):
-    def run(self):
-        self.create_output_dirs()
-
-        for key, file_list in self.get_transposed_input_file_names().items():
-            if hasattr(self, "keys") and key not in self.keys:
-                continue
-            args = ["b2file-merge", "-f", self.get_output_file_name(key)] + file_list
-            subprocess.check_call(args)
+class Basf2FileMergeTask(MergerTask):
+    cmd = ["b2file-merge", "-f"]
