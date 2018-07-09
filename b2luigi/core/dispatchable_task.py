@@ -4,9 +4,7 @@ import subprocess
 import sys
 
 import colorama
-from luigi import Event
 
-from b2luigi.core import utils
 from b2luigi.core.settings import get_setting
 from b2luigi.core.task import Task
 

@@ -1,5 +1,4 @@
 import collections
-import json
 
 import luigi
 import luigi.server
