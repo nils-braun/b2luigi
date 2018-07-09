@@ -1,3 +1,6 @@
+import colorama
+from luigi import Event
+
 from b2luigi.core import utils
 from b2luigi.core.settings import get_setting
 
@@ -162,6 +165,7 @@ class Task(luigi.Task, TaskWithDataSupport):
         for output in output_list:
             output.makedirs()
 
+
 class ExternalTask(Task, luigi.ExternalTask):
     pass
 
@@ -175,22 +179,22 @@ class DispatchableTask(Task):
     def process(self):
         raise NotImplementedError
 
-    def run_local(self):
+    def run(self):
+        if os.environ.get("B2LUIGI_EXECUTION", False) or not get_setting("dispatch", True):
+            self._run_local()
+        else:
+            self._run_remote()
+
+    def _run_local(self):
         self.create_output_dirs()
 
         self.process()
 
-    def run_remote(self):
+    def _run_remote(self):
         env_list = self._prepare_env()
-        self.dispatch(os.path.realpath(sys.argv[0]), env_list)
+        self._dispatch(os.path.realpath(sys.argv[0]), env_list)
 
-    def run(self):
-        if os.environ.get("B2LUIGI_EXECUTION", False) or not get_setting("dispatch", True):
-            self.run_local()
-        else:
-            self.run_remote()
-
-    def dispatch(self, filename, env):
+    def _dispatch(self, filename, env):
         stdout_file_name = self.log_files["stdout"]
         stderr_file_name = self.log_files["stderr"]
 
@@ -223,6 +227,22 @@ class DispatchableTask(Task):
 
             env[f"{utils.PREFIX}{key}"] = utils.encode_value(value)
         return env
+
+    def on_failure(self, exception):
+        log_files = self.get_log_output_files()
+        print(colorama.Fore.RED)
+        print("Task", self.task_family, "failed!")
+        print("Parameters")
+        for key, value in self.get_filled_params().items():
+            print(key, "=", value)
+        print("Please have a look into the log files:", log_files["stdout"], "and", log_files["stderr"])
+        print(colorama.Style.RESET_ALL)
+
+
+@DispatchableTask.event_handler(Event.FAILURE)
+def task_failure(task, *args, **kwargs):
+    print("Task", task, "failed. Please have a look into the log files:", task.get_log_output_files())
+
 
 
 def run_task_from_env():
