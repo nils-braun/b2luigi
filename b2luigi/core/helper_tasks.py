@@ -101,3 +101,14 @@ class Basf2FileMergeTask(HaddTask):
                 continue
             args = ["b2file-merge", "-f", self.get_output_file_name(key)] + file_list
             subprocess.check_call(args)
+
+
+class Basf2nTupleMergeTask(HaddTask):
+    def run(self):
+        self.create_output_dirs()
+
+        for key, file_list in self.get_transposed_input_file_names().items():
+            if hasattr(self, "keys") and key not in self.keys:
+                continue
+            args = ["fei_merge_files", self.get_output_file_name(key)] + file_list
+            subprocess.check_call(args)
