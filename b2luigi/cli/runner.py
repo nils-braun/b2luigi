@@ -17,7 +17,10 @@ def run_as_batch_worker(task_list, cli_args, kwargs):
             if task.task_id != cli_args.task_id:
                 continue
 
+            set_setting("local_execution", True)
+
             # TODO: We do not process the information if (a) we have a new dependency and (b) why the task has failed.
+            # TODO: Would be also nice to run the event handlers
             try:
                 task.run()
                 task.on_success()
@@ -42,8 +45,9 @@ def run_local(task_list, cli_args, kwargs):
 
 
 def run_test_mode(task_list, cli_args, kwargs):
-    set_setting("dispatch", False)
+    set_setting("local_execution", True)
     luigi.build(task_list, log_level="DEBUG", local_scheduler=True, **kwargs)
+
 
 def show_all_outputs(task_list, *args, **kwargs):
     from colorama import Fore, Style

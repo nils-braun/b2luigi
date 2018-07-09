@@ -1,4 +1,5 @@
-import git
+import contextlib
+import importlib
 
 import base64
 import itertools
@@ -6,8 +7,15 @@ import pickle
 import os
 import collections
 
+from b2luigi.core.settings import set_setting
 
-PREFIX = "B2LUIGI_PARAM_"
+@contextlib.contextmanager
+def remember_cwd():
+    old_cwd = os.getcwd()
+    try:
+        yield
+    finally:
+        os.chdir(old_cwd)
 
 
 def product_dict(**kwargs):
@@ -27,34 +35,6 @@ def fill_kwargs_with_lists(**kwargs):
         return_kwargs[key] = value
 
     return return_kwargs
-
-
-def encode_value(value):
-    pickled_value = pickle.dumps(value)
-    encoded_bytes = base64.b64encode(pickled_value)
-    encoded_string = encoded_bytes.decode()
-    return encoded_string
-
-
-def decode_value(encoded_string):
-    encoded_bytes = encoded_string.encode()
-    pickled_value = base64.b64decode(encoded_bytes)
-    value = pickle.loads(pickled_value)
-    return value
-
-
-def get_basf2_git_hash():
-    basf2_release = os.getenv("BELLE2_RELEASE")
-
-    assert basf2_release
-
-    if basf2_release == "head":
-        basf2_release_location = os.getenv("BELLE2_LOCAL_DIR")
-
-        assert basf2_release_location
-        return git.Repo(basf2_release_location).head.object.hexsha
-
-    return basf2_release
 
 
 def flatten_to_file_paths(inputs):
@@ -94,7 +74,7 @@ def get_all_output_files_in_tree(root_module, key=None):
             continue
 
         for file_key, file_name in output_dict.items():
-            all_output_files[file_key].append(dict(parameters=task.get_filled_params(),
+            all_output_files[file_key].append(dict(parameters=task.get_serialized_parameters(),
                                                    file_name=os.path.abspath(file_name)))
 
     return all_output_files
@@ -111,7 +91,6 @@ def filter_from_params(output_files, **kwargs):
     for kwargs in product_dict(**kwargs_list):
         for output_dict in output_files:
             parameters = output_dict["parameters"]
-            file_name = output_dict["file_name"]
 
             not_use = False
             for key, value in kwargs.items():
@@ -122,6 +101,21 @@ def filter_from_params(output_files, **kwargs):
             if not_use:
                 continue
 
-            file_names.add(file_name)
+            file_names.add(output_dict)
 
     return list(file_names)
+
+
+def get_task_from_file(file_name, task_name, settings=None, **kwargs):
+    with remember_cwd():
+        os.chdir(os.path.dirname(file_name))
+        spec = importlib.util.spec_from_file_location("module.name", os.path.basename(file_name))
+        task_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(task_module)
+
+        if settings:
+            for key, value in settings.items():
+                set_setting(key, value)
+        m = getattr(task_module, task_name)(**kwargs)
+
+        return m

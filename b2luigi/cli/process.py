@@ -1,9 +1,5 @@
 from b2luigi.cli.arguments import get_cli_arguments
 from b2luigi.cli.runner import run_as_batch_worker, run_local, run_test_mode, run_batched, show_all_outputs, dry_run
-from b2luigi.core import tasks
-
-import os
-
 
 __has_run_already = False
 
@@ -20,10 +16,6 @@ def process(task_like_elements, **kwargs):
         task_list = [task_like_elements]
     else:
         task_list = task_like_elements
-
-    # Run now if requested
-    if os.environ.get("B2LUIGI_EXECUTION", False):
-        return tasks.run_task_from_env()
 
     # Check the CLI arguments and run as requested
     cli_args = get_cli_arguments()

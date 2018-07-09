@@ -1,20 +1,46 @@
-from b2luigi import ROOTLocalTarget
-from b2luigi.core import tasks
+import collections
+import os
 
-import luigi
+import b2luigi
+from b2luigi.basf2_helper.targets import ROOTLocalTarget
+from b2luigi.basf2_helper.utils import get_basf2_git_hash
 
-import inspect
 import subprocess
 
 
-class Basf2Task(tasks.DispatchableTask):
-    num_processes = luigi.IntParameter(significant=False, default=0)
-    max_event = luigi.IntParameter(significant=False, default=0)
+class Basf2Task(b2luigi.DispatchableTask):
+    git_hash = b2luigi.Parameter(default=get_basf2_git_hash())
+
+    def get_output_file_target(self, *args, **kwargs):
+        file_name = self.get_output_file_name(*args, **kwargs)
+        if os.path.splitext(file_name)[-1] == ".root":
+            return ROOTLocalTarget(file_name)
+        else:
+            return super().get_output_file_target(*args, **kwargs)
+
+    def get_serialized_parameters(self):
+        serialized_parameters = super().get_serialized_parameters()
+
+        # Git hash should go to the front
+        return_dict = collections.OrderedDict()
+        return_dict["git_hash"] = serialized_parameters["git_hash"]
+
+        for key, value in serialized_parameters.items():
+            return_dict[key] = value
+
+        return return_dict
+
+
+class Basf2PathTask(Basf2Task):
+    num_processes = b2luigi.IntParameter(significant=False, default=0)
+    max_event = b2luigi.IntParameter(significant=False, default=0)
 
     def create_path(self):
         raise NotImplementedError()
 
     def process(self):
+        assert get_basf2_git_hash() == self.git_hash
+
         try:
             import basf2
             import ROOT
@@ -49,32 +75,8 @@ class SimplifiedOutputBasf2Task(Basf2Task):
         return outputs
 
 
-class Basf2PathCreatorTask(SimplifiedOutputBasf2Task):
-    path_creator_function = tasks.FunctionParameter()
-
-    def create_path(self):
-        path_creator_function = self.path_creator_function
-        parameters = inspect.signature(path_creator_function).parameters
-
-        path_function_parameters = {}
-        for key, value in self.get_filled_params().items():
-            if key in parameters:
-                path_function_parameters[key] = value
-
-        return path_creator_function(**path_function_parameters)
-
-
-class Basf2PathTask(SimplifiedOutputBasf2Task):
-    basf2_path = None
-    
-    def create_path(self):
-        return self.basf2_path
-
-
-class HaddTask(tasks.Task):
+class HaddTask(Basf2Task):
     def output(self):
-        output_targets = {}
-
         for key, _ in self.get_transposed_input_file_names().items():
             if hasattr(self, "keys") and key not in self.keys:
                 continue
