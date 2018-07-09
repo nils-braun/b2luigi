@@ -7,4 +7,5 @@ from luigi.util import requires, inherits
 
 from b2luigi.core.task import Task, ExternalTask, WrapperTask
 from b2luigi.core.dispatchable_task import DispatchableTask
+from b2luigi.core.settings import get_setting, set_setting
 from b2luigi.cli.process import process
