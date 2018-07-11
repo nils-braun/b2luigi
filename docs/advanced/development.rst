@@ -91,9 +91,6 @@ Open TODOs
 * port b2luigi to basf2
 * add tests!
 * settings on remote side
-* "local" testing batch system
-* Make the get_input/output_file_names ready for any kind of strange output definitions
-
 
 .. _flit: https://pypi.org/project/flit/
 
