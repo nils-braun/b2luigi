@@ -1,5 +1,6 @@
 from b2luigi.cli.arguments import get_cli_arguments
-from b2luigi.cli.runner import run_as_batch_worker, run_local, run_test_mode, run_batched, show_all_outputs, dry_run
+from b2luigi.cli import runner
+
 
 __has_run_already = False
 
@@ -20,18 +21,23 @@ def process(task_like_elements, **kwargs):
     # Check the CLI arguments and run as requested
     cli_args = get_cli_arguments()
 
-    if cli_args.show_output:
-        show_all_outputs(task_list)
-    elif cli_args.dry_run:
-        dry_run(task_list)
-    elif cli_args.test:
-        run_test_mode(task_list, cli_args, kwargs)
-    elif cli_args.batch:
-        run_batched(task_list, cli_args, kwargs)
+    show_output_flag = kwargs.pop("show_output", False)
+    dry_run_flag = kwargs.pop("dry_run", False)
+    test_flag = kwargs.pop("test", False)
+    batch_flag = kwargs.pop("batch", False)
+
+    if cli_args.show_output or show_output_flag:
+        runner.show_all_outputs(task_list)
+    elif cli_args.dry_run or dry_run_flag:
+        runner.dry_run(task_list)
+    elif cli_args.test or test_flag:
+        runner.run_test_mode(task_list, cli_args, kwargs)
+    elif cli_args.batch or batch_flag:
+        runner.run_batched(task_list, cli_args, kwargs)
     elif cli_args.batch_runner:
-        run_as_batch_worker(task_list, cli_args, kwargs)
+        runner.run_as_batch_worker(task_list, cli_args, kwargs)
     else:
-        run_local(task_list, cli_args, kwargs)
+        runner.run_local(task_list, cli_args, kwargs)
 
 
 
