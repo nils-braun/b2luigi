@@ -1,13 +1,14 @@
 import contextlib
 import importlib
 
-import base64
 import itertools
-import pickle
 import os
 import collections
 
+from luigi.task import flatten
+
 from b2luigi.core.settings import set_setting
+
 
 @contextlib.contextmanager
 def remember_cwd():
@@ -44,17 +45,48 @@ def flatten_to_file_paths(inputs):
     return {key: value.path for key, value in inputs.items()}
 
 
+def _to_dict(d):
+    if isinstance(d, dict):
+        return d
+
+    return {d: d}
+
+
+def _flatten(struct):
+    if isinstance(struct, dict) or isinstance(struct, str):
+        return [struct]
+
+    result = []
+    try:
+        iterator = iter(struct)
+    except TypeError:
+        return [struct]
+
+    for f in iterator:
+        result += _flatten(f)
+
+    return result
+
+
 def flatten_to_dict(inputs):
-    if isinstance(inputs, dict):
-        return inputs
+    inputs = _flatten(inputs)
+    inputs = map(_to_dict, inputs)
 
-    if isinstance(inputs, collections.Iterable):
-        joined_dict = {}
-        for i in inputs:
-            joined_dict.update(**i)
-        return joined_dict
+    joined_dict = {}
+    for i in inputs:
+        joined_dict.update(**i)
+    return joined_dict
 
-    return {inputs: inputs}
+
+def flatten_to_list_of_dicts(inputs):
+    inputs = _flatten(inputs)
+    inputs = map(_to_dict, inputs)
+
+    joined_dict = collections.defaultdict(list)
+    for i in inputs:
+        for key, value in i.items():
+            joined_dict[key].append(value)
+    return joined_dict
 
 
 def task_iterator(task):
