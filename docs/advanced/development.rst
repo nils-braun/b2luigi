@@ -1,7 +1,13 @@
 .. _development-label:
 
-Development
-===========
+Development and TODOs
+=====================
+
+You want to help developing ``b2luigi``? Great! Have your github account ready and let's go!
+
+
+Local Development
+-----------------
 
 You want to help developing ``b2luigi``? Great! Here are some first steps to help you dive in:
 
@@ -71,6 +77,23 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
             flit publish
 
     At a later stage, I will try to automate this.
+
+
+Open TODOs
+----------
+
+* Add support for different batch systems, e.g. htcondor and a batch system discovery
+* Integrate gbasf2 as another batch system
+* Document the API of the task class
+* Add more examples on how to do complex tasks with a full "analysis example".
+* Add a function for writing into temporary files and moving automatically
+* Add helper messages on events (e.g. failed)
+* port b2luigi to basf2
+* add tests!
+* settings on remote side
+* "local" testing batch system
+* Make the get_input/output_file_names ready for any kind of strange output definitions
+
 
 .. _flit: https://pypi.org/project/flit/
 

@@ -2,8 +2,3 @@
 
 Advanced Examples
 =================
-
-.. toctree::
-    :maxdepth: 2
-
-    basf2
