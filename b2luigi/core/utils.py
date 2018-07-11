@@ -107,7 +107,8 @@ def flatten_to_dict(inputs):
 
     joined_dict = {}
     for i in inputs:
-        joined_dict.update(**i)
+        for key, value in i.items():
+            joined_dict[key] = value
     return joined_dict
 
 
@@ -134,12 +135,16 @@ def get_all_output_files_in_tree(root_module, key=None):
 
     all_output_files = collections.defaultdict(list)
     for task in task_iterator(root_module):
-        output_dict = task.get_output_file_names()
+        output_dict = flatten_to_dict(task.output())
         if not output_dict:
             continue
 
-        for file_key, file_name in output_dict.items():
-            all_output_files[file_key].append(dict(parameters=task.get_serialized_parameters(),
+        for target_key, target in output_dict.items():
+            converted_dict = flatten_to_file_paths({target_key: target})
+            file_key, file_name = converted_dict.popitem()
+
+            all_output_files[file_key].append(dict(exists=target.exists(),
+                                                   parameters=get_serialized_parameters(task),
                                                    file_name=os.path.abspath(file_name)))
 
     return all_output_files

@@ -38,9 +38,9 @@ def run_local(task_list, cli_args, kwargs):
         core_settings = luigi.interface.core()
         host = cli_args.scheduler_host or core_settings.scheduler_host
         port = int(cli_args.scheduler_port) or core_settings.scheduler_port
-        luigi.build(task_list, log_level="INFO", scheduler_host=host, scheduler_port=port, **kwargs)
+        luigi.build(task_list, scheduler_host=host, scheduler_port=port, **kwargs)
     else:
-        luigi.build(task_list, log_level="INFO", local_scheduler=True, **kwargs)
+        luigi.build(task_list, local_scheduler=True, **kwargs)
 
 
 def run_test_mode(task_list, cli_args, kwargs):
@@ -61,10 +61,12 @@ def show_all_outputs(task_list, *args, **kwargs):
     for key, file_names in all_output_files.items():
         print(key)
 
+        exists = all(d["exists"] for d in file_names)
+
         file_names = sorted(set(d["file_name"] for d in file_names))
         for file_name in file_names:
             # TODO: this is not correct as it does not check the task status!
-            if os.path.exists(file_name):
+            if exists:
                 print("\t", Fore.GREEN, file_name, Style.RESET_ALL)
             else:
                 print("\t", Fore.RED, file_name, Style.RESET_ALL)
@@ -72,8 +74,13 @@ def show_all_outputs(task_list, *args, **kwargs):
 
 
 def dry_run(task_list):
+    one_is_not_complete = False
     for task in task_list:
         if not task.complete():
-            exit(1)
+            one_is_not_complete = True
+            print("Would run", task)
 
-    exit(0)
+    if one_is_not_complete:
+        exit(1)
+    else:
+        exit(0)
