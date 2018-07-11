@@ -70,7 +70,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
             git push 
             git push --tags
 
-    d. Publish to pipy
+    d.  Publish to pipy
 
         .. code-block:: bash
 
@@ -83,14 +83,15 @@ Open TODOs
 ----------
 
 * Add support for different batch systems, e.g. htcondor and a batch system discovery
-* Integrate gbasf2 as another batch system
+* Integrate gbasf2/dirac or other grid systems as another batch system
 * Document the API of the task class
+* Document how to add a new batch system (and make this point easier)
+* Document the settings + data management
 * Add more examples on how to do complex tasks with a full "analysis example".
-* Add a function for writing into temporary files and moving automatically
+* Add a function for writing into temporary files and moving automatically in the run function
 * Add helper messages on events (e.g. failed)
-* port b2luigi to basf2
-* add tests!
-* settings on remote side
+* Add unit tests!
+* Make it possible to have different settings on the remote side
 
 .. _flit: https://pypi.org/project/flit/
 
