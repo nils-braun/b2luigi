@@ -43,6 +43,7 @@ Other functions
 ---------------
 
 .. toctree::
+    :maxdepth: 1
 
     b2luigi.core.utils
     b2luigi.batch

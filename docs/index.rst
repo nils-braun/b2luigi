@@ -94,6 +94,7 @@ Content
     advanced/examples
     advanced/basf2-examples
     documentation/api
+    documentation/run_modes
     advanced/faq
     advanced/development
 
