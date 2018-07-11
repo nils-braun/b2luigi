@@ -2,7 +2,8 @@ import json
 import re
 import subprocess
 
-from b2luigi.batch.processes import BatchProcess
+from b2luigi.batch.processes import BatchProcess, JobStatus
+from b2luigi.core.utils import get_log_files
 
 
 class LSFProcess(BatchProcess):
@@ -11,29 +12,26 @@ class LSFProcess(BatchProcess):
 
         self._batch_job_id = None
 
-    def is_alive(self):
+    def get_job_status(self):
         assert self._batch_job_id
 
-        output = subprocess.check_output(["bjobs", "-json", "-o", "stat exit_code", self._batch_job_id])
+        output = subprocess.check_output(["bjobs", "-json", "-o", "stat", self._batch_job_id])
         output = output.decode()
         output = json.loads(output)["RECORDS"][0]
 
         if "STAT" not in output:
-            self.exitcode = -1
-            return False
+            return JobStatus.aborted
 
         job_status = output["STAT"]
-        self.exitcode = output["EXIT_CODE"]
 
         if job_status == "DONE":
-            self.put_to_result_queue()
-            return False
+            return JobStatus.successful
         elif job_status == "EXIT":
-            return False
+            return JobStatus.aborted
 
-        return True
+        return JobStatus.running
 
-    def run(self):
+    def start_job(self):
         prefix = ["bsub", "-env all"]
 
         try:
@@ -43,12 +41,8 @@ class LSFProcess(BatchProcess):
 
         # Automatic requeing?
 
-        try:
-            stdout_log_file = self.task.log_files["stdout"]
-            stderr_log_file = self.task.log_files["stderr"]
-            prefix += ["-eo", stderr_log_file, "-oo", stdout_log_file]
-        except AttributeError:
-            pass
+        stdout_log_file, stderr_log_file = get_log_files(self.task)
+        prefix += ["-eo", stderr_log_file, "-oo", stdout_log_file]
 
         output = subprocess.check_output(prefix + self.task_cmd)
         output = output.decode()
@@ -60,9 +54,7 @@ class LSFProcess(BatchProcess):
 
         self._batch_job_id = match.group(0)[1:-1]
 
-        print("Started batch job with id", self._batch_job_id)
-
-    def terminate(self):
+    def kill_job(self):
         if not self._batch_job_id:
             return
 
