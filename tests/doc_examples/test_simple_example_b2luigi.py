@@ -11,7 +11,7 @@ class MyNumberTask(b2luigi.Task):
     def run(self):
         random_number = random.random()
 
-        with self.get_output_file("output_file.txt").open("w") as f:
+        with self.get_output_target("output_file.txt").open("w") as f:
             f.write(f"{random_number}\n")
 
 

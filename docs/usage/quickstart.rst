@@ -57,7 +57,7 @@ Later, we will build the average of those numbers.
 
 3.  After the job is completed, you will see something like:
 
-    .. code-block::
+    .. code-block:: bash
 
         ===== Luigi Execution Summary =====
 
