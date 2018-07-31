@@ -14,15 +14,25 @@ class Task(luigi.Task):
         """Call this in your output() function"""
         return {output_file_name: self._get_output_file_target(output_file_name, create_folder=True)}
 
-    def get_input_file_names(self):
+    def get_input_file_names(self, key=None):
         """Get the dict of input file names"""
         input_list = utils.flatten_to_list_of_dicts(self.input())
-        return utils.flatten_to_file_paths(input_list)
+        file_paths = utils.flatten_to_file_paths(input_list)
+
+        if key is not None:
+            return file_paths[key]
+        else:
+            return file_paths
 
     def get_output_file_names(self):
         """Get the dict of output file names"""
         output_dict = utils.flatten_to_dict(self.output())
         return utils.flatten_to_file_paths(output_dict)
+
+    def get_output_file(self, key):
+        """Shortcut to get the output target for a given key"""
+        output_dict = utils.flatten_to_dict(self.output())
+        return output_dict[key]
 
     def create_output_dirs(self):
         """Create all needed output dicts if needed"""

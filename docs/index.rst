@@ -29,6 +29,11 @@ Jump right into it with out :ref:`quick-start-label`.
 If you have never worked with ``luigi`` before, you may want to have a look into the `luigi documentation`_.
 But you can learn most of the nice features also from this documentation!
 
+.. attention::
+
+    The API of ``b2luigi`` is still under construction.
+    Please remember this when using the package in production!
+
 
 Why not use the already created batch tasks?
 --------------------------------------------
@@ -115,6 +120,12 @@ The team
 Main developer:
 
 *   Nils Braun (`nils-braun`_)
+
+Useful help and testing:
+
+*   Felix Metzner
+*   Patrick Ecker
+*   Jochen Gemmler
 
 Stolen ideas:
 
