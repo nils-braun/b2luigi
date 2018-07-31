@@ -75,8 +75,8 @@ def show_all_outputs(task_list, *args, **kwargs):
 
 def dry_run(task_list):
     one_is_not_complete = False
-    for task in task_list:
-        if not task.complete():
+    for root_task in task_list:
+        for task in task_iterator(root_task, only_non_complete=True):
             one_is_not_complete = True
             print("Would run", task)
 
