@@ -4,8 +4,12 @@ from b2luigi import Task, IntParameter, requires, set_setting
 
 
 class TaskTestCase(TestCase):
+    def setUp(self):
+        set_setting("result_path", "results")
+
     def tearDown(self):
-        set_setting("result_path", ".")
+        import shutil
+        shutil.rmtree("results", ignore_errors=True)
 
     def test_file_path_usage(self):
         class TaskA(Task):
@@ -17,7 +21,7 @@ class TaskTestCase(TestCase):
         
         task = TaskA(some_parameter=3)
 
-        set_setting("result_path", "some_crazy_path")
+        set_setting("result_path", "results/some_crazy_path")
         
         self.assertEqual(task.get_filled_params(), {"some_parameter": 3})
         self.assertFalse(task.get_input_file_names())
@@ -74,4 +78,4 @@ class TaskTestCase(TestCase):
         input_file_names = task.get_input_file_names("file_a")
 
         for i in range(100):
-            self.assertIn(f"./some_parameter={i}/file_a", input_file_names)
+            self.assertIn(f"results/some_parameter={i}/file_a", input_file_names)
