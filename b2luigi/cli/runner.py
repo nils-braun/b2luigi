@@ -38,9 +38,13 @@ def run_local(task_list, cli_args, kwargs):
         core_settings = luigi.interface.core()
         host = cli_args.scheduler_host or core_settings.scheduler_host
         port = int(cli_args.scheduler_port) or core_settings.scheduler_port
-        luigi.build(task_list, scheduler_host=host, scheduler_port=port, **kwargs)
+        kwargs["scheduler_host"] = host
+        kwargs["scheduler_port"] = port
     else:
-        luigi.build(task_list, local_scheduler=True, **kwargs)
+        kwargs["local_scheduler"] = True
+
+    kwargs.setdefault("log_level", "INFO")
+    luigi.build(task_list, **kwargs)
 
 
 def run_test_mode(task_list, cli_args, kwargs):
