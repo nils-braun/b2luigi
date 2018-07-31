@@ -123,10 +123,11 @@ def flatten_to_list_of_dicts(inputs):
     return joined_dict
 
 
-def task_iterator(task):
-    yield task
-    for dep in task.deps():
-        yield from task_iterator(dep)
+def task_iterator(task, only_non_complete=False):
+    if not only_non_complete or not task.complete():
+        yield task
+        for dep in task.deps():
+            yield from task_iterator(dep, only_non_complete=only_non_complete)
 
 
 def get_all_output_files_in_tree(root_module, key=None):
@@ -156,7 +157,7 @@ def filter_from_params(output_files, **kwargs):
     if not kwargs_list:
         return output_files
 
-    file_names = set()
+    file_names = []
 
     for kwargs in product_dict(**kwargs_list):
         for output_dict in output_files:
@@ -164,16 +165,16 @@ def filter_from_params(output_files, **kwargs):
 
             not_use = False
             for key, value in kwargs.items():
-                if key in parameters and parameters[key] != value:
+                if key in parameters and parameters[key] != str(value):
                     not_use = True
                     break
 
             if not_use:
                 continue
 
-            file_names.add(output_dict)
+            file_names.append(output_dict)
 
-    return list(file_names)
+    return {x["file_name"]: x for x in file_names}.values()
 
 
 def get_task_from_file(file_name, task_name, settings=None, **kwargs):
