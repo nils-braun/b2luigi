@@ -82,6 +82,8 @@ def flatten_to_file_paths(inputs):
     if isinstance(inputs, dict):
         return {os.path.basename(flatten_to_file_paths(key)):
                     flatten_to_file_paths(value) for key, value in inputs.items()}
+    elif isinstance(inputs, list):
+        return [flatten_to_file_paths(value) for value in inputs]
     else:
         return inputs
 
