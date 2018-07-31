@@ -11,6 +11,10 @@ from b2luigi.core.utils import get_log_files
 
 
 class DispatchableTask(Task):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cmd_prefix = []
+
     def process(self):
         raise NotImplementedError
 
@@ -30,8 +34,7 @@ class DispatchableTask(Task):
 
         with open(stdout_file_name, "w") as stdout_file:
             with open(stderr_file_name, "w") as stderr_file:
-                return_code = subprocess.call([sys.executable, os.path.basename(filename),
-                                               "--batch-runner", "--task-id", self.task_id],
+                return_code = subprocess.call(self.cmd_prefix + [sys.executable, os.path.basename(filename), "--batch-runner", "--task-id", self.task_id],
                                               stdout=stdout_file, stderr=stderr_file,
                                               cwd=os.path.dirname(filename))
 
