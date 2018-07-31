@@ -122,7 +122,7 @@ def flatten_to_list_of_dicts(inputs):
     for i in inputs:
         for key, value in i.items():
             joined_dict[key].append(value)
-    return joined_dict
+    return dict(joined_dict)
 
 
 def task_iterator(task, only_non_complete=False):
