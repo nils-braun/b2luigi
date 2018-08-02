@@ -56,9 +56,10 @@ without the need to change anything!
     :undoc-members:
     :show-inheritance:
 
+.. autofunction:: b2luigi.dispatch
+
 .. autoclass:: b2luigi.DispatchableTask
-    :members:
-    :undoc-members:
+    :members: process
     :show-inheritance:
 
 Settings
