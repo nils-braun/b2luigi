@@ -1,19 +1,12 @@
-from unittest import TestCase
+from ..helpers import B2LuigiTestCase
 
-from b2luigi import Task, IntParameter, requires, set_setting
+import b2luigi
 
 
-class TaskTestCase(TestCase):
-    def setUp(self):
-        set_setting("result_path", "results")
-
-    def tearDown(self):
-        import shutil
-        shutil.rmtree("results", ignore_errors=True)
-
+class TaskTestCase(B2LuigiTestCase):
     def test_file_path_usage(self):
-        class TaskA(Task):
-            some_parameter = IntParameter()
+        class TaskA(b2luigi.Task):
+            some_parameter = b2luigi.IntParameter()
 
             def output(self):
                 yield self.add_to_output("file_a")
@@ -21,7 +14,7 @@ class TaskTestCase(TestCase):
         
         task = TaskA(some_parameter=3)
 
-        set_setting("result_path", "results/some_crazy_path")
+        b2luigi.set_setting("result_path", "results/some_crazy_path")
         
         self.assertEqual(task.get_filled_params(), {"some_parameter": 3})
         self.assertFalse(task.get_input_file_names())
@@ -33,14 +26,14 @@ class TaskTestCase(TestCase):
         self.assertIn("some_crazy_path", task.get_output_file_names("file_a"))
 
     def test_dependencies(self):
-        class TaskA(Task):
-            some_parameter = IntParameter()
+        class TaskA(b2luigi.Task):
+            some_parameter = b2luigi.IntParameter()
 
             def output(self):
                 yield self.add_to_output("file_a")
 
-        @requires(TaskA)
-        class TaskB(Task):
+        @b2luigi.requires(TaskA)
+        class TaskB(b2luigi.Task):
             def output(self):
                 yield self.add_to_output("file_b")
 
@@ -56,13 +49,13 @@ class TaskTestCase(TestCase):
         self.assertIn("some_parameter=42", task.get_output_file_names("file_b"))
 
     def test_many_dependencies(self):
-        class TaskA(Task):
-            some_parameter = IntParameter()
+        class TaskA(b2luigi.Task):
+            some_parameter = b2luigi.IntParameter()
 
             def output(self):
                 yield self.add_to_output("file_a")
 
-        class TaskB(Task):
+        class TaskB(b2luigi.Task):
             def requires(self):
                 for i in range(100):
                     yield self.clone(TaskA, some_parameter=i)
