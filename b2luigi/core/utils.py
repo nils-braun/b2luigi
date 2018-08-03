@@ -5,6 +5,9 @@ import itertools
 import os
 import collections
 import sys
+import types
+
+import colorama
 
 from b2luigi.core.settings import set_setting, get_setting
 
@@ -257,3 +260,21 @@ def _flatten(struct):
         result += _flatten(f)
 
     return result
+
+
+def _on_failure_for_dispatch_task(self, exception):
+    stdout_file_name, stderr_file_name = get_log_files(self)
+
+    print(colorama.Fore.RED)
+    print("Task", self.task_family, "failed!")
+    print("Parameters")
+    for key, value in self.get_filled_params().items():
+        print("\t", key, "=", value)
+    print("Please have a look into the log files")
+    print(stdout_file_name)
+    print(stderr_file_name)
+    print(colorama.Style.RESET_ALL)
+
+
+def add_on_failure_function(task):
+    task.on_failure = types.MethodType(_on_failure_for_dispatch_task, task)

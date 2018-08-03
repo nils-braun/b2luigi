@@ -1,36 +1,20 @@
-import contextlib
 import os
 import subprocess
 import sys
-import types
 import functools
-
-import colorama
 
 from b2luigi.core.settings import get_setting
 from b2luigi.core.task import Task
-from b2luigi.core.utils import get_log_files
+from b2luigi.core.utils import get_log_files, add_on_failure_function
 
-
-def _on_failure_for_dispatch_task(self, exception):
-    stdout_file_name, stderr_file_name = get_log_files(self)
-
-    print(colorama.Fore.RED)
-    print("Task", self.task_family, "failed!")
-    print("Parameters")
-    for key, value in self.get_filled_params().items():
-        print("\t",key, "=", value)
-    print("Please have a look into the log files")
-    print(stdout_file_name)
-    print(stderr_file_name)
-    print(colorama.Style.RESET_ALL)
 
 def _run_task_locally(task, run_function):
     task.create_output_dirs()
     run_function(task)
 
+
 def _run_task_remote(task):
-    task.on_failure = types.MethodType(_on_failure_for_dispatch_task, task)
+    add_on_failure_function(task)
 
     filename = os.path.realpath(sys.argv[0])
     stdout_file_name, stderr_file_name = get_log_files(task)
@@ -41,7 +25,7 @@ def _run_task_remote(task):
 
     executable = get_setting("executable", [sys.executable])
     cmd += executable
-    
+
     cmd += [os.path.basename(filename), "--batch-runner", "--task-id", task.task_id]
 
     with open(stdout_file_name, "w") as stdout_file:
@@ -86,6 +70,7 @@ def dispatch(run_function):
     needs to be a list of strings, which are prefixed to the current command (e.g.
     if you want to add a profiler to all your tasks)
     """
+
     @functools.wraps(run_function)
     def wrapped_run_function(self):
         if get_setting("local_execution", False):
@@ -107,6 +92,7 @@ class DispatchableTask(Task):
         You need to overload the process function
         instead of the run function in this case!
     """
+
     def process(self):
         """
         Override this method with your normal run function.
