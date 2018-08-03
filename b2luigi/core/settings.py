@@ -67,6 +67,16 @@ def set_setting(key, value):
     _current_global_settings[key] = value
 
 
+def clear_setting(key):
+    """
+    Clear the setting with the given key
+    """
+    try:
+        del _current_global_settings[key]
+    except KeyError:
+        pass
+
+
 def _setting_file_iterator():
     path = os.getcwd()
 
