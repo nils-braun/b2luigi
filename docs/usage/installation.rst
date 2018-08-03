@@ -5,15 +5,8 @@ Installation
 
 This installation description is for the general user. If you are using the Belle II software, see below:
 
-1.  Setup your local environment. If you are using basf2: You can use a local environment (installed on your machine)
-    or a release on cvmfs.
+1.  Setup your local environment. 
     For example, run:
-
-    .. code-block:: bash
-
-        source /cvmfs/belle.cern.ch/tools/b2setup prerelease-02-00-00c
-
-    Or you setup the virtual environment of your project:
 
     .. code-block:: bash
 
@@ -34,7 +27,6 @@ This installation description is for the general user. If you are using the Bell
     .. code-block:: bash
 
         pip3 install --user b2luigi
-
 
     This will automatically also install `luigi` into your current environment.
     Please make sure to always setup your environment correctly before using `b2luigi`.
