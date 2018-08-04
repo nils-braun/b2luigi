@@ -14,7 +14,7 @@ Later, we will build the average of those numbers.
 
 1. Open a code editor and create a new file ``simple-example.py`` with the following content:
 
-    .. literalinclude:: ../../tests/doc_examples/test_simple_example.py
+    .. literalinclude:: ../../tests/doc_examples/simple_example.py
        :linenos:
 
     Each building block in ``(b2)luigi`` is a :class:`b2luigi.Task`.
@@ -82,7 +82,7 @@ Later, we will build the average of those numbers.
     This code listing shows the same task, but this time written using the helper
     functions given by ``b2luigi``.
 
-    .. literalinclude:: ../../tests/doc_examples/test_simple_example_b2luigi.py
+    .. literalinclude:: ../../tests/doc_examples/simple_example_b2luigi.py
        :linenos:
 
     Before you execute the file (e.g. with ``--batch``), add a ``settings.json`` with the following content
@@ -110,7 +110,7 @@ Later, we will build the average of those numbers.
     and add them all together to an average number.
     So edit your example file to include the following content:
 
-    .. literalinclude:: ../../tests/doc_examples/test_simple_example_b2luigi_2.py
+    .. literalinclude:: ../../tests/doc_examples/simple_example_b2luigi_2.py
        :linenos:
 
     See how we defined dependencies in line 19 with the ``requires`` function.
