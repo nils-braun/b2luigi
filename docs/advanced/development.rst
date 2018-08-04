@@ -85,8 +85,6 @@ Open TODOs
 * Add support for different batch systems, e.g. htcondor and a batch system discovery
 * Integrate gbasf2/dirac or other grid systems as another batch system
 * Document how to add a new batch system (and make this point easier)
-* Add more examples on how to do complex tasks with a full "analysis example".
-* Add a function for writing into temporary files and moving automatically in the run function
 * Add helper messages on events (e.g. failed)
 * Add unit tests!
 
