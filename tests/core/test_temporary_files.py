@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 
 from ..helpers import B2LuigiTestCase
 
@@ -45,7 +46,7 @@ class TemporaryWrapperTestCase(B2LuigiTestCase):
         with open("test.py", "w") as f:
             f.write(FIRST_CONTENT)
 
-        subprocess.check_call(["python3", "test.py"])
+        subprocess.check_call([sys.executable, "test.py"])
 
         self.assertFalse(os.path.exists("test.txt"))
 
@@ -53,7 +54,7 @@ class TemporaryWrapperTestCase(B2LuigiTestCase):
         with open("test.py", "w") as f:
             f.write(SECOND_CONTENT)
 
-        subprocess.check_call(["python3", "test.py"])
+        subprocess.check_call([sys.executable, "test.py"])
 
         self.assertTrue(os.path.exists("test.txt"))
 

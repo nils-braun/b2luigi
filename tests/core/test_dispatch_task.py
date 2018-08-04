@@ -1,3 +1,5 @@
+import sys
+
 from ..helpers import B2LuigiTestCase
 
 import b2luigi
@@ -72,7 +74,7 @@ class DispatchTaskTestCase(B2LuigiTestCase):
             with open("dispatch_task.py", "w") as f:
                 f.write(content)
 
-            out = subprocess.check_output(["python3", "dispatch_task.py"], stderr=subprocess.STDOUT)
+            out = subprocess.check_output([sys.executable, "dispatch_task.py"], stderr=subprocess.STDOUT)
 
             self.assertTrue(os.path.exists("results/some_file.txt"))
             self.assertFalse(os.path.exists("results/some_other_file.txt"))
