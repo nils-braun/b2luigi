@@ -95,7 +95,6 @@ Content
 
     usage/installation
     usage/quickstart
-    usage/data-management
     advanced/examples
     advanced/basf2-examples
     documentation/api

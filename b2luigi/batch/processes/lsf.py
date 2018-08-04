@@ -7,6 +7,15 @@ from b2luigi.core.utils import get_log_files
 
 
 class LSFProcess(BatchProcess):
+    """
+    Reference implementation of the batch process for an LSF batch system.
+
+    We assume that the batch system shares a file system with the submission node you
+    are currently working on (or at least the current folder is also available there with the same path).
+    We also assume that we can run the same python interpreter there by just copying
+    the current environment and calling it from the same path.
+    Both requirements are fulfilled by a "normal" LSF setup, so you do not keep those in mind typically.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

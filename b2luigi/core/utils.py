@@ -278,3 +278,18 @@ def on_failure(self, exception):
 
 def add_on_failure_function(task):
     task.on_failure = types.MethodType(on_failure, task)
+
+
+def create_cmd_from_task(task):
+    filename = os.path.realpath(sys.argv[0])
+
+    cmd = []
+    if hasattr(task, "cmd_prefix"):
+        cmd = task.cmd_prefix
+
+    executable = get_setting("executable", [sys.executable])
+    cmd += executable
+
+    cmd += [os.path.basename(filename), "--batch-runner", "--task-id", task.task_id]
+
+    return cmd

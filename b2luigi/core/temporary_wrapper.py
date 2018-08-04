@@ -65,6 +65,11 @@ def on_temporary_files(run_function):
     file first and copied to its final location at the end of the run function (but only if there
     was no error).
 
+    *Attention*:
+
+    The decorator only edits the function get_output_file_name. If you are using
+    the output directly, you have to take care of using the temporary path correctly by yourself!
+
     """
     @wraps(run_function)
     def run(self):

@@ -1,13 +1,9 @@
 b2luigi.batch package
 =====================
 
-.. automodule:: b2luigi.batch.processes
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. autoclass:: b2luigi.batch.processes.BatchProcess
+    :members: get_job_status, start_job, kill_job
 
-.. automodule:: b2luigi.batch.processes.lsf
-    :members:
-    :undoc-members:
+.. autoclass:: b2luigi.batch.processes.lsf.LSFProcess
     :show-inheritance:
 

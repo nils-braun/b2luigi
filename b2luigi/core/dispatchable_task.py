@@ -1,11 +1,11 @@
 import os
 import subprocess
-import sys
 import functools
+import sys
 
 from b2luigi.core.settings import get_setting
 from b2luigi.core.task import Task
-from b2luigi.core.utils import get_log_files, add_on_failure_function
+from b2luigi.core.utils import get_log_files, add_on_failure_function, create_cmd_from_task
 
 
 def _run_task_locally(task, run_function):
@@ -19,14 +19,7 @@ def _run_task_remote(task):
     filename = os.path.realpath(sys.argv[0])
     stdout_file_name, stderr_file_name = get_log_files(task)
 
-    cmd = []
-    if hasattr(task, "cmd_prefix"):
-        cmd = task.cmd_prefix
-
-    executable = get_setting("executable", [sys.executable])
-    cmd += executable
-
-    cmd += [os.path.basename(filename), "--batch-runner", "--task-id", task.task_id]
+    cmd = create_cmd_from_task(task)
 
     with open(stdout_file_name, "w") as stdout_file:
         with open(stderr_file_name, "w") as stderr_file:
