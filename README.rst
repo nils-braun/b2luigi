@@ -1,13 +1,14 @@
 b2luigi
 =======
 
-.. image:: https://travis-ci.org/nils-braun/b2luigi.svg?branch=master
 .. image:: https://readthedocs.org/projects/b2luigi/badge/?version=latest&style=flat-sphare
            :target: https://b2luigi.readthedocs.io/en/stable/
 .. image:: https://badge.fury.io/py/b2luigi.svg
            :target: https://badge.fury.io/py/b2luigi
 .. image:: https://coveralls.io/repos/github/nils-braun/b2luigi/badge.svg?branch=master
            :target: https://coveralls.io/github/nils-braun/b2luigi?branch=master
+.. image:: https://travis-ci.org/nils-braun/b2luigi.svg?branch=master
+           :target: https://travis-ci.org/nils-braun/b2luigi
 
 
 ``b2luigi`` is a helper package constructed around ``luigi``, that helps you schedule working packages (so called tasks)
