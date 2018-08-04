@@ -95,7 +95,7 @@ class MergerTask(Basf2Task):
             if hasattr(self, "keys") and key not in self.keys:
                 continue
 
-            args = self.cmd + [self.get_output_file_names(key)] + file_list
+            args = self.cmd + [self.get_output_file_name(key)] + file_list
             subprocess.check_call(args)
 
 

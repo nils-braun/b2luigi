@@ -90,7 +90,7 @@ class Task(luigi.Task):
         else:
             return file_paths
 
-    def get_output_file_names(self, key=None):
+    def get_output_file_name(self, key=None):
         """
         Analogous to :obj:`get_input_file_names` this function returns
         a dictionary of output files defined in out output function.

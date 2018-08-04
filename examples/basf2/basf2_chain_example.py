@@ -36,7 +36,7 @@ class SimulationTask(Basf2PathTask):
         modularAnalysis.loadGearbox(path)
         simulation.add_simulation(path)
 
-        path.add_module('RootOutput', outputFileName=self.get_output_file_names('simulation_full_output.root'))
+        path.add_module('RootOutput', outputFileName=self.get_output_file_name('simulation_full_output.root'))
 
         return path
 
@@ -53,7 +53,7 @@ class ReconstructionTask(Basf2PathTask):
         modularAnalysis.loadGearbox(path)
         reconstruction.add_reconstruction(path)
 
-        modularAnalysis.outputMdst(self.get_output_file_names("reconstructed_output.root"), path=path)
+        modularAnalysis.outputMdst(self.get_output_file_name("reconstructed_output.root"), path=path)
 
         return path
 
@@ -76,11 +76,11 @@ class AnalysisTask(Basf2PathTask):
         modularAnalysis.variablesToNtuple('D0',
                                           ['M', 'p', 'E', 'useCMSFrame(p)', 'useCMSFrame(E)',
                                            'daughter(0, kaonID)', 'daughter(1, pionID)', 'isSignal', 'mcErrors'],
-                                          filename=self.get_output_file_names("D_n_tuple.root"),
+                                          filename=self.get_output_file_name("D_n_tuple.root"),
                                           path=path)
         modularAnalysis.variablesToNtuple('B-',
                                           ['Mbc', 'deltaE', 'isSignal', 'mcErrors', 'M'],
-                                          filename=self.get_output_file_names("B_n_tuple.root"),
+                                          filename=self.get_output_file_name("B_n_tuple.root"),
                                           path=path)
         return path
 
