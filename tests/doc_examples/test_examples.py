@@ -1,6 +1,4 @@
 import os
-import subprocess
-import sys
 from glob import glob
 
 from ..helpers import B2LuigiTestCase
@@ -12,7 +10,7 @@ class ExampleTestCase(B2LuigiTestCase):
 
 for file_name in glob(os.path.join(os.path.dirname(__file__), "*.py")):
     def lambda_function(self):
-        subprocess.check_call([sys.executable, os.path.abspath(file_name)])
+        self.call_file(os.path.join("doc_examples/", os.path.basename(file_name)))
 
     short_file_name = os.path.basename(file_name)
     short_file_name = os.path.splitext(short_file_name)[0]

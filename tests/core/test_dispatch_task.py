@@ -1,80 +1,14 @@
-import sys
+import subprocess
 
 from ..helpers import B2LuigiTestCase
 
-import b2luigi
-
 import os
-import tempfile
-
-
-FIRST_CONTENT = """
-import b2luigi
-import os
-
-
-class MyTask(b2luigi.DispatchableTask):
-    def output(self):
-        yield self.add_to_output("some_file.txt")
-        yield self.add_to_output("some_other_file.txt")
-
-    def process(self):
-        print("Hello!")
-        with open(self.get_output_file_name("some_file.txt"), "w") as f:
-            f.write("Done")
-
-        print("Bye!")
-        import sys
-        sys.stdout.flush()
-        os.kill(os.getpid(), 11)
-
-        with open(self.get_output_file_name("some_other_file.txt"), "w") as f:
-            f.write("Done")
-
-if __name__ == "__main__":
-    b2luigi.set_setting("result_path", "results")
-    b2luigi.process(MyTask())
-"""
-
-SECOND_CONTENT = """
-import b2luigi
-import os
-
-
-class MyTask(b2luigi.Task):
-    def output(self):
-        yield self.add_to_output("some_file.txt")
-        yield self.add_to_output("some_other_file.txt")
-
-    @b2luigi.dispatch
-    def run(self):
-        print("Hello!")
-        with open(self.get_output_file_name("some_file.txt"), "w") as f:
-            f.write("Done")
-
-        print("Bye!")
-        import sys
-        sys.stdout.flush()
-        os.kill(os.getpid(), 11)
-
-        with open(self.get_output_file_name("some_other_file.txt"), "w") as f:
-            f.write("Done")
-
-if __name__ == "__main__":
-    b2luigi.set_setting("result_path", "results")
-    b2luigi.process(MyTask())
-"""
 
 
 class DispatchTaskTestCase(B2LuigiTestCase):
     def test_failing_task_class(self):
-        import subprocess
-
-        for content in [FIRST_CONTENT, SECOND_CONTENT]:
-            with open("dispatch_task.py", "w") as f:
-                f.write(content)
-
-            out = subprocess.check_output([sys.executable, "dispatch_task.py"], stderr=subprocess.STDOUT)
+        for file_name in ["core/dispatch_1.py", "core/dispatch_2.py"]:
+            out = self.call_file(file_name, stderr=subprocess.STDOUT)
 
             self.assertTrue(os.path.exists("results/some_file.txt"))
             self.assertFalse(os.path.exists("results/some_other_file.txt"))

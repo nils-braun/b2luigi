@@ -1,60 +1,18 @@
 import os
-import subprocess
-import sys
 
 from ..helpers import B2LuigiTestCase
 
 import b2luigi
 
 
-FIRST_CONTENT = """
-import b2luigi
-
-class MyTask(b2luigi.Task):
-    def output(self):
-        yield self.add_to_output("test.txt")
-
-    @b2luigi.on_temporary_files
-    def run(self):
-        with open(self.get_output_file_name("test.txt"), "w") as f:
-            raise ValueError()
-            f.write("Test")
-
-if __name__ == "__main__":
-    b2luigi.process(MyTask())
-"""
-
-SECOND_CONTENT = """
-import b2luigi
-
-class MyTask(b2luigi.Task):
-    def output(self):
-        yield self.add_to_output("test.txt")
-
-    @b2luigi.on_temporary_files
-    def run(self):
-        with open(self.get_output_file_name("test.txt"), "w") as f:
-            f.write("Test")
-
-if __name__ == "__main__":
-    b2luigi.process(MyTask())
-"""
-
-
 class TemporaryWrapperTestCase(B2LuigiTestCase):
     def test_failed_temporary_files(self):
-        with open("test.py", "w") as f:
-            f.write(FIRST_CONTENT)
-
-        subprocess.check_call([sys.executable, "test.py"])
+        self.call_file("core/temporary_task_1.py")
 
         self.assertFalse(os.path.exists("test.txt"))
 
     def test_good_temporary_files(self):
-        with open("test.py", "w") as f:
-            f.write(SECOND_CONTENT)
-
-        subprocess.check_call([sys.executable, "test.py"])
+        self.call_file("core/temporary_task_2.py")
 
         self.assertTrue(os.path.exists("test.txt"))
 
