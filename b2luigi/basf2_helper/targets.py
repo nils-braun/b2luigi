@@ -1,5 +1,4 @@
 import b2luigi
-import ROOT
 
 
 class ROOTLocalTarget(b2luigi.LocalTarget):
@@ -8,5 +7,7 @@ class ROOTLocalTarget(b2luigi.LocalTarget):
             return False
 
         path = self.path
+
+        import ROOT
         tfile = ROOT.TFile.Open(path)
         return tfile and len(tfile.GetListOfKeys()) > 0
