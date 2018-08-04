@@ -83,10 +83,8 @@ Open TODOs
 ----------
 
 * Add support for different batch systems, e.g. htcondor and a batch system discovery
-* Integrate gbasf2/dirac or other grid systems as another batch system
-* Document how to add a new batch system (and make this point easier)
+* Integrate dirac or other grid systems as another batch system
 * Add helper messages on events (e.g. failed)
-* Add unit tests!
 
 .. _flit: https://pypi.org/project/flit/
 
