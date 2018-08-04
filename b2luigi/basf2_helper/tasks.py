@@ -38,6 +38,7 @@ class Basf2PathTask(Basf2Task):
     def create_path(self):
         raise NotImplementedError()
 
+    @b2luigi.on_temporary_files
     def process(self):
         assert get_basf2_git_hash() == self.git_hash
 
@@ -88,6 +89,7 @@ class MergerTask(Basf2Task):
 
             yield self.add_to_output(key)
 
+    @b2luigi.on_temporary_files
     def process(self):
         self.create_output_dirs()
 
