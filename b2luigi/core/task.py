@@ -90,29 +90,25 @@ class Task(luigi.Task):
         else:
             return file_paths
 
-    def get_output_file_name(self, key=None):
+    def get_output_file_name(self, key):
         """
         Analogous to :obj:`get_input_file_names` this function returns
-        a dictionary of output files defined in out output function.
-        Use the key to refer to a specific file name in this dictionary.
+        a an output file defined in out output function with
+        the given key.
 
         In contrast to :obj:`get_input_file_names`, only a single file name
         will be returned (as there can only be a single output file with a given name).
 
         Args:
-            key (:obj:`str`, optional): If given, only return the file path with this given key.
+            key (:obj:`str`): Return the file path with this given key.
 
         Return:
-            If key is none, returns a dictionary of keys to a file path.
-            Else, returns only the file path for this given key.
+            Returns only the file path for this given key.
         """
-        output_dict = utils.flatten_to_dict(self.output())
-        file_paths = utils.flatten_to_file_paths(output_dict)
+        target = self.get_output_target(key)
+        file_paths = utils.flatten_to_file_paths(target)
 
-        if key is not None:
-            return file_paths[key]
-        else:
-            return file_paths
+        return file_paths
 
     def get_input_targets(self, key):
         """Shortcut to get the input targets for a given key. Will return a luigi target."""
