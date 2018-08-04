@@ -105,17 +105,17 @@ class Task(luigi.Task):
         Return:
             Returns only the file path for this given key.
         """
-        target = self.get_output_target(key)
+        target = self._get_output_target(key)
         file_paths = utils.flatten_to_file_paths(target)
 
         return file_paths
 
-    def get_input_targets(self, key):
+    def _get_input_targets(self, key):
         """Shortcut to get the input targets for a given key. Will return a luigi target."""
         input_dict = utils.flatten_to_list_of_dicts(self.input())
         return input_dict[key]
 
-    def get_output_target(self, key):
+    def _get_output_target(self, key):
         """Shortcut to get the output target for a given key. Will return a luigi target."""
         output_dict = utils.flatten_to_dict(self.output())
         return output_dict[key]

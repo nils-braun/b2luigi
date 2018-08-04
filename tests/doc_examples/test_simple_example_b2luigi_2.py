@@ -11,7 +11,7 @@ class MyNumberTask(b2luigi.Task):
     def run(self):
         random_number = random.random()
 
-        with self.get_output_target("output_file.txt").open("w") as f:
+        with open(self.get_output_file_name("output_file.txt"), "w") as f:
             f.write(f"{random_number}\n")
 
 
@@ -27,14 +27,14 @@ class MyAverageTask(b2luigi.Task):
         # Build the mean
         summed_numbers = 0
         counter = 0
-        for input_file in self.get_input_targets("output_file.txt"):
-            with input_file.open("r") as f:
+        for input_file in self.get_input_file_names("output_file.txt"):
+            with open(input_file, "r") as f:
                 summed_numbers += float(f.read())
                 counter += 1
 
         average = summed_numbers / counter
 
-        with self.get_output_target("average.txt").open("w") as f:
+        with open(self.get_output_file_name("average.txt"), "w") as f:
             f.write(f"{average}\n")
 
 

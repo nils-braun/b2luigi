@@ -18,7 +18,7 @@ class MyTask(b2luigi.DispatchableTask):
 
     def process(self):
         print("Hello!")
-        with self.get_output_target("some_file.txt").open("w") as f:
+        with open(self.get_output_file_name("some_file.txt"), "w") as f:
             f.write("Done")
 
         print("Bye!")
@@ -26,7 +26,7 @@ class MyTask(b2luigi.DispatchableTask):
         sys.stdout.flush()
         os.kill(os.getpid(), 11)
 
-        with self.get_output_target("some_other_file.txt").open("w") as f:
+        with open(self.get_output_file_name("some_other_file.txt"), "w") as f:
             f.write("Done")
 
 if __name__ == "__main__":
@@ -47,7 +47,7 @@ class MyTask(b2luigi.Task):
     @b2luigi.dispatch
     def run(self):
         print("Hello!")
-        with self.get_output_target("some_file.txt").open("w") as f:
+        with open(self.get_output_file_name("some_file.txt"), "w") as f:
             f.write("Done")
 
         print("Bye!")
@@ -55,13 +55,14 @@ class MyTask(b2luigi.Task):
         sys.stdout.flush()
         os.kill(os.getpid(), 11)
 
-        with self.get_output_target("some_other_file.txt").open("w") as f:
+        with open(self.get_output_file_name("some_other_file.txt"), "w") as f:
             f.write("Done")
 
 if __name__ == "__main__":
     b2luigi.set_setting("result_path", "results")
     b2luigi.process(MyTask())
 """
+
 
 class DispatchTaskTestCase(B2LuigiTestCase):
     def test_failing_task_class(self):
