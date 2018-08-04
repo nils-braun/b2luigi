@@ -73,6 +73,8 @@ Settings
 Other functions
 ---------------
 
+.. autofunction:: b2luigi.on_temporary_files
+
 .. toctree::
     :maxdepth: 1
 
