@@ -88,9 +88,9 @@ def process(task_like_elements, show_output=False, dry_run=False, test=False, ba
         runner.dry_run(task_list)
     elif cli_args.test or test:
         runner.run_test_mode(task_list, cli_args, kwargs)
-    elif cli_args.batch or batch:
-        runner.run_batched(task_list, cli_args, kwargs)
     elif cli_args.batch_runner:
         runner.run_as_batch_worker(task_list, cli_args, kwargs)
+    elif cli_args.batch or batch:
+        runner.run_batched(task_list, cli_args, kwargs)
     else:
         runner.run_local(task_list, cli_args, kwargs)

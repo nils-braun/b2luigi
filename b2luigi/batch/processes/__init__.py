@@ -7,6 +7,8 @@ import enum
 import luigi
 import luigi.scheduler
 
+from b2luigi.core.utils import add_on_failure_function, on_failure
+
 
 class JobStatus(enum.Enum):
     running = "running"
@@ -61,6 +63,9 @@ class BatchProcess:
         elif job_status == JobStatus.aborted:
             job_output = self.get_job_output()
             self._put_to_result_queue(status=luigi.scheduler.FAILED, explanation=job_output)
+
+            on_failure(self.task, job_output)
+
             return False
         elif job_status == JobStatus.running:
             return True

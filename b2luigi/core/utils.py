@@ -262,7 +262,7 @@ def _flatten(struct):
     return result
 
 
-def _on_failure_for_dispatch_task(self, exception):
+def on_failure(self, exception):
     stdout_file_name, stderr_file_name = get_log_files(self)
 
     print(colorama.Fore.RED)
@@ -277,4 +277,4 @@ def _on_failure_for_dispatch_task(self, exception):
 
 
 def add_on_failure_function(task):
-    task.on_failure = types.MethodType(_on_failure_for_dispatch_task, task)
+    task.on_failure = types.MethodType(on_failure, task)
