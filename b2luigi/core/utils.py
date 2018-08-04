@@ -30,7 +30,7 @@ def product_dict(**kwargs):
     .. code-block:: python
 
         >>> list(product_dict(arg_1=[1, 2], arg_2=[3, 4]))
-        [{"arg_1": 1, "arg_2": 3}, {"arg_1": 1, "arg_2": 4}, {"arg_1": 2, "arg_2": 3}, {"arg_1": 2, "arg_2": 3}]
+        [{'arg_1': 1, 'arg_2': 3}, {'arg_1': 1, 'arg_2': 4}, {'arg_1': 2, 'arg_2': 3}, {'arg_1': 2, 'arg_2': 4}]
 
 
     :param kwargs: Each keyword argument should be an iterable
@@ -50,7 +50,7 @@ def fill_kwargs_with_lists(**kwargs):
     .. code-block:: python
 
         >>> fill_kwargs_with_lists(arg_1=[1, 2], arg_2=3)
-        {"arg_1": [1, 2], "arg_2": [3]}
+        {'arg_1': [1, 2], 'arg_2': [3]}
 
     :param kwargs: The input keyword arguments
     :return: Same as kwargs, but each value mapped to a list if not a list already
@@ -102,7 +102,7 @@ def flatten_to_dict(inputs):
     .. code-block:: python
 
         >>> flatten_to_dict([{"a": 1, "b": 2}, {"c": 3}, "d"])
-        {"a": 1, "b": 2, "c": 3, "d": "d"}
+        {'a': 1, 'b': 2, 'c': 3, 'd': 'd'}
 
     :param inputs: The input structure
     :return: A dict constructed as described above.
