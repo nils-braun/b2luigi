@@ -6,6 +6,6 @@ install:
   - pip install -U pytest pytest-cov python-coveralls
   - flit install -s
 script:
-  - pytest --doctest-modules -v --cov b2luigi --cov-report term-missing
+  - pytest -v --cov b2luigi --cov-report term-missing
 after_success:
   - coveralls
