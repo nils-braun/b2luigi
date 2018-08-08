@@ -228,6 +228,9 @@ def create_output_file_name(task, base_filename, create_folder=False, result_pat
 
 
 def get_log_files(task):
+    if hasattr(task, 'get_log_files'):
+        return task.get_log_files()
+
     filename = os.path.realpath(sys.argv[0])
     log_folder = get_setting("log_folder", default=os.path.join(os.path.dirname(filename), "logs"))
     stdout_file_name = create_output_file_name(task, task.get_task_family() + "_stdout", create_folder=True,
