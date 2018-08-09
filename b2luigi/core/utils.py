@@ -296,6 +296,6 @@ def create_cmd_from_task(task):
     executable = get_setting("executable", [sys.executable])
     cmd += executable
 
-    cmd += [os.path.basename(filename), "--batch-runner", "--task-id", task.task_id]
+    cmd += [os.path.abspath(filename), "--batch-runner", "--task-id", task.task_id]
 
     return cmd

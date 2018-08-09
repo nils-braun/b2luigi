@@ -2,7 +2,7 @@
 __version__ = "0.2.2"
 
 from luigi import *
-from luigi.util import requires, inherits
+from luigi.util import requires, inherits, copies
 
 from b2luigi.core.parameter import wrap_parameter
 wrap_parameter()
