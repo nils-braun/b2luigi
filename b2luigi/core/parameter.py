@@ -1,5 +1,8 @@
 import hashlib
 
+import luigi
+from luigi.parameter import _no_value
+
 
 def wrap_parameter():
     """
@@ -27,3 +30,10 @@ def wrap_parameter():
             self.serialize_hashed = lambda x: serialize_hashed(self, x)
 
     parameter_class.__init__ = __init__
+
+
+class BoolParameter(luigi.BoolParameter):
+    """Copied BoolParameter without default value"""
+    def __init__(self, **kwargs):
+        kwargs.setdefault("default", _no_value)
+        luigi.Parameter.__init__(self, **kwargs)
