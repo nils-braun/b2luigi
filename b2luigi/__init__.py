@@ -4,6 +4,7 @@ __version__ = "0.2.2"
 from luigi import *
 
 from luigi.util import requires, inherits, copies
+from b2luigi.core.parameter import BoolParameter
 
 from b2luigi.core.task import Task, ExternalTask, WrapperTask
 from b2luigi.core.temporary_wrapper import on_temporary_files
