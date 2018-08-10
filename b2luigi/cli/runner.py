@@ -11,11 +11,13 @@ from b2luigi.core.utils import task_iterator, get_all_output_files_in_tree
 
 
 def run_as_batch_worker(task_list, cli_args, kwargs):
+    found_task = False
     for root_task in task_list:
         for task in task_iterator(root_task):
             if task.task_id != cli_args.task_id:
                 continue
 
+            found_task = True
             set_setting("local_execution", True)
 
             # TODO: We do not process the information if (a) we have a new dependency and (b) why the task has failed.
@@ -26,6 +28,10 @@ def run_as_batch_worker(task_list, cli_args, kwargs):
             except BaseException as ex:
                 task.on_failure(ex)
                 raise ex
+
+    if not found_task:
+        raise ValueError(f"The task id {task.task_id} to be executed by this batch worker "
+                         f"does not exist in the locally reproduced task graph.")
 
 
 def run_batched(task_list, cli_args, kwargs):
