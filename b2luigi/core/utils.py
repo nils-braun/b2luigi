@@ -206,7 +206,10 @@ def get_serialized_parameters(task):
             continue
 
         value = getattr(task, key)
-        value = parameter.serialize(value)
+        if hasattr(parameter, "serialize_hashed"):
+            value = parameter.serialize_hashed(value)
+        else:
+            value = parameter.serialize(value)
 
         serialized_parameters[key] = value
 

@@ -28,6 +28,44 @@ must return a tuple of the paths for the stdout and the stderr files, for exampl
 files. Be careful, though, as these log files will of course be overwritten if more than one
 task receive the same paths to write to!
 
+How do I handle parameter values which include "/" (or other unusual characters)?
+---------------------------------------------------------------------------------
+
+``b2luigi`` automatically generates the filenames for your output or log files out of
+the current tasks values in the form
+
+    ``<result-path>/param1=value1/param2=value2/..../filename.ext``
+
+The values are given by the serialisation of your parameter, which is basically its string representation.
+Sometimes, this representation may include characters not suitable for their usage as a path name,
+e.g. "/".
+Especially when you use a :obj:`DictParameter` or a :obj:`ListParameter`, you might not
+want to have its value in your output.
+Also, if you have credentials in the parameter (what you should never do of course!), you do not
+want to show them to everyone.
+
+When using a parameter in `b2luigi` (or any of its derivatives), they have a new flag called ``hashed``
+in their constructor, which makes the path creation only using a hashed version of your parameter value.
+
+For example will this task::
+
+    class MyTask(b2luigi.Task):
+        my_parameter = b2luigi.ListParameter(hashed=True)
+
+        def run(self):
+            with open(self.get_output_file_name("test.txt"), "w") as f:
+                f.write("test")
+
+        def output(self):
+            yield self.add_to_output("test.txt")
+
+
+    if __name__ == "__main__":
+        b2luigi.process(MyTask(my_parameter=["Some", "strange", "items", "with", "bad / signs"]))
+
+create a file called ``my_parameter=hashed_08928069d368e4a0f8ac02a0193e443b/test.txt`` in your output folder
+instead of using the list value.
+
 
 What does the ValueError "The task id {task.task_id} to be executed..." mean?
 -----------------------------------------------------------------------------
