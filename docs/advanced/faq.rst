@@ -28,7 +28,6 @@ must return a tuple of the paths for the stdout and the stderr files, for exampl
 files. Be careful, though, as these log files will of course be overwritten if more than one
 task receive the same paths to write to!
 
-
 How do I handle parameter values which include "/" (or other unusual characters)?
 ---------------------------------------------------------------------------------
 
@@ -66,3 +65,15 @@ For example will this task::
 
 create a file called ``my_parameter=hashed_08928069d368e4a0f8ac02a0193e443b/test.txt`` in your output folder
 instead of using the list value.
+
+
+What does the ValueError "The task id {task.task_id} to be executed..." mean?
+-----------------------------------------------------------------------------
+
+The `ValueError` exception `The task id <task_id> to be executed by this batch worker does
+not exist in the locally reproduced task graph.` is thrown by ``b2luigi`` batch workers if
+the task that should have been executed by this batch worker does not exist in the task
+graph reproduced by the batch worker. This means that the task graph produced by the initial
+``b2luigi.process`` call and the one reproduced in the batch job differ from each other.
+This can be caused by a non-deterministic behavior of your dependency graph generation, such
+as a random task parameter.
