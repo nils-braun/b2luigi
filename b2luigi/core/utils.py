@@ -274,7 +274,7 @@ def on_failure(self, exception):
     print(colorama.Fore.RED)
     print("Task", self.task_family, "failed!")
     print("Parameters")
-    for key, value in self.get_filled_params().items():
+    for key, value in get_filled_params(self).items():
         print("\t", key, "=", value)
     print("Please have a look into the log files")
     print(stdout_file_name)
@@ -299,3 +299,17 @@ def create_cmd_from_task(task):
     cmd += [os.path.abspath(filename), "--batch-runner", "--task-id", task.task_id]
 
     return cmd
+
+
+def create_output_dirs(task):
+    """Create all output dicts if needed. Normally only used internally."""
+    output_list = flatten_to_dict(task.output())
+    output_list = output_list.values()
+
+    for output in output_list:
+        output.makedirs()
+
+
+def get_filled_params(task):
+    """Helper function for getting the parameter list with each parameter set to its current value"""
+    return {key: getattr(task, key) for key, _ in task.get_params()}

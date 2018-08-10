@@ -37,10 +37,6 @@ class Task(luigi.Task):
                     f.write(f"{average}\\n")
 
     """
-    def get_filled_params(self):
-        """Helper function for getting the parameter list with each parameter set to its current value"""
-        return {key: getattr(self, key) for key, _ in self.get_params()}
-
     def add_to_output(self, output_file_name):
         """
         Call this in your output() function to add a target to the list of files,
@@ -119,14 +115,6 @@ class Task(luigi.Task):
         """Shortcut to get the output target for a given key. Will return a luigi target."""
         output_dict = utils.flatten_to_dict(self.output())
         return output_dict[key]
-
-    def create_output_dirs(self):
-        """Create all output dicts if needed. Normally only used internally."""
-        output_list = utils.flatten_to_dict(self.output())
-        output_list = output_list.values()
-
-        for output in output_list:
-            output.makedirs()
 
     def _get_output_file_target(self, base_filename, **kwargs):
         file_name = create_output_file_name(self, base_filename, **kwargs)
