@@ -71,17 +71,15 @@ def show_all_outputs(task_list, *args, **kwargs):
     for key, file_names in all_output_files.items():
         print(key)
 
-        set_file_names = []
-        for file_name in file_names:
-            if file_name in set_file_names:
-                continue
-            # TODO: this is not correct as it does not check the task status!
-            if file_name["exists"]:
-                print("\t", Fore.GREEN, file_name["file_name"], Style.RESET_ALL)
-            else:
-                print("\t", Fore.RED, file_name["file_name"], Style.RESET_ALL)
+        exists = all(d["exists"] for d in file_names)
 
-            set_file_names.append(file_name)
+        file_names = sorted(set(d["file_name"] for d in file_names))
+        for file_name in file_names:
+            # TODO: this is not correct as it does not check the task status!
+            if exists:
+                print("\t", Fore.GREEN, file_name, Style.RESET_ALL)
+            else:
+                print("\t", Fore.RED, file_name, Style.RESET_ALL)
         print()
 
 
