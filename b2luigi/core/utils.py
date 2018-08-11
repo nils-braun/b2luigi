@@ -267,17 +267,14 @@ def _flatten(struct):
 
 def on_failure(self, exception):
     log_file_dir = get_log_file_dir(self)
-    stderr_file_name = log_file_dir + "stderr"
-    stdout_file_name = log_file_dir + "stdout"
 
     print(colorama.Fore.RED)
     print("Task", self.task_family, "failed!")
     print("Parameters")
     for key, value in self.get_filled_params().items():
         print("\t", key, "=", value)
-    print("Please have a look into the log files")
-    print(stdout_file_name)
-    print(stderr_file_name)
+    print("Please have a look into the log files in ")
+    print(log_file_dir)
     print(colorama.Style.RESET_ALL)
 
 
