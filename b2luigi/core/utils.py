@@ -273,7 +273,7 @@ def on_failure(self, exception):
     print("Parameters")
     for key, value in self.get_filled_params().items():
         print("\t", key, "=", value)
-    print("Please have a look into the log files in ")
+    print("Please have a look into the log files in")
     print(log_file_dir)
     print(colorama.Style.RESET_ALL)
 

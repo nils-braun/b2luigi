@@ -19,5 +19,5 @@ class DispatchTaskTestCase(B2LuigiTestCase):
                 self.assertEqual(f.readlines(), ["Hello!\n", "Bye!\n"])
 
             self.assertIn(b"Task MyTask failed!", out.splitlines())
-            self.assertIn(b"Please have a look into the log files", out.splitlines())
+            self.assertIn(b"Please have a look into the log files in", out.splitlines())
             self.assertIn(b"RuntimeError: Execution failed with return code -11", out.splitlines())
