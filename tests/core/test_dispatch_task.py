@@ -12,10 +12,10 @@ class DispatchTaskTestCase(B2LuigiTestCase):
 
             self.assertTrue(os.path.exists("results/some_file.txt"))
             self.assertFalse(os.path.exists("results/some_other_file.txt"))
-            self.assertTrue(os.path.exists("logs/MyTask_stderr"))
-            self.assertTrue(os.path.exists("logs/MyTask_stdout"))
+            self.assertTrue(os.path.exists("logs/MyTask/stderr"))
+            self.assertTrue(os.path.exists("logs/MyTask/stdout"))
 
-            with open("logs/MyTask_stdout", "r") as f:
+            with open("logs/MyTask/stdout", "r") as f:
                 self.assertEqual(f.readlines(), ["Hello!\n", "Bye!\n"])
 
             self.assertIn(b"Task MyTask failed!", out.splitlines())
