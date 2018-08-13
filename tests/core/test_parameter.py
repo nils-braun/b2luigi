@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 import b2luigi
 
 from ..helpers import B2LuigiTestCase

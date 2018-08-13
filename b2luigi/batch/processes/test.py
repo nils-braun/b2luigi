@@ -1,7 +1,7 @@
 import subprocess
 
 from b2luigi.batch.processes import BatchProcess, JobStatus
-from b2luigi.core.utils import get_log_files
+from b2luigi.core.utils import get_log_file_dir
 
 
 class TestProcess(BatchProcess):
@@ -24,7 +24,9 @@ class TestProcess(BatchProcess):
             return JobStatus.successful
 
     def start_job(self):
-        stdout_log_file, stderr_log_file = get_log_files(self.task)
+        log_file_dir = get_log_file_dir(self.task)
+        stderr_log_file = log_file_dir + "stderr"
+        stdout_log_file = log_file_dir + "stdout"
 
         with open(stdout_log_file, "w") as stdout:
             with open(stderr_log_file, "w") as stderr:

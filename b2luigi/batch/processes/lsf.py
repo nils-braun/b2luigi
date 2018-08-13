@@ -3,7 +3,7 @@ import re
 import subprocess
 
 from b2luigi.batch.processes import BatchProcess, JobStatus
-from b2luigi.core.utils import get_log_files
+from b2luigi.core.utils import get_log_file_dir
 
 
 class LSFProcess(BatchProcess):
@@ -48,9 +48,10 @@ class LSFProcess(BatchProcess):
         except AttributeError:
             pass
 
-        # Automatic requeing?
+        log_file_dir = get_log_file_dir(self.task)
+        stderr_log_file = log_file_dir + "stderr"
+        stdout_log_file = log_file_dir + "stdout"
 
-        stdout_log_file, stderr_log_file = get_log_files(self.task)
         prefix += ["-eo", stderr_log_file, "-oo", stdout_log_file]
 
         output = subprocess.check_output(prefix + self.task_cmd)

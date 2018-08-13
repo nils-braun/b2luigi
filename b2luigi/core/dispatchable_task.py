@@ -5,7 +5,7 @@ import sys
 
 from b2luigi.core.settings import get_setting
 from b2luigi.core.task import Task
-from b2luigi.core.utils import get_log_files, add_on_failure_function, create_cmd_from_task, create_output_dirs
+from b2luigi.core.utils import get_log_file_dir, add_on_failure_function, create_cmd_from_task, create_output_dirs
 
 
 def _run_task_locally(task, run_function):
@@ -17,7 +17,9 @@ def _run_task_remote(task):
     add_on_failure_function(task)
 
     filename = os.path.realpath(sys.argv[0])
-    stdout_file_name, stderr_file_name = get_log_files(task)
+    log_file_dir = get_log_file_dir(task)
+    stderr_file_name = log_file_dir + "stderr"
+    stdout_file_name = log_file_dir + "stdout"
 
     cmd = create_cmd_from_task(task)
 

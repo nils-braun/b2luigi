@@ -230,19 +230,16 @@ def create_output_file_name(task, base_filename, create_folder=False, result_pat
     return filename
 
 
-def get_log_files(task):
-    if hasattr(task, 'get_log_files'):
-        return task.get_log_files()
+def get_log_file_dir(task):
+    if hasattr(task, 'get_log_file_dir'):
+        log_file_dir = task.get_log_file_dir()
+        return log_file_dir
 
     filename = os.path.realpath(sys.argv[0])
-    log_folder = get_setting("log_folder", default=os.path.join(os.path.dirname(filename), "logs"))
-    stdout_file_name = create_output_file_name(task, task.get_task_family() + "_stdout", create_folder=True,
-                                               result_path=log_folder)
+    base_log_file_dir = get_setting("log_folder", default=os.path.join(os.path.dirname(filename), "logs"))
 
-    stderr_file_name = create_output_file_name(task, task.get_task_family() + "_stderr", create_folder=True,
-                                               result_path=log_folder)
-
-    return stdout_file_name, stderr_file_name
+    log_file_dir = create_output_file_name(task, task.get_task_family() + "/", create_folder=True, result_path=base_log_file_dir)
+    return log_file_dir
 
 
 def _to_dict(d):
@@ -269,16 +266,15 @@ def _flatten(struct):
 
 
 def on_failure(self, exception):
-    stdout_file_name, stderr_file_name = get_log_files(self)
+    log_file_dir = get_log_file_dir(self)
 
     print(colorama.Fore.RED)
     print("Task", self.task_family, "failed!")
     print("Parameters")
     for key, value in get_filled_params(self).items():
         print("\t", key, "=", value)
-    print("Please have a look into the log files")
-    print(stdout_file_name)
-    print(stderr_file_name)
+    print("Please have a look into the log files in")
+    print(log_file_dir)
     print(colorama.Style.RESET_ALL)
 
 
