@@ -1,6 +1,7 @@
 from ..helpers import B2LuigiTestCase
 
 import b2luigi
+from b2luigi.core.utils import get_filled_params
 
 
 class TaskTestCase(B2LuigiTestCase):
@@ -16,7 +17,7 @@ class TaskTestCase(B2LuigiTestCase):
 
         b2luigi.set_setting("result_path", "results/some_crazy_path")
         
-        self.assertEqual(task.get_filled_params(), {"some_parameter": 3})
+        self.assertEqual(get_filled_params(task), {"some_parameter": 3})
         self.assertFalse(task.get_input_file_names())
         self.assertRaises(KeyError, lambda: task._get_input_targets("some_file"))
         self.assertEqual(task._get_output_target("file_a").path, task.get_output_file_name("file_a"))
@@ -39,7 +40,7 @@ class TaskTestCase(B2LuigiTestCase):
 
         task = TaskB(some_parameter=42)
 
-        self.assertEqual(task.get_filled_params(), {"some_parameter": 42})
+        self.assertEqual(get_filled_params(task), {"some_parameter": 42})
         self.assertEqual(len(task._get_input_targets("file_a")), 1)
         self.assertEqual(len(task.get_input_file_names("file_a")), 1)
         self.assertEqual(len(task.get_input_file_names().keys()), 1)

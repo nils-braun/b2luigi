@@ -7,6 +7,8 @@ from b2luigi.basf2_helper.utils import get_basf2_git_hash
 
 import subprocess
 
+from b2luigi.core.utils import create_output_dirs
+
 
 class Basf2Task(b2luigi.DispatchableTask):
     git_hash = b2luigi.Parameter(default=get_basf2_git_hash())
@@ -91,7 +93,7 @@ class MergerTask(Basf2Task):
 
     @b2luigi.on_temporary_files
     def process(self):
-        self.create_output_dirs()
+        create_output_dirs(self)
 
         for key, file_list in self.get_input_file_names().items():
             if hasattr(self, "keys") and key not in self.keys:

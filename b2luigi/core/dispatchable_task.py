@@ -5,11 +5,11 @@ import sys
 
 from b2luigi.core.settings import get_setting
 from b2luigi.core.task import Task
-from b2luigi.core.utils import get_log_file_dir, add_on_failure_function, create_cmd_from_task
+from b2luigi.core.utils import get_log_file_dir, add_on_failure_function, create_cmd_from_task, create_output_dirs
 
 
 def _run_task_locally(task, run_function):
-    task.create_output_dirs()
+    create_output_dirs(task)
     run_function(task)
 
 
