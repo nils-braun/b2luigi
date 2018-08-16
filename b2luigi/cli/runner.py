@@ -73,10 +73,8 @@ def show_all_outputs(task_list, *args, **kwargs):
     for key, file_names in all_output_files.items():
         print(key)
 
-        exists = all(d["exists"] for d in file_names)
-
-        file_names = sorted(set(d["file_name"] for d in file_names))
-        for file_name in file_names:
+        file_names = {d["file_name"]: d["exists"] for d in file_names}
+        for file_name, exists in file_names.items():
             # TODO: this is not correct as it does not check the task status!
             if exists:
                 print("\t", Fore.GREEN, file_name, Style.RESET_ALL)
@@ -86,13 +84,24 @@ def show_all_outputs(task_list, *args, **kwargs):
 
 
 def dry_run(task_list):
-    one_is_not_complete = False
+    nonfinished_task_list = collections.defaultdict(set)
+
     for root_task in task_list:
         for task in task_iterator(root_task, only_non_complete=True):
-            one_is_not_complete = True
-            print("Would run", task)
+            nonfinished_task_list[task.__class__.__name__].add(task)
 
-    if one_is_not_complete:
+    non_completed_tasks = 0
+    for task_class in sorted(nonfinished_task_list):
+        print(task_class)
+        for task in nonfinished_task_list[task_class]:
+            print("\tWould run", task)
+            print()
+
+            non_completed_tasks += 1
+
+    if non_completed_tasks:
+        print("In total", non_completed_tasks)
         exit(1)
     else:
+        print("All tasks are finished!")
         exit(0)
