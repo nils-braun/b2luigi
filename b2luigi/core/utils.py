@@ -59,7 +59,7 @@ def fill_kwargs_with_lists(**kwargs):
     for key, value in kwargs.items():
         if value is None:
             value = []
-        if not isinstance(value, collections.Iterable):
+        if isinstance(value, str) or not isinstance(value, collections.Iterable):
             value = [value]
         return_kwargs[key] = value
 
@@ -170,7 +170,7 @@ def filter_from_params(output_files, **kwargs):
 
             not_use = False
             for key, value in kwargs.items():
-                if key in parameters and parameters[key] != str(value):
+                if key in parameters and str(parameters[key]) != str(value):
                     not_use = True
                     break
 
