@@ -290,12 +290,20 @@ def create_cmd_from_task(task):
     if hasattr(task, "cmd_prefix"):
         cmd = task.cmd_prefix
 
-    executable = get_setting("executable", [sys.executable])
+    if hasattr(task, "executable"):
+        executable = task.executable
+    else:
+        executable = get_setting("executable", [sys.executable])
     cmd += executable
 
     cmd += [os.path.abspath(filename), "--batch-runner", "--task-id", task.task_id]
 
-    return cmd
+    if hasattr(task, "env"):
+        env = task.env
+    else:
+        env = os.environ.copy()
+
+    return cmd, env
 
 
 def create_output_dirs(task):

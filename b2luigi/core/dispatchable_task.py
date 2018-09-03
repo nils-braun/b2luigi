@@ -21,12 +21,12 @@ def _run_task_remote(task):
     stderr_file_name = log_file_dir + "stderr"
     stdout_file_name = log_file_dir + "stdout"
 
-    cmd = create_cmd_from_task(task)
+    cmd, env = create_cmd_from_task(task)
 
     with open(stdout_file_name, "w") as stdout_file:
         with open(stderr_file_name, "w") as stderr_file:
             return_code = subprocess.call(cmd, stdout=stdout_file, stderr=stderr_file,
-                                          cwd=os.path.dirname(filename))
+                                          cwd=os.path.dirname(filename), env=env)
 
     if return_code:
         raise RuntimeError(f"Execution failed with return code {return_code}")

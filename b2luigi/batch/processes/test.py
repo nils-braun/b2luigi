@@ -30,7 +30,7 @@ class TestProcess(BatchProcess):
 
         with open(stdout_log_file, "w") as stdout:
             with open(stderr_log_file, "w") as stderr:
-                self._process = subprocess.Popen(self.task_cmd, stdout=stdout, stderr=stderr)
+                self._process = subprocess.Popen(self.task_cmd, stdout=stdout, stderr=stderr, env=self.task_env)
 
     def kill_job(self):
         if not self._process:

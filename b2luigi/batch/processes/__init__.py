@@ -76,7 +76,7 @@ class BatchProcess:
         self._result_queue = result_queue
         self._scheduler = scheduler
 
-        self.task_cmd = create_cmd_from_task(task)
+        self.task_cmd, self.task_env = create_cmd_from_task(task)
 
     @property
     def exitcode(self):

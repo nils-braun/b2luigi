@@ -85,7 +85,7 @@ class LSFProcess(BatchProcess):
 
         prefix += ["-eo", stderr_log_file, "-oo", stdout_log_file]
 
-        output = subprocess.check_output(prefix + self.task_cmd)
+        output = subprocess.check_output(prefix + self.task_cmd, env=self.task_env)
         output = output.decode()
 
         # Output of the form Job <72065926> is submitted to default queue <s>.
