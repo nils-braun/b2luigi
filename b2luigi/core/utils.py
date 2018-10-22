@@ -84,7 +84,7 @@ def flatten_to_file_paths(inputs):
 
     if isinstance(inputs, dict):
         return {os.path.basename(flatten_to_file_paths(key)):
-                    flatten_to_file_paths(value) for key, value in inputs.items()}
+                flatten_to_file_paths(value) for key, value in inputs.items()}
     elif isinstance(inputs, list):
         return [flatten_to_file_paths(value) for value in inputs]
     else:
@@ -182,19 +182,14 @@ def filter_from_params(output_files, **kwargs):
     return {x["file_name"]: x for x in file_names}.values()
 
 
-def get_task_from_file(file_name, task_name, settings=None, **kwargs):
-    with remember_cwd():
-        os.chdir(os.path.dirname(file_name))
-        spec = importlib.util.spec_from_file_location("module.name", os.path.basename(file_name))
-        task_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(task_module)
+def get_task_from_file(file_name, task_name, **kwargs):
+    spec = importlib.util.spec_from_file_location("module.name", os.path.basename(file_name))
+    task_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(task_module)
 
-        if settings:
-            for key, value in settings.items():
-                set_setting(key, value)
-        m = getattr(task_module, task_name)(**kwargs)
+    m = getattr(task_module, task_name)(**kwargs)
 
-        return m
+    return m
 
 
 def get_serialized_parameters(task):
