@@ -71,6 +71,7 @@ class BatchProcess:
         self.use_multiprocessing = False
         self.task = task
         self.timeout_time = time.time() + worker_timeout if worker_timeout else None
+        self._terminated = False
 
         self._result_queue = result_queue
         self._scheduler = scheduler
@@ -137,18 +138,21 @@ class BatchProcess:
         self.kill_job()
 
     def is_alive(self):
+        if self._terminated:
+            return False
+
         job_status = self.get_job_status()
 
         if job_status == JobStatus.successful:
             job_output = ""
             self._put_to_result_queue(status=luigi.scheduler.DONE, explanation=job_output)
+            self._terminated = True
             return False
         elif job_status == JobStatus.aborted:
             job_output = ""
             self._put_to_result_queue(status=luigi.scheduler.FAILED, explanation=job_output)
-
             on_failure(self.task, job_output)
-
+            self._terminated = True
             return False
         elif job_status == JobStatus.running:
             return True
