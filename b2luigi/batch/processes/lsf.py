@@ -5,6 +5,40 @@ import subprocess
 from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.core.utils import get_log_file_dir
 
+from cachetools import TTLCache
+
+
+class BatchJobStatusCache(TTLCache):
+    def __init__(self):
+        super(BatchJobStatusCache, self).__init__(maxsize=1000, ttl=20)
+
+    def _ask_for_job_status(self, job_id=None):
+        if job_id:
+            output = subprocess.check_output(["bjobs", "-json", "-o", "jobid stat", str(job_id)])
+        else:
+            output = subprocess.check_output(["bjobs", "-json", "-o", "jobid stat"])
+        output = output.decode()
+        output = json.loads(output)["RECORDS"]
+
+        for record in output:
+            self[record["JOBID"]] = record["STAT"]
+
+    def __missing__(self, job_id):
+        # First, ask for all jobs
+        self._ask_for_job_status(job_id=None)
+        if job_id in self:
+            return self[job_id]
+
+        # Then, ask specifically for this job
+        self._ask_for_job_status(job_id=job_id)
+        if job_id in self:
+            return self[job_id]
+
+        raise KeyError
+
+
+_batch_job_status_cache = BatchJobStatusCache()
+
 
 class LSFProcess(BatchProcess):
     """
@@ -16,6 +50,7 @@ class LSFProcess(BatchProcess):
     the current environment and calling it from the same path.
     Both requirements are fulfilled by a "normal" LSF setup, so you do not keep those in mind typically.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -24,14 +59,10 @@ class LSFProcess(BatchProcess):
     def get_job_status(self):
         assert self._batch_job_id
 
-        output = subprocess.check_output(["bjobs", "-json", "-o", "stat", self._batch_job_id])
-        output = output.decode()
-        output = json.loads(output)["RECORDS"][0]
-
-        if "STAT" not in output:
+        try:
+            job_status = _batch_job_status_cache[self._batch_job_id]
+        except KeyError:
             return JobStatus.aborted
-
-        job_status = output["STAT"]
 
         if job_status == "DONE":
             return JobStatus.successful
