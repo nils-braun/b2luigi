@@ -1,6 +1,6 @@
 import json
 import os
-
+import contextlib
 
 # The global object hosting the current settings
 _current_global_settings = {}
@@ -32,8 +32,9 @@ def get_setting(key, default=None):
     except KeyError:
         for settings_file in _setting_file_iterator():
             try:
-                with open(settings_file , "r") as f:
-                    return json.load(f)[key]
+                with open(settings_file, "r") as f:
+                    j = json.load(f)
+                    return j[key]
             except KeyError:
                 pass
 
@@ -88,3 +89,14 @@ def _setting_file_iterator():
         path = os.path.split(path)[0]
         if path == "/":
             break
+
+
+@contextlib.contextmanager
+def with_new_settings():
+    global _current_global_settings
+    old_settings = _current_global_settings.copy()
+    _current_global_settings = {}
+
+    yield
+
+    _current_global_settings = old_settings.copy()
