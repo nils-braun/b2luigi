@@ -17,7 +17,30 @@ from b2luigi.cli.process import process
 
 class requires(object):
     """
-    Same as @inherits, but also auto-defines the requires method.
+    This "hack" copies the luigi.requires functionality, except that we allow for 
+    additional kwarg arguments when called.
+
+    It can be used to require a certain task, but with some variables already set, 
+    e.g.
+
+        class TaskA(b2luigi.Task):
+             some_parameter = b2luigi.IntParameter()
+             some_other_parameter = b2luigi.IntParameter()
+ 
+             def output(self):
+                 yield self.add_to_output("test.txt")
+ 
+         @b2luigi.requires(TaskA, some_parameter=3)
+         class TaskB(b2luigi.Task):
+             another_parameter = b2luigi.IntParameter()
+ 
+             def output(self):
+                 yield self.add_to_output("out.dat")
+
+    TaskB will not require TaskA, where some_parameter is already set to 3. 
+    This also means, that TaskB only has the parameters another_parameter 
+    and some_other_parameter (because some_parameter is already fixed).
+
     """
 
     def __init__(self, task_to_require, **kwargs):
