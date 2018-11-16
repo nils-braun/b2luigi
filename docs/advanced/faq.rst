@@ -27,6 +27,7 @@ must return a directory path for the stdout and the stderr files, for example:
 files. Be careful, though, as these log files will of course be overwritten if more than one
 task receive the same paths to write to!
 
+
 How do I handle parameter values which include "/" (or other unusual characters)?
 ---------------------------------------------------------------------------------
 
