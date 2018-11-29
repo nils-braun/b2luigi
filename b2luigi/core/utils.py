@@ -32,6 +32,12 @@ def product_dict(**kwargs):
         >>> list(product_dict(arg_1=[1, 2], arg_2=[3, 4]))
         [{'arg_1': 1, 'arg_2': 3}, {'arg_1': 1, 'arg_2': 4}, {'arg_1': 2, 'arg_2': 3}, {'arg_1': 2, 'arg_2': 4}]
 
+    The thus produced list can directly be used as inputs for a required tasks:
+
+    .. code-block:: python
+        def requires(self):
+            for args in list(product_dict(arg_1=[1, 2], arg_2=[3, 4])):
+                yield task(**args)
 
     :param kwargs: Each keyword argument should be an iterable
     :return: A list of kwargs where each list of input keyword arguments is cross-multiplied with every other.
