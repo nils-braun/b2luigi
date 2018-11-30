@@ -36,7 +36,7 @@ def product_dict(**kwargs):
 
     .. code-block:: python
         def requires(self):
-            for args in list(product_dict(arg_1=[1, 2], arg_2=[3, 4])):
+            for args product_dict(arg_1=[1, 2], arg_2=[3, 4]):
                 yield task(**args)
 
     :param kwargs: Each keyword argument should be an iterable
