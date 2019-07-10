@@ -7,7 +7,7 @@ from b2luigi.basf2_helper.utils import get_basf2_git_hash
 
 import subprocess
 
-from b2luigi.core.utils import create_output_dirs
+from b2luigi.core.utils import create_output_dirs, get_serialized_parameters
 
 
 class Basf2Task(b2luigi.DispatchableTask):
@@ -21,7 +21,7 @@ class Basf2Task(b2luigi.DispatchableTask):
             return super().get_output_file_target(*args, **kwargs)
 
     def get_serialized_parameters(self):
-        serialized_parameters = super().get_serialized_parameters()
+        serialized_parameters = get_serialized_parameters(self)
 
         # Git hash should go to the front
         return_dict = collections.OrderedDict()
