@@ -4,6 +4,7 @@ import luigi.interface
 import luigi.worker
 
 from b2luigi.batch.processes.lsf import LSFProcess
+from b2luigi.batch.processes.htcondor import HTCondorProcess
 from b2luigi.batch.processes.test import TestProcess
 from b2luigi.core.settings import get_setting
 
@@ -25,7 +26,7 @@ class SendJobWorker(luigi.worker.Worker):
         if batch_system == BatchSystems.lsf:
             process_class = LSFProcess
         elif batch_system == BatchSystems.htcondor:
-            raise NotImplementedError
+            process_class = HTCondorProcess
         elif batch_system == BatchSystems.test:
             process_class = TestProcess
         elif batch_system == BatchSystems.local:
