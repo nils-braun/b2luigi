@@ -1,8 +1,10 @@
 import os
 import sys
 import time
-
+import abc
 import enum
+
+from cachetools import TTLCache
 
 import luigi
 import luigi.scheduler
@@ -14,6 +16,30 @@ class JobStatus(enum.Enum):
     running = "running"
     successful = "successful"
     aborted = "aborted"
+    idle = "idle"
+
+
+class BatchJobStatusCache(abc.ABC, TTLCache):
+
+    def __init__(self):
+        super(BatchJobStatusCache, self).__init__(maxsize=1000, ttl=20)
+
+    @abc.abstractmethod
+    def _ask_for_job_status(self, job_id=None):
+        pass
+
+    def __missing__(self, job_id):
+        # First, ask for all jobs
+        self._ask_for_job_status(job_id=None)
+        if job_id in self:
+            return self[job_id]
+
+        # Then, ask specifically for this job
+        self._ask_for_job_status(job_id=job_id)
+        if job_id in self:
+            return self[job_id]
+
+        raise KeyError
 
 
 class BatchProcess:
