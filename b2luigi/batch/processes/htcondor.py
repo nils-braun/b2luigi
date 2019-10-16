@@ -48,7 +48,7 @@ class HTCondorJobStatusCache(BatchJobStatusCache):
             self[status_dict["ClusterId"]] = status_dict["JobStatus"]  # int -> int
 
 
-class HTCondorJobStatus(enum.Enum):
+class HTCondorJobStatus(enum.IntEnum):
     idle = 1
     running = 2
     removed = 3
@@ -57,6 +57,7 @@ class HTCondorJobStatus(enum.Enum):
     submission_err = 6
 
 
+_batch_job_status_cache = HTCondorJobStatusCache()
 class HTCondorProcess(BatchProcess):
 
     def __init__(self, *args, **kwargs):
