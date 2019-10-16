@@ -217,17 +217,26 @@ def get_serialized_parameters(task):
     return serialized_parameters
 
 
-def create_output_file_name(task, base_filename, create_folder=False, result_path=None):
+def get_output_dirs(task, create_folder=False, result_path=None):
     serialized_parameters = get_serialized_parameters(task)
 
     if not result_path:
         result_path = get_setting("result_path", ".")
 
     param_list = [f"{key}={value}" for key, value in serialized_parameters.items()]
-    filename = os.path.join(result_path, *param_list, base_filename)
+    output_path = os.path.join(result_path, *param_list)
 
     if create_folder:
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        os.makedirs(output_path, exist_ok=True)
+
+    return output_path
+
+
+def create_output_file_name(task, base_filename, create_folder=False, result_path=None):
+
+    output_path = get_output_dirs(task, create_folder, result_path)
+    filename = os.path.join(output_path, base_filename)
+
     return filename
 
 
