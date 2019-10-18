@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import stat
 import subprocess
 import enum
@@ -101,8 +102,13 @@ class HTCondorProcess(BatchProcess):
         # apparently you have to in the same directory as the submit file
         # to be able to submit jobs with htcondor
         cur_dir = os.getcwd()
+
+        # have to copy settings file to job working directory since b2luigi has to
+        # take the result path from it
+        shutil.copyfile("settings.json", os.path.join(submit_file_dir, "settings.json"))
         os.chdir(submit_file_dir)
         output = subprocess.check_output(cmd, env=curr_env)
+        os.remove("settings.json")
         os.chdir(cur_dir)
         output = output.decode()
         match = re.search(r"[0-9]+\.", output)
@@ -135,7 +141,8 @@ class HTCondorProcess(BatchProcess):
 
         with open(submit_file_path, "w") as submit_file:
             submit_file.write(f"executable = {executable_wrapper_path}\n")
-
+            submit_file.write("should_transfer_files = YES\n")
+            submit_file.write("transfer_input_files = settings.json\n")
             submit_file.write(f"log = {job_log_file}\n")
             submit_file.write(f"output = {stdout_log_file}\n")
             submit_file.write(f"error = {stderr_log_file}\n")
@@ -167,6 +174,8 @@ class HTCondorProcess(BatchProcess):
         with open(executable_wrapper_path, "w") as exec_wrapper:
             exec_wrapper.write(f"#!/bin/{shell}\n")
             exec_wrapper.write(f"source {env_setup_path}\n")
+            exec_wrapper.write("echo 'Starting executable'\n")
+            exec_wrapper.write("cd /jwd\n")
             exec_wrapper.write(f"{condor_executable_cmd}\n")
 
         st = os.stat(executable_wrapper_path)
