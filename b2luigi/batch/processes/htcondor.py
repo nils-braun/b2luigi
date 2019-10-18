@@ -108,7 +108,6 @@ class HTCondorProcess(BatchProcess):
         shutil.copyfile("settings.json", os.path.join(submit_file_dir, "settings.json"))
         os.chdir(submit_file_dir)
         output = subprocess.check_output(cmd, env=curr_env)
-        os.remove("settings.json")
         os.chdir(cur_dir)
         output = output.decode()
         match = re.search(r"[0-9]+\.", output)
