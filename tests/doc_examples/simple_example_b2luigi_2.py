@@ -39,4 +39,4 @@ class MyAverageTask(b2luigi.Task):
 
 
 if __name__ == "__main__":
-    b2luigi.process(MyAverageTask(), workers=200)
+    b2luigi.process(MyAverageTask(), workers=200, batch=True)

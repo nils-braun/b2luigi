@@ -3,7 +3,7 @@ import random
 
 
 class MyNumberTask(b2luigi.Task):
-    some_parameter = b2luigi.Parameter()
+    some_parameter = b2luigi.IntParameter()
 
     def output(self):
         yield self.add_to_output("output_file.txt")
@@ -16,4 +16,4 @@ class MyNumberTask(b2luigi.Task):
 
 
 if __name__ == "__main__":
-    b2luigi.process([MyNumberTask(some_parameter=i) for i in range(100)])
+    b2luigi.process([MyNumberTask(some_parameter=i) for i in range(10)], batch=True, workers=10)

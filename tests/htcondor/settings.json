@@ -1,12 +1,10 @@
 {
 	"batch_system": "htcondor",
-	"result_path": "/afs/desy.de/user/w/welsch/results",
-	"log_folder":  "/afs/desy.de/user/w/welsch/logs",
-	"env_setup": "/afs/desy.de/user/w/welsch/bla.sh",
+	"result_path": "/cephfs/user/mwelsch/results",
+	"log_folder":  "/cephfs/user/mwelsch/logs",
+	"env_setup": "/cephfs/user/mwelsch/bla.sh",
 	"htcondor_settings": {
-		"request_cpus": 1,
-		"request_memory": "20MB",
-		"request_time": "60"
+      "+ContainerOS": "Ubuntu1804"
 	}
 
 }

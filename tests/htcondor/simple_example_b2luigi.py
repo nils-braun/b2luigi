@@ -10,7 +10,8 @@ class MyNumberTask(b2luigi.Task):
 
     def run(self):
         random_number = random.random()
-
+        print(random_number)
+        print(self.get_output_file_name("output_file.txt"))
         with open(self.get_output_file_name("output_file.txt"), "w") as f:
             f.write(f"{random_number}\n")
 
