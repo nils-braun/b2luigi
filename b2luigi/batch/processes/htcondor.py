@@ -42,7 +42,8 @@ class HTCondorJobStatusCache(BatchJobStatusCache):
                 output = output.decode()
                 output = output.lstrip("[\n").rstrip("\n]\n").split("\n,\n")
                 if output:
-                    dict_list.append(json.loads(output))
+                    for status_dict in output:
+                        dict_list.append(json.loads(status_dict))
 
         for status_dict in dict_list:
             self[status_dict["ClusterId"]] = status_dict["JobStatus"]  # int -> int
