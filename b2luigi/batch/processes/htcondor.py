@@ -63,6 +63,22 @@ _batch_job_status_cache = HTCondorJobStatusCache()
 
 
 class HTCondorProcess(BatchProcess):
+    """
+    Reference implementation of the batch process for a HTCondor batch system.
+
+    We assume that the batch system shares a file system with the submission node you
+    are currently working on (or at least the current folder and the result/log directory
+    are also available there with the same path).
+    The environment has to be set up on its own new for each job. For that, a environment
+    setup script has to be provided in the ``settings.json`` file.
+    If no own python cmd is specified, the task is executed with the current ``python3``
+    available after the environment is setup.
+    General settings (may be dependend on your HTCondor setup) that affect all jobs (tasks)
+    can be specified in the ``settings.json`` by adding a ``htcondor_settings`` entry.
+    Job specific settings, e.g. number of cpus or required memory can be specified by adding
+    a ``htcondor_settings`` attribute to the task. It's value has to be a dictionary containig
+    also HTCondor settings as key/value pairs.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -93,8 +109,8 @@ class HTCondorProcess(BatchProcess):
             raise ValueError(f"Unknown HTCondor Job status: {job_status}")
 
     def start_job(self):
-        submit_file_path = self.create_htcondor_submit_file()
-        exec_cmd, curr_env = self.create_condor_executable_cmd()
+        submit_file_path = self._create_htcondor_submit_file()
+        exec_cmd, curr_env = self._create_condor_executable_cmd()
 
         submit_file_dir, submit_file = os.path.split(submit_file_path)
         cmd = ["condor_submit", submit_file]
@@ -121,10 +137,10 @@ class HTCondorProcess(BatchProcess):
             return
         subprocess.check_call(["condor_rm", str(self._batch_job_id)], stdout=subprocess.DEVNULL)
 
-    def create_htcondor_submit_file(self):
+    def _create_htcondor_submit_file(self):
         output_path = get_output_dirs(self.task, create_folder=True)
         submit_file_path = os.path.join(output_path, "job.submit")
-        executable_wrapper_path = self.create_executable_wrapper()
+        executable_wrapper_path = self._create_executable_wrapper()
 
         log_file_dir = get_log_file_dir(self.task)
         stderr_log_file = log_file_dir + "job.err"
@@ -156,7 +172,7 @@ class HTCondorProcess(BatchProcess):
 
         return submit_file_path
 
-    def create_executable_wrapper(self):
+    def _create_executable_wrapper(self):
 
         env_setup_path = get_setting("env_setup")
 
@@ -168,7 +184,7 @@ class HTCondorProcess(BatchProcess):
 
         executable_wrapper_path = os.path.join(output_path, "executable_wrapper.sh")
 
-        condor_executable_cmd, _ = self.create_condor_executable_cmd()
+        condor_executable_cmd, _ = self._create_condor_executable_cmd()
         condor_executable_cmd = " ".join(condor_executable_cmd)
         with open(executable_wrapper_path, "w") as exec_wrapper:
             exec_wrapper.write(f"#!/bin/{shell}\n")
@@ -177,12 +193,13 @@ class HTCondorProcess(BatchProcess):
             exec_wrapper.write("cd /jwd\n")
             exec_wrapper.write(f"{condor_executable_cmd}\n")
 
+        # make wrapper executable
         st = os.stat(executable_wrapper_path)
         os.chmod(executable_wrapper_path, st.st_mode | stat.S_IEXEC)
 
         return executable_wrapper_path
 
-    def create_condor_executable_cmd(self):
+    def _create_condor_executable_cmd(self):
 
         filename = os.path.realpath(sys.argv[0])
 

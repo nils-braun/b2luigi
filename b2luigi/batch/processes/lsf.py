@@ -27,7 +27,7 @@ _batch_job_status_cache = LSFJobStatusCache()
 
 class LSFProcess(BatchProcess):
     """
-    Reference implementation of the batch process for an LSF batch system.
+    Reference implementation of the batch process for a LSF batch system.
 
     We assume that the batch system shares a file system with the submission node you
     are currently working on (or at least the current folder is also available there with the same path).
