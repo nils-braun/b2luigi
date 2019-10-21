@@ -250,7 +250,8 @@ def get_log_file_dir(task):
 
     log_file_dir = create_output_file_name(task, task.get_task_family() + "/", create_folder=True, result_path=base_log_file_dir)
     if not os.path.isdir(log_file_dir):
-        os.makedirs(log_file_dir, exist_ok=True)
+        os.makedirs(log_file_dir)
+        
     return log_file_dir
 
 
