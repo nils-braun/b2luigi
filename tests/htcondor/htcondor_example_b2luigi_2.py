@@ -3,7 +3,7 @@ import random
 
 
 class MyNumberTask(b2luigi.Task):
-    some_parameter = b2luigi.Parameter()
+    some_parameter = b2luigi.IntParameter()
 
     htcondor_settings = {
         "request_cpus": 1,
