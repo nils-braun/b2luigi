@@ -121,7 +121,7 @@ class HTCondorProcess(BatchProcess):
             job_status = _batch_job_status_cache[self._batch_job_id]
         except KeyError:
             return JobStatus.aborted
-        
+
         if job_status in [HTCondorJobStatus.completed]:
             return JobStatus.successful
         elif job_status in [HTCondorJobStatus.idle, HTCondorJobStatus.running]:
@@ -176,12 +176,14 @@ class HTCondorProcess(BatchProcess):
             job_settings = {}
 
         with open(submit_file_path, "w") as submit_file:
-            submit_file.write(f"executable = {executable_wrapper_path}\n")
-            submit_file.write("should_transfer_files = YES\n")
-            submit_file.write("transfer_input_files = settings.json\n")
-            submit_file.write(f"log = {job_log_file}\n")
-            submit_file.write(f"output = {stdout_log_file}\n")
-            submit_file.write(f"error = {stderr_log_file}\n")
+            submit_file.write(f"""
+            executable = {executable_wrapper_path}
+            should_transfer_files = YES
+            transfer_input_files = settings.json
+            log = {job_log_file}
+            output = {stdout_log_file}
+            error = {stderr_log_file}
+            """)
 
             for key, item in general_settings.items():
                 submit_file.write(f"{key} = {item}\n")
