@@ -4,7 +4,7 @@
 	"log_folder":  "/cephfs/user/mwelsch/logs",
 	"env_setup": "/cephfs/user/mwelsch/bla.sh",
 	"htcondor_settings": {
-      "+ContainerOS": "Ubuntu1804"
+		"+ContainerOS": "Ubuntu1804"
 	}
 
 }
