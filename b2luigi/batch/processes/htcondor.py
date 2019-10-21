@@ -8,7 +8,7 @@ import subprocess
 import enum
 import sys
 
-from b2luigi.core.utils import get_setting, get_output_dirs
+from b2luigi.core.utils import get_setting, get_output_dirs, create_cmd_from_task
 from b2luigi.batch.processes import BatchProcess, JobStatus, BatchJobStatusCache
 from b2luigi.core.utils import get_log_file_dir
 
@@ -111,6 +111,9 @@ class HTCondorProcess(BatchProcess):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # reassign task_cmd since the current python3 command provided by
+        # the new environment should be used by default
+        self.task_cmd, self.task_env = create_cmd_from_task(self.task, "python3")
         self._batch_job_id = None
 
     def get_job_status(self):
@@ -133,7 +136,6 @@ class HTCondorProcess(BatchProcess):
 
     def start_job(self):
         submit_file_path = self._create_htcondor_submit_file()
-        exec_cmd, curr_env = self._create_condor_executable_cmd()
 
         submit_file_dir, submit_file = os.path.split(submit_file_path)
         cmd = ["condor_submit", submit_file]
@@ -145,7 +147,7 @@ class HTCondorProcess(BatchProcess):
         # have to copy settings file to job working directory since b2luigi has to
         # take the result path from it
         shutil.copyfile("settings.json", os.path.join(submit_file_dir, "settings.json"))
-        output = subprocess.check_output(cmd, env=curr_env, cwd=submit_file_dir)
+        output = subprocess.check_output(cmd, env=self.task_env, cwd=submit_file_dir)
         output = output.decode()
         match = re.search(r"[0-9]+\.", output)
         if not match:
@@ -207,8 +209,7 @@ class HTCondorProcess(BatchProcess):
 
         executable_wrapper_path = os.path.join(output_path, "executable_wrapper.sh")
 
-        condor_executable_cmd, _ = self._create_condor_executable_cmd()
-        condor_executable_cmd = " ".join(condor_executable_cmd)
+        condor_executable_cmd = " ".join(self.task_cmd)
         with open(executable_wrapper_path, "w") as exec_wrapper:
             exec_wrapper.write(f"#!/bin/{shell}\n")
             exec_wrapper.write(f"source {env_setup_path}\n")
@@ -221,28 +222,5 @@ class HTCondorProcess(BatchProcess):
         os.chmod(executable_wrapper_path, st.st_mode | stat.S_IEXEC)
 
         return executable_wrapper_path
-
-    def _create_condor_executable_cmd(self):
-
-        filename = os.path.realpath(sys.argv[0])
-
-        cmd = []
-        if hasattr(self.task, "cmd_prefix"):
-            cmd = self.task.cmd_prefix
-
-        if hasattr(self.task, "executable"):
-            executable = self.task.executable
-        else:
-            executable = get_setting("executable", ["python3"])
-        cmd += executable
-
-        cmd += [os.path.abspath(filename), "--batch-runner", "--task-id", self.task.task_id]
-
-        if hasattr(self.task, "env"):
-            env = self.task.env
-        else:
-            env = os.environ.copy()
-
-        return cmd, env
 
 

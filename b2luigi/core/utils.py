@@ -11,7 +11,6 @@ import colorama
 
 from b2luigi.core.settings import set_setting, get_setting
 
-
 @contextlib.contextmanager
 def remember_cwd():
     """Helper contextmanager to stay in the same cwd"""
@@ -295,7 +294,7 @@ def add_on_failure_function(task):
     task.on_failure = types.MethodType(on_failure, task)
 
 
-def create_cmd_from_task(task):
+def create_cmd_from_task(task, default_python=sys.executable):
     filename = os.path.realpath(sys.argv[0])
 
     cmd = []
@@ -305,7 +304,8 @@ def create_cmd_from_task(task):
     if hasattr(task, "executable"):
         executable = task.executable
     else:
-        executable = get_setting("executable", [sys.executable])
+        executable = get_setting("executable", [default_python])
+
     cmd += executable
 
     cmd += [os.path.abspath(filename), "--batch-runner", "--task-id", task.task_id]
