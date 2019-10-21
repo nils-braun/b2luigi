@@ -19,7 +19,33 @@ class HTCondorJobStatusCache(BatchJobStatusCache):
         super(HTCondorJobStatusCache, self).__init__()
 
     def _ask_for_job_status(self, job_id: int = None):
+        """
+        With HTCondor, you can check the progress of your jobs using the `condor_q` command.
+        If no `JobId` is given as argument, this command shows you the status of all queued jobs
+        (usually only your own by default).
+
+        Normally the HTCondor `JobID` is stated as `ClusterId.ProcId`. Since only on job is queued per
+        cluster, we can identify jobs by their `ClusterId` (The `ProcId` will be 0 for all submitted jobs).
+        With the `-json` option, the `condor_q` output is returned in the JSON format. By specifying some
+        attributes, not the entire job ClassAd is returned, but only the necessary information to match a
+        job to its `JobStatus`. The output is given as `string` and cannot be directly parsed into a json
+        dictionary. It has the following form:
+            [
+                {....}
+                ,
+                {...}
+                ,
+
+                {...}
+            ]
+        The {....} are the different dictionaries including the specified attributes.
+        Sometimes it might happen that a job is completed in between the status checks. Then its final status
+        can be found in the `condor_history` file (works mostly in the same way as `condor_q`.
+        Both commands are used in order to find the `JobStatus`.
+        """
+        # https://htcondor.readthedocs.io/en/latest/man-pages/condor_q.html
         q_cmd = ["condor_q", "-json", "-attributes", "ClusterId,ProcId,JobStatus"]
+        # https://htcondor.readthedocs.io/en/latest/man-pages/condor_history.html
         history_cmd = ["condor_history", "-json", "-attributes", "ClusterId,ProcId,JobStatus"]
 
         if job_id:
