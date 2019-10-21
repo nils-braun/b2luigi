@@ -143,16 +143,14 @@ class HTCondorProcess(BatchProcess):
         submit_file_dir, submit_file = os.path.split(submit_file_path)
         cmd = ["condor_submit", submit_file]
 
-        # apparently you have to in the same directory as the submit file
+        # apparently you have to be in the same directory as the submit file
         # to be able to submit jobs with htcondor
         cur_dir = os.getcwd()
 
         # have to copy settings file to job working directory since b2luigi has to
         # take the result path from it
         shutil.copyfile("settings.json", os.path.join(submit_file_dir, "settings.json"))
-        os.chdir(submit_file_dir)
-        output = subprocess.check_output(cmd, env=curr_env)
-        os.chdir(cur_dir)
+        output = subprocess.check_output(cmd, env=curr_env, cwd=submit_file_dir)
         output = output.decode()
         match = re.search(r"[0-9]+\.", output)
         if not match:
