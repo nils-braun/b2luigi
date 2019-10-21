@@ -97,14 +97,14 @@ class HTCondorProcess(BatchProcess):
     We assume that the batch system shares a file system with the submission node you
     are currently working on (or at least the current folder and the result/log directory
     are also available there with the same path).
-    The environment has to be set up on its own new for each job. For that, a environment
+    An environment has to be set up on its own for each job. For that, a environment
     setup script has to be provided in the ``settings.json`` file.
     If no own python cmd is specified, the task is executed with the current ``python3``
     available after the environment is setup.
-    General settings (may be dependend on your HTCondor setup) that affect all jobs (tasks)
+    General settings (may be depended on your HTCondor setup) that affect all jobs (tasks)
     can be specified in the ``settings.json`` by adding a ``htcondor_settings`` entry.
     Job specific settings, e.g. number of cpus or required memory can be specified by adding
-    a ``htcondor_settings`` attribute to the task. It's value has to be a dictionary containig
+    a ``htcondor_settings`` attribute to the task. It's value has to be a dictionary containing
     also HTCondor settings as key/value pairs.
     """
 
