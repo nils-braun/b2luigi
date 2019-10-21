@@ -77,12 +77,14 @@ class HTCondorJobStatusCache(BatchJobStatusCache):
 
 
 class HTCondorJobStatus(enum.IntEnum):
+    """
+    See https://htcondor.readthedocs.io/en/latest/classad-attributes/job-classad-attributes.htmls
+    """
     idle = 1
     running = 2
     removed = 3
     completed = 4
     held = 5
-    submission_err = 6
 
 
 _batch_job_status_cache = HTCondorJobStatusCache()
