@@ -121,17 +121,12 @@ class HTCondorProcess(BatchProcess):
             job_status = _batch_job_status_cache[self._batch_job_id]
         except KeyError:
             return JobStatus.aborted
-        if job_status == HTCondorJobStatus.completed:
+        
+        if job_status in [HTCondorJobStatus.completed]:
             return JobStatus.successful
-        elif job_status == HTCondorJobStatus.idle:
+        elif job_status in [HTCondorJobStatus.idle, HTCondorJobStatus.running]:
             return JobStatus.running
-        elif job_status == HTCondorJobStatus.running:
-            return JobStatus.running
-        elif job_status == HTCondorJobStatus.removed:
-            return JobStatus.aborted
-        elif job_status == HTCondorJobStatus.held:
-            return JobStatus.aborted
-        elif job_status == HTCondorJobStatus.submission_err:
+        elif job_status in [HTCondorJobStatus.removed, HTCondorJobStatus.held]:
             return JobStatus.aborted
         else:
             raise ValueError(f"Unknown HTCondor Job status: {job_status}")
