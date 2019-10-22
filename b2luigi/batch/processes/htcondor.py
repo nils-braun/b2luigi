@@ -48,7 +48,7 @@ class HTCondorJobStatusCache(BatchJobStatusCache):
         # https://htcondor.readthedocs.io/en/latest/man-pages/condor_q.html
         q_cmd = ["condor_q", "-json", "-attributes", "ClusterId,ProcId,JobStatus"]
         # https://htcondor.readthedocs.io/en/latest/man-pages/condor_history.html
-        history_cmd = ["condor_history", "-json", "-attributes", "ClusterId,ProcId,JobStatus"]
+        history_cmd = ["condor_history", "-json", "-attributes", "ClusterId,ProcId,JobStatus", "-match", "1"]
 
         if job_id:
             q_cmd.append(str(job_id))
