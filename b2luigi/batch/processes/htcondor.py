@@ -8,8 +8,10 @@ import subprocess
 import enum
 import sys
 
-from b2luigi.core.utils import get_setting, get_output_dirs, create_cmd_from_task
-from b2luigi.batch.processes import BatchProcess, JobStatus, BatchJobStatusCache
+from b2luigi.core.utils import create_cmd_from_task
+from b2luigi.core.settings import get_setting
+from b2luigi.batch.processes import BatchProcess, JobStatus
+from b2luigi.batch.cache import BatchJobStatusCache
 from b2luigi.core.utils import get_log_file_dir
 
 

@@ -2,7 +2,8 @@ import json
 import re
 import subprocess
 
-from b2luigi.batch.processes import BatchProcess, JobStatus, BatchJobStatusCache
+from b2luigi.batch.processes import BatchProcess, JobStatus
+from b2luigi.batch.cache import BatchJobStatusCache
 from b2luigi.core.utils import get_log_file_dir
 
 
