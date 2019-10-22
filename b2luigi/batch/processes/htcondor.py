@@ -33,49 +33,52 @@ class HTCondorJobStatusCache(BatchJobStatusCache):
         job to its `JobStatus`. The output is given as `string` and cannot be directly parsed into a json
         dictionary. It has the following form:
             [
-                {....}
+                {...}
                 ,
                 {...}
                 ,
-
                 {...}
             ]
-        The {....} are the different dictionaries including the specified attributes.
+        The {...} are the different dictionaries including the specified attributes.
         Sometimes it might happen that a job is completed in between the status checks. Then its final status
-        can be found in the `condor_history` file (works mostly in the same way as `condor_q`.
-        Both commands are used in order to find the `JobStatus`.
+        can be found in the `condor_history` file (works mostly in the same way as `condor_q`).
+        Both commands are used in order to find out the `JobStatus`.
         """
         # https://htcondor.readthedocs.io/en/latest/man-pages/condor_q.html
-        q_cmd = ["condor_q", "-json", "-attributes", "ClusterId,ProcId,JobStatus"]
-        # https://htcondor.readthedocs.io/en/latest/man-pages/condor_history.html
-        history_cmd = ["condor_history", "-json", "-attributes", "ClusterId,ProcId,JobStatus", "-match", "1"]
+        q_cmd = ["condor_q", "-json", "-attributes", "ClusterId,JobStatus,ExitStatus"]
 
         if job_id:
-            q_cmd.append(str(job_id))
-            output = subprocess.check_output(q_cmd)
+            output = subprocess.check_output(q_cmd + [str(job_id)])
         else:
             output = subprocess.check_output(q_cmd)
+
+        seen_ids = self._fill_from_output(output)
+
+        # If the specified job can not be found in the condor_q output, we need to request its history
+        if job_id and job_id not in seen_ids:
+            # https://htcondor.readthedocs.io/en/latest/man-pages/condor_history.html
+            history_cmd = ["condor_history", "-json", "-attributes", "ClusterId,JobStatus,ExitCode", "-match", "1", str(job_id)]
+            output = subprocess.check_output(history_cmd)
+
+            self._fill_from_output(output)
+
+    def _fill_from_output(self, output):
         output = output.decode()
 
-        dict_list = []
-        for status_dict in output.lstrip("[\n").rstrip("\n]\n").split("\n,\n"):
-            if status_dict:
-                dict_list.append(json.loads(status_dict))
+        seen_ids = set()
+
+        if not output:
+            return seen_ids
+
+        for status_dict in json.loads(output):
+            if status_dict["JobStatus"] == HTCondorJobStatus.completed and status_dict["ExitCode"]:
+                self[status_dict["ClusterId"]] = HTCondorJobStatus.failed
             else:
-                continue
+                self[status_dict["ClusterId"]] = status_dict["JobStatus"]
 
-        if job_id:
-            if job_id not in [status_dict["ClusterId"] for status_dict in dict_list]:
-                history_cmd.append(str(job_id))
-                output = subprocess.check_output(history_cmd)
-                output = output.decode()
-                output = output.lstrip("[\n").rstrip("\n]\n").split("\n,\n")
-                if output:
-                    for status_dict in output:
-                        dict_list.append(json.loads(status_dict))
+            seen_ids.add(status_dict["ClusterId"])
 
-        for status_dict in dict_list:
-            self[status_dict["ClusterId"]] = status_dict["JobStatus"]  # int -> int
+        return seen_ids
 
 
 class HTCondorJobStatus(enum.IntEnum):
@@ -87,6 +90,7 @@ class HTCondorJobStatus(enum.IntEnum):
     removed = 3
     completed = 4
     held = 5
+    failed = 999
 
 
 _batch_job_status_cache = HTCondorJobStatusCache()
@@ -128,7 +132,7 @@ class HTCondorProcess(BatchProcess):
             return JobStatus.successful
         elif job_status in [HTCondorJobStatus.idle, HTCondorJobStatus.running]:
             return JobStatus.running
-        elif job_status in [HTCondorJobStatus.removed, HTCondorJobStatus.held]:
+        elif job_status in [HTCondorJobStatus.removed, HTCondorJobStatus.held, HTCondorJobStatus.failed]:
             return JobStatus.aborted
         else:
             raise ValueError(f"Unknown HTCondor Job status: {job_status}")
