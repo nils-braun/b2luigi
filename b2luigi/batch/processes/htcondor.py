@@ -112,10 +112,7 @@ class HTCondorProcess(BatchProcess):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # reassign task_cmd since the current python3 command provided by
-        # the new environment should be used by default
-        self.task_cmd, self.task_env = create_cmd_from_task(self.task, "python3")
+        
         self._batch_job_id = None
 
     def get_job_status(self):
