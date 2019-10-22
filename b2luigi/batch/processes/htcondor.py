@@ -112,11 +112,10 @@ class HTCondorProcess(BatchProcess):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         self._batch_job_id = None
 
     def get_job_status(self):
-
         assert self._batch_job_id
 
         try:
@@ -161,13 +160,13 @@ class HTCondorProcess(BatchProcess):
         log_file_dir = get_log_file_dir(self.task)
 
         stdout_log_file = log_file_dir + "stdout"
-        submit_file_content.append(f"log = {job_log_file}")
-
-        stderr_log_file = log_file_dir + "stderr"
         submit_file_content.append(f"output = {stdout_log_file}")
 
-        job_log_file = log_file_dir + "job.log"
+        stderr_log_file = log_file_dir + "stderr"
         submit_file_content.append(f"error = {stderr_log_file})")
+
+        job_log_file = log_file_dir + "job.log"
+        submit_file_content.append(f"log = {job_log_file}")
 
         # Specify the executable
         executable_file = create_executable_wrapper(self.task)
