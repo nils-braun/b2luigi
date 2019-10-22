@@ -62,7 +62,7 @@ class LSFProcess(BatchProcess):
         command = ["bsub", "-env all"]
 
         try:
-            prefix += ["-q", self.task.queue]
+            command += ["-q", self.task.queue]
         except AttributeError:
             pass
 
