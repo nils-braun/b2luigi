@@ -244,6 +244,13 @@ def get_log_file_dir(task):
     return log_file_dir
 
 
+def get_task_file_dir(task):
+    task_file_dir = create_output_file_name(task, task.get_task_family() + "/")
+    os.makedirs(task_file_dir, exist_ok=True)
+
+    return task_file_dir
+
+
 def _to_dict(d):
     if isinstance(d, dict):
         return d
@@ -284,24 +291,14 @@ def add_on_failure_function(task):
     task.on_failure = types.MethodType(on_failure, task)
 
 
-def create_cmd_from_task(task, default_python=sys.executable):
+def create_cmd_from_task(task):
     filename = os.path.realpath(sys.argv[0])
 
-    cmd = []
-    if hasattr(task, "cmd_prefix"):
-        cmd = task.cmd_prefix
+    cmd = get_task_setting("cmd_prefix", task=task, default=[])
+    cmd += get_task_setting("executable", task=task, default=[sys.executable])
+    cmd += [filename, "--batch-runner", "--task-id", task.task_id]
 
-    executable = get_task_setting("executable", task=task, default=[default_python])
-    cmd += executable
-
-    cmd += [os.path.abspath(filename), "--batch-runner", "--task-id", task.task_id]
-
-    if hasattr(task, "env"):
-        env = task.env
-    else:
-        env = os.environ.copy()
-
-    return cmd, env
+    return cmd
 
 
 def create_output_dirs(task):

@@ -5,31 +5,8 @@ import sys
 
 from b2luigi.core.settings import get_setting
 from b2luigi.core.task import Task
-from b2luigi.core.utils import get_log_file_dir, add_on_failure_function, create_cmd_from_task, create_output_dirs
-
-
-def _run_task_locally(task, run_function):
-    create_output_dirs(task)
-    run_function(task)
-
-
-def _run_task_remote(task):
-    add_on_failure_function(task)
-
-    filename = os.path.realpath(sys.argv[0])
-    log_file_dir = get_log_file_dir(task)
-    stderr_file_name = log_file_dir + "stderr"
-    stdout_file_name = log_file_dir + "stdout"
-
-    cmd, env = create_cmd_from_task(task)
-
-    with open(stdout_file_name, "w") as stdout_file:
-        with open(stderr_file_name, "w") as stderr_file:
-            return_code = subprocess.call(cmd, stdout=stdout_file, stderr=stderr_file,
-                                          cwd=os.path.dirname(filename), env=env)
-
-    if return_code:
-        raise RuntimeError(f"Execution failed with return code {return_code}")
+from b2luigi.core.utils import create_output_dirs
+from b2luigi.core.executable import run_task_remote
 
 
 def dispatch(run_function):
@@ -46,7 +23,6 @@ def dispatch(run_function):
         the parameters of the task), which you can check afterwards::
 
             import b2luigi
-
 
             class MyTask(b2luigi.Task):
                 @b2luigi.dispatch
@@ -67,11 +43,12 @@ def dispatch(run_function):
     """
 
     @functools.wraps(run_function)
-    def wrapped_run_function(self):
+    def wrapped_run_function(task):
         if get_setting("local_execution", False):
-            _run_task_locally(self, run_function)
+            create_output_dirs(task)
+            run_function(task)
         else:
-            _run_task_remote(self)
+            run_task_remote(task)
 
     return wrapped_run_function
 
