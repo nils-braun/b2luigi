@@ -77,8 +77,6 @@ class BatchProcess:
         self._result_queue = result_queue
         self._scheduler = scheduler
 
-        self.task_cmd, self.task_env = create_cmd_from_task(task)
-
     @property
     def exitcode(self):
         # We cheat here a bit: if the exit code is set to 0 all the time, we can always use the result queue for

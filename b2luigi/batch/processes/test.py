@@ -2,6 +2,7 @@ import subprocess
 
 from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.core.utils import get_log_file_dir
+from b2luigi.core.executable import create_executable_wrapper
 
 
 class TestProcess(BatchProcess):
@@ -25,12 +26,14 @@ class TestProcess(BatchProcess):
 
     def start_job(self):
         log_file_dir = get_log_file_dir(self.task)
-        stderr_log_file = log_file_dir + "stderr"
         stdout_log_file = log_file_dir + "stdout"
+        stderr_log_file = log_file_dir + "stderr"
 
-        with open(stdout_log_file, "w") as stdout:
-            with open(stderr_log_file, "w") as stderr:
-                self._process = subprocess.Popen(self.task_cmd, stdout=stdout, stderr=stderr, env=self.task_env)
+        executable_file = create_executable_wrapper(self.task)
+
+        with open(stdout_log_file, "w") as stdout_file:
+            with open(stderr_log_file, "w") as stderr_file:
+                self._process = subprocess.Popen([executable_file], stdout=stdout_file, stderr=stderr_file)
 
     def kill_job(self):
         if not self._process:

@@ -5,6 +5,7 @@ import subprocess
 from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.batch.cache import BatchJobStatusCache
 from b2luigi.core.utils import get_log_file_dir
+from b2luigi.core.executable import create_executable_wrapper
 
 
 class LSFJobStatusCache(BatchJobStatusCache):
@@ -58,7 +59,7 @@ class LSFProcess(BatchProcess):
         return JobStatus.running
 
     def start_job(self):
-        prefix = ["bsub", "-env all"]
+        command = ["bsub", "-env all"]
 
         try:
             prefix += ["-q", self.task.queue]
@@ -66,12 +67,15 @@ class LSFProcess(BatchProcess):
             pass
 
         log_file_dir = get_log_file_dir(self.task)
-        stderr_log_file = log_file_dir + "stderr"
         stdout_log_file = log_file_dir + "stdout"
+        stderr_log_file = log_file_dir + "stderr"
 
-        prefix += ["-eo", stderr_log_file, "-oo", stdout_log_file]
+        command += ["-eo", stderr_log_file, "-oo", stdout_log_file]
 
-        output = subprocess.check_output(prefix + self.task_cmd, env=self.task_env)
+        executable_file = create_executable_wrapper(self.task)
+        command.append(executable_file)
+
+        output = subprocess.check_output(command)
         output = output.decode()
 
         # Output of the form Job <72065926> is submitted to default queue <s>.
@@ -85,4 +89,4 @@ class LSFProcess(BatchProcess):
         if not self._batch_job_id:
             return
 
-        subprocess.check_call(["bkill", self._batch_job_id], stdout=subprocess.DEVNULL)
+        subprocess.run(["bkill", self._batch_job_id], stdout=subprocess.DEVNULL)
