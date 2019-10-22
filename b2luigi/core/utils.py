@@ -216,11 +216,13 @@ def get_serialized_parameters(task):
     return serialized_parameters
 
 
-def get_output_dirs(task, create_folder=False, result_path=None):
+def create_output_file_name(task, base_filename, create_folder=False, result_path=None):
     serialized_parameters = get_serialized_parameters(task)
 
     if not result_path:
-        result_path = get_task_setting("result_path", task=task, default=".")
+        filename = os.path.realpath(sys.argv[0])
+        default_result_folder = os.path.join(os.path.dirname(filename), ".")
+        result_path = get_task_setting("result_path", task=task, default=default_result_folder)
 
     param_list = [f"{key}={value}" for key, value in serialized_parameters.items()]
     output_path = os.path.join(result_path, *param_list)
@@ -228,29 +230,16 @@ def get_output_dirs(task, create_folder=False, result_path=None):
     if create_folder:
         os.makedirs(output_path, exist_ok=True)
 
-    return output_path
-
-
-def create_output_file_name(task, base_filename, create_folder=False, result_path=None):
-
-    output_path = get_output_dirs(task, create_folder, result_path)
-    filename = os.path.join(output_path, base_filename)
-
-    return filename
+    return os.path.join(output_path, base_filename)
 
 
 def get_log_file_dir(task):
-    if hasattr(task, 'get_log_file_dir'):
-        log_file_dir = task.get_log_file_dir()
-        return log_file_dir
-
     filename = os.path.realpath(sys.argv[0])
     default_log_folder = os.path.join(os.path.dirname(filename), "logs")
     base_log_file_dir = get_task_setting("log_folder", task=task, default=default_log_folder)
 
-    log_file_dir = create_output_file_name(task, task.get_task_family() + "/", create_folder=True, result_path=base_log_file_dir)
-    if not os.path.isdir(log_file_dir):
-        os.makedirs(log_file_dir)
+    log_file_dir = create_output_file_name(task, task.get_task_family() + "/", result_path=base_log_file_dir)
+    os.makedirs(log_file_dir, exist_ok=True)
 
     return log_file_dir
 
