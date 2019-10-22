@@ -45,3 +45,17 @@ class TaskTestCase(B2LuigiTestCase):
             json.dump({"my_setting": "my child value"}, f)
 
         self.assertEqual("my child value", b2luigi.get_setting("my_setting"))
+
+    def test_set_by_task_or_file(self):
+        with open("settings.json", "w") as f:
+            json.dump({"my_setting": "my file value"}, f)
+
+        b2luigi.set_setting("my_second_setting", "my value")
+
+        task = b2luigi.Task()
+        setattr(task, "my_third_setting", "my task value")
+
+        self.assertEqual("my file value", b2luigi.get_task_setting("my_setting", task=task))
+        self.assertEqual("my value", b2luigi.get_task_setting("my_second_setting", task=task))
+        self.assertEqual("my task value", b2luigi.get_task_setting("my_third_setting", task=task))
+        

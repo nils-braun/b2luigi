@@ -43,6 +43,24 @@ def get_setting(key, default=None):
     return default
 
 
+def get_task_setting(key, default=None, task=None):
+    """
+    Return the setting value of `key` 
+    * either if it is set as an attribute of the specified task
+    * or if not (or no task is given) as set by the setting files 
+      or current global setting
+    * or if nothing is specified, returns the default (or raise 
+      an exception of no default is given)
+    """
+    if task:
+        try:
+            return getattr(task, key)
+        except AttributeError:
+            pass
+
+    return get_setting(key, default)
+
+
 def set_setting(key, value):
     """
     There are two possibilities to set a setting with a given name:

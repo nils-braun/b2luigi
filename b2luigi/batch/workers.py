@@ -6,7 +6,7 @@ import luigi.worker
 from b2luigi.batch.processes.lsf import LSFProcess
 from b2luigi.batch.processes.htcondor import HTCondorProcess
 from b2luigi.batch.processes.test import TestProcess
-from b2luigi.core.settings import get_setting
+from b2luigi.core.settings import get_task_setting
 
 
 class BatchSystems(enum.Enum):
@@ -18,10 +18,7 @@ class BatchSystems(enum.Enum):
 
 class SendJobWorker(luigi.worker.Worker):
     def _create_task_process(self, task):
-        try:
-            batch_system = task.batch_system
-        except AttributeError:
-            batch_system = BatchSystems(get_setting("batch_system", BatchSystems.lsf))
+        batch_system = BatchSystems(get_task_setting("batch_system", default=BatchSystems.lsf, task=task))
 
         if batch_system == BatchSystems.lsf:
             process_class = LSFProcess

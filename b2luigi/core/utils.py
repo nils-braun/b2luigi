@@ -9,7 +9,7 @@ import types
 
 import colorama
 
-from b2luigi.core.settings import set_setting, get_setting
+from b2luigi.core.settings import set_setting, get_task_setting
 
 @contextlib.contextmanager
 def remember_cwd():
@@ -220,7 +220,7 @@ def get_output_dirs(task, create_folder=False, result_path=None):
     serialized_parameters = get_serialized_parameters(task)
 
     if not result_path:
-        result_path = get_setting("result_path", ".")
+        result_path = get_task_setting("result_path", task=task, default=".")
 
     param_list = [f"{key}={value}" for key, value in serialized_parameters.items()]
     output_path = os.path.join(result_path, *param_list)
@@ -245,7 +245,8 @@ def get_log_file_dir(task):
         return log_file_dir
 
     filename = os.path.realpath(sys.argv[0])
-    base_log_file_dir = get_setting("log_folder", default=os.path.join(os.path.dirname(filename), "logs"))
+    default_log_folder = os.path.join(os.path.dirname(filename), "logs")
+    base_log_file_dir = get_task_setting("log_folder", task=task, default=default_log_folder)
 
     log_file_dir = create_output_file_name(task, task.get_task_family() + "/", create_folder=True, result_path=base_log_file_dir)
     if not os.path.isdir(log_file_dir):
@@ -301,11 +302,7 @@ def create_cmd_from_task(task, default_python=sys.executable):
     if hasattr(task, "cmd_prefix"):
         cmd = task.cmd_prefix
 
-    if hasattr(task, "executable"):
-        executable = task.executable
-    else:
-        executable = get_setting("executable", [default_python])
-
+    executable = get_task_setting("executable", task=task, default=[default_python])
     cmd += executable
 
     cmd += [os.path.abspath(filename), "--batch-runner", "--task-id", task.task_id]
