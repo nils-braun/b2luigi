@@ -1,0 +1,10 @@
+{
+	"batch_system": "htcondor",
+	"result_path": "/cephfs/user/mwelsch/results",
+	"log_folder":  "/cephfs/user/mwelsch/logs",
+	"env_setup": "/cephfs/user/mwelsch/bla.sh",
+	"htcondor_settings": {
+		"+ContainerOS": "Ubuntu1804"
+	}
+
+}

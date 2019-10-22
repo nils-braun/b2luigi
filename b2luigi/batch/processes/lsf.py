@@ -2,15 +2,13 @@ import json
 import re
 import subprocess
 
-from b2luigi.batch.processes import BatchProcess, JobStatus
+from b2luigi.batch.processes import BatchProcess, JobStatus, BatchJobStatusCache
 from b2luigi.core.utils import get_log_file_dir
 
-from cachetools import TTLCache
 
-
-class BatchJobStatusCache(TTLCache):
+class LSFJobStatusCache(BatchJobStatusCache):
     def __init__(self):
-        super(BatchJobStatusCache, self).__init__(maxsize=1000, ttl=20)
+        super(LSFJobStatusCache, self).__init__()
 
     def _ask_for_job_status(self, job_id=None):
         if job_id:
@@ -23,26 +21,13 @@ class BatchJobStatusCache(TTLCache):
         for record in output:
             self[record["JOBID"]] = record["STAT"]
 
-    def __missing__(self, job_id):
-        # First, ask for all jobs
-        self._ask_for_job_status(job_id=None)
-        if job_id in self:
-            return self[job_id]
 
-        # Then, ask specifically for this job
-        self._ask_for_job_status(job_id=job_id)
-        if job_id in self:
-            return self[job_id]
-
-        raise KeyError
-
-
-_batch_job_status_cache = BatchJobStatusCache()
+_batch_job_status_cache = LSFJobStatusCache()
 
 
 class LSFProcess(BatchProcess):
     """
-    Reference implementation of the batch process for an LSF batch system.
+    Reference implementation of the batch process for a LSF batch system.
 
     We assume that the batch system shares a file system with the submission node you
     are currently working on (or at least the current folder is also available there with the same path).

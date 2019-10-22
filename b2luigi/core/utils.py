@@ -11,7 +11,6 @@ import colorama
 
 from b2luigi.core.settings import set_setting, get_setting
 
-
 @contextlib.contextmanager
 def remember_cwd():
     """Helper contextmanager to stay in the same cwd"""
@@ -217,17 +216,26 @@ def get_serialized_parameters(task):
     return serialized_parameters
 
 
-def create_output_file_name(task, base_filename, create_folder=False, result_path=None):
+def get_output_dirs(task, create_folder=False, result_path=None):
     serialized_parameters = get_serialized_parameters(task)
 
     if not result_path:
         result_path = get_setting("result_path", ".")
 
     param_list = [f"{key}={value}" for key, value in serialized_parameters.items()]
-    filename = os.path.join(result_path, *param_list, base_filename)
+    output_path = os.path.join(result_path, *param_list)
 
     if create_folder:
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        os.makedirs(output_path, exist_ok=True)
+
+    return output_path
+
+
+def create_output_file_name(task, base_filename, create_folder=False, result_path=None):
+
+    output_path = get_output_dirs(task, create_folder, result_path)
+    filename = os.path.join(output_path, base_filename)
+
     return filename
 
 
@@ -240,6 +248,9 @@ def get_log_file_dir(task):
     base_log_file_dir = get_setting("log_folder", default=os.path.join(os.path.dirname(filename), "logs"))
 
     log_file_dir = create_output_file_name(task, task.get_task_family() + "/", create_folder=True, result_path=base_log_file_dir)
+    if not os.path.isdir(log_file_dir):
+        os.makedirs(log_file_dir)
+
     return log_file_dir
 
 
@@ -283,7 +294,7 @@ def add_on_failure_function(task):
     task.on_failure = types.MethodType(on_failure, task)
 
 
-def create_cmd_from_task(task):
+def create_cmd_from_task(task, default_python=sys.executable):
     filename = os.path.realpath(sys.argv[0])
 
     cmd = []
@@ -293,7 +304,8 @@ def create_cmd_from_task(task):
     if hasattr(task, "executable"):
         executable = task.executable
     else:
-        executable = get_setting("executable", [sys.executable])
+        executable = get_setting("executable", [default_python])
+
     cmd += executable
 
     cmd += [os.path.abspath(filename), "--batch-runner", "--task-id", task.task_id]
