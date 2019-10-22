@@ -15,7 +15,13 @@ def create_executable_wrapper(task):
     shell = get_task_setting("shell", task=task, default="bash")
     executable_wrapper_content = [f"#!/bin/{shell}", "set -e"]
 
-    # 1. First part of the executable wrapper, the environment.
+    # 1. First part is the folder we need to change if given
+    working_dir = get_task_setting("working_dir", task=task, default=os.getcwd())
+    executable_wrapper_content.append(f"cd {working_dir}")
+
+    executable_wrapper_content.append("echo 'Working in the folder:'; pwd")
+
+    # 2. Second part of the executable wrapper, the environment.
     executable_wrapper_content.append("echo 'Setting up the environment'")
     # (a) If given, use the environment script
     env_setup_script = get_task_setting("env_script", task=task, default="")
@@ -30,12 +36,6 @@ def create_executable_wrapper(task):
         executable_wrapper_content.append(f"export {key}={value}")
 
     executable_wrapper_content.append("echo 'Current environment:'; env")
-
-    # 2. Second part is the folder we need to change if given
-    working_dir = get_task_setting("working_dir", task=task, default=os.getcwd())
-    executable_wrapper_content.append(f"cd {working_dir}")
-
-    executable_wrapper_content.append("echo 'Working in the folder:'; pwd")
 
     # 3. Third part is to call the actual program
     command = " ".join(create_cmd_from_task(task))
