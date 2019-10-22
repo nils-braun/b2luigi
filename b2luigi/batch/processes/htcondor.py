@@ -135,10 +135,10 @@ class HTCondorProcess(BatchProcess):
 
     def start_job(self):
         submit_file = self._create_htcondor_submit_file()
-        command = ["condor_submit", submit_file]
 
-        # TODO maybe submit_file_dir, submit_file = os.path.split(submit_file_path)
-        output = subprocess.check_output(command)
+        # HTCondor submit needs to be called in the folder of the submit file
+        submit_file_dir, submit_file = os.path.split(submit_file)
+        output = subprocess.check_output(["condor_submit", submit_file], cwd=submit_file_dir)
 
         output = output.decode()
         match = re.search(r"[0-9]+\.", output)
@@ -164,7 +164,7 @@ class HTCondorProcess(BatchProcess):
         submit_file_content.append(f"output = {stdout_log_file}")
 
         stderr_log_file = log_file_dir + "stderr"
-        submit_file_content.append(f"error = {stderr_log_file})")
+        submit_file_content.append(f"error = {stderr_log_file}")
 
         job_log_file = log_file_dir + "job.log"
         submit_file_content.append(f"log = {job_log_file}")
