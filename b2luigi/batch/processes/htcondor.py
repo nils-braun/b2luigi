@@ -8,11 +8,11 @@ import subprocess
 import enum
 import sys
 
-from b2luigi.core.utils import create_cmd_from_task
 from b2luigi.core.settings import get_setting
 from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.batch.cache import BatchJobStatusCache
-from b2luigi.core.utils import get_log_file_dir
+from b2luigi.core.utils import get_log_file_dir, get_task_file_dir
+from b2luigi.core.executable import create_executable_wrapper
 
 
 class HTCondorJobStatusCache(BatchJobStatusCache):
@@ -137,92 +137,63 @@ class HTCondorProcess(BatchProcess):
             raise ValueError(f"Unknown HTCondor Job status: {job_status}")
 
     def start_job(self):
-        submit_file_path = self._create_htcondor_submit_file()
+        submit_file = self._create_htcondor_submit_file()
+        command = ["condor_submit", submit_file]
 
-        submit_file_dir, submit_file = os.path.split(submit_file_path)
-        cmd = ["condor_submit", submit_file]
+        # TODO maybe submit_file_dir, submit_file = os.path.split(submit_file_path)
+        output = subprocess.check_output(command)
 
-        # apparently you have to be in the same directory as the submit file
-        # to be able to submit jobs with htcondor
-        cur_dir = os.getcwd()
-
-        # have to copy settings file to job working directory since b2luigi has to
-        # take the result path from it
-        shutil.copyfile("settings.json", os.path.join(submit_file_dir, "settings.json"))
-        output = subprocess.check_output(cmd, env=self.task_env, cwd=submit_file_dir)
         output = output.decode()
         match = re.search(r"[0-9]+\.", output)
         if not match:
             raise RuntimeError("Batch submission failed with output " + output)
 
         self._batch_job_id = int(match.group(0)[:-1])
+        
 
     def kill_job(self):
         if not self._batch_job_id:
             return
-        subprocess.check_call(["condor_rm", str(self._batch_job_id)], stdout=subprocess.DEVNULL)
+
+        subprocess.run(["condor_rm", str(self._batch_job_id)], stdout=subprocess.DEVNULL)
 
     def _create_htcondor_submit_file(self):
-        output_path = get_output_dirs(self.task, create_folder=True)
-        submit_file_path = os.path.join(output_path, "job.submit")
-        executable_wrapper_path = self._create_executable_wrapper()
+        submit_file_content = []
 
+        # Specify where to write the log to
         log_file_dir = get_log_file_dir(self.task)
-        stderr_log_file = log_file_dir + "job.err"
-        stdout_log_file = log_file_dir + "job.out"
+
+        stdout_log_file = log_file_dir + "stdout"
+        submit_file_content.append(f"log = {job_log_file}")
+
+        stderr_log_file = log_file_dir + "stderr"
+        submit_file_content.append(f"output = {stdout_log_file}")
+
         job_log_file = log_file_dir + "job.log"
+        submit_file_content.append(f"error = {stderr_log_file})")
 
+        # Specify the executable
+        executable_file = create_executable_wrapper(self.task)
+        submit_file_content.append(f"executable = {executable_file}")
+
+        # Specify additional settings
         general_settings = get_setting("htcondor_settings", dict())
-
         try:
-            job_settings = self.task.htcondor_settings
+            general_settings.update(self.task.htcondor_settings)
         except AttributeError:
-            job_settings = {}
+            pass
+        
+        for key, item in general_settings.items():
+            submit_file_content.append(f"{key} = {item}")
+
+        # Finally also start the process
+        submit_file_content.append("queue 1")
+
+        # Now we can write the submit file
+        output_path = get_task_file_dir(self.task)
+        submit_file_path = os.path.join(output_path, "job.submit")
 
         with open(submit_file_path, "w") as submit_file:
-            submit_file.write(f"""
-            executable = {executable_wrapper_path}
-            should_transfer_files = YES
-            transfer_input_files = settings.json
-            log = {job_log_file}
-            output = {stdout_log_file}
-            error = {stderr_log_file}
-            """)
-
-            for key, item in general_settings.items():
-                submit_file.write(f"{key} = {item}\n")
-
-            for key, item in job_settings.items():
-                submit_file.write(f"{key} = {item}\n")
-
-            submit_file.write(f"queue 1\n")
+            submit_file.write("\n".join(submit_file_content))
 
         return submit_file_path
-
-    def _create_executable_wrapper(self):
-
-        env_setup_path = get_setting("env_setup")
-
-        if not os.path.isfile(env_setup_path):
-            raise FileNotFoundError(f"Environment setup script {env_setup_path} does not exist.")
-
-        output_path = get_output_dirs(self.task, create_folder=True)
-        shell = get_setting("shell", "bash")
-
-        executable_wrapper_path = os.path.join(output_path, "executable_wrapper.sh")
-
-        condor_executable_cmd = " ".join(self.task_cmd)
-        with open(executable_wrapper_path, "w") as exec_wrapper:
-            exec_wrapper.write(f"#!/bin/{shell}\n")
-            exec_wrapper.write(f"source {env_setup_path}\n")
-            exec_wrapper.write("echo 'Starting executable'\n")
-            exec_wrapper.write("cd /jwd\n")
-            exec_wrapper.write(f"{condor_executable_cmd}\n")
-
-        # make wrapper executable
-        st = os.stat(executable_wrapper_path)
-        os.chmod(executable_wrapper_path, st.st_mode | stat.S_IEXEC)
-
-        return executable_wrapper_path
-
-
