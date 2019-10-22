@@ -44,7 +44,8 @@ class LSFProcess(BatchProcess):
         self._batch_job_id = None
 
     def get_job_status(self):
-        assert self._batch_job_id
+        if not self._batch_job_id:
+            return JobStatus.aborted
 
         try:
             job_status = _batch_job_status_cache[self._batch_job_id]
