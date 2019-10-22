@@ -32,9 +32,8 @@ def create_executable_wrapper(task):
     executable_wrapper_content.append("echo 'Current environment:'; env")
 
     # 2. Second part is the folder we need to change if given
-    working_dir = get_task_setting("working_dir", task=task, default="")
-    if working_dir:
-        executable_wrapper_content.append(f"cd {working_dir}")
+    working_dir = get_task_setting("working_dir", task=task, default=os.getcwd())
+    executable_wrapper_content.append(f"cd {working_dir}")
 
     executable_wrapper_content.append("echo 'Working in the folder:'; pwd")
 
