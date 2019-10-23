@@ -41,10 +41,10 @@ Why not use the already created batch tasks?
 Luigi already contains a large set of tasks for scheduling and monitoring batch jobs [1]_.
 But for thousands of tasks in very large projects with different task-defining libraries, you have some problems:
 
-*   **You want to run many (like many!) batch jobs in parallel**
-    In other implementations, for every running batch job you also need a running task that monitors it.
-    On most of the systems, the maximal number of processes is limited per user, you will not be able to run more
-    batch jobs than this
+*   **You want to run many (many many!) batch jobs in parallel**
+    In other luigi batch implementations, for every running batch job you also need a running task that monitors it.
+    On most of the systems, the maximal number of processes is limited per user, so you will not be able to run more
+    batch jobs than this.
     But what do you do if you have thousands of tasks to do?
 *   **You have already a large set of luigi tasks in your project**
     In other implementations you either have to override a ``work`` function (and you are not allowed to touch
@@ -78,7 +78,7 @@ that we have learned with time.
 Why are you still talking, lets use it!
 ---------------------------------------
 
-Have a look into the :ref:`quick-start-label` or one of the :ref:`advanced-label`.
+Have a look into the :ref:`quick-start-label`.
 
 You can also start reading the :ref:`api-documentation-label` or the code on github_.
 
@@ -95,7 +95,7 @@ Content
 
     usage/installation
     usage/quickstart
-    advanced/examples
+    usage/batch
     advanced/basf2-examples
     documentation/api
     documentation/run_modes

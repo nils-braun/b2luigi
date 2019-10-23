@@ -24,7 +24,7 @@ No need to change any of your scripts!
 But if you want to take advantage of some of the recipies we have developed
 to work with large luigi task sets, you can use the drop in replacements
 from the ``b2luigi`` package.
-All task classes (except the :class:`b2luigi.DispatchableTask`) are superclasses of
+All task classes (except the :class:`b2luigi.DispatchableTask`, see below) are superclasses of
 a ``luigi`` class.
 As we import ``luigi`` into ``b2luigi``, you just need to replace
 
@@ -78,7 +78,6 @@ Settings
 --------
 
 .. autofunction:: b2luigi.get_setting
-.. autofunction:: b2luigi.get_task_setting
 .. autofunction:: b2luigi.set_setting
 .. autofunction:: b2luigi.clear_setting
 
@@ -92,5 +91,4 @@ Other functions
     :maxdepth: 1
 
     b2luigi.core.utils
-    b2luigi.batch
     b2luigi.basf2_helper

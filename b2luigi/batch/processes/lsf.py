@@ -29,6 +29,22 @@ _batch_job_status_cache = LSFJobStatusCache()
 
 class LSFProcess(BatchProcess):
     """
+
+
+
+
+TODO:
+
+
+By default, all tasks will be sent to the short queue. This behavior can be changed on a per task level by giving
+the task a property called ``queue`` and setting it to the queue it should run on, e.g.
+
+.. code-block:: python
+
+    class MyLongTask(b2luigi.Task):
+        queue = "l"
+
+
     Reference implementation of the batch process for a LSF batch system.
 
     We assume that the batch system shares a file system with the submission node you

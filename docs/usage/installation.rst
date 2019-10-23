@@ -37,6 +37,9 @@ Now you can go on with the :ref:`quick-start-label`.
 b2luigi and Belle II
 ---------------------
 
+Starting from release 04-00-00, `b2luigi` is already included in the externals. 
+Follow this guid, if you want to update to the newest version nevertheless.
+
 1.  Setup your local environment. You can use a local environment (installed on your machine) or a release on cvmfs.
     For example, run:
 
@@ -57,17 +60,17 @@ b2luigi and Belle II
 
     .. code-block:: bash
 
-        pip3 install b2luigi
+        pip3 install b2luigi -U
 
 
     b.  If you are using an installation from cvmfs, you need to add the ``user`` flag.
 
     .. code-block:: bash
 
-        pip3 install --user b2luigi
+        pip3 install --user b2luigi -U
 
 
 The examples in this documentation are all shown with calling ``python``, but basf2 users need to use ``python3``
 instead.
 
-Please also have a look into the specific :ref:`basf2-examples-label`.
+Please also have a look into the :ref:`basf2-example-label`.

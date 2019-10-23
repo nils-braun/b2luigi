@@ -65,6 +65,11 @@ def process(task_like_elements, show_output=False, dry_run=False, test=False, ba
 
         **kwargs: Additional keyword arguments passed to ``luigi.build``.
 
+    Warning:
+        You should always have just a single call to ``process`` in your script.
+        If you need to have multiple calls, either use a :class:`b2luigi.WrapperTask`
+        or two scripts.
+
     """
     # Assert, that process is only run once
     global __has_run_already

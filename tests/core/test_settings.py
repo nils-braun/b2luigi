@@ -55,7 +55,7 @@ class TaskTestCase(B2LuigiTestCase):
         task = b2luigi.Task()
         setattr(task, "my_third_setting", "my task value")
 
-        self.assertEqual("my file value", b2luigi.get_task_setting("my_setting", task=task))
-        self.assertEqual("my value", b2luigi.get_task_setting("my_second_setting", task=task))
-        self.assertEqual("my task value", b2luigi.get_task_setting("my_third_setting", task=task))
+        self.assertEqual("my file value", b2luigi.get_setting("my_setting", task=task))
+        self.assertEqual("my value", b2luigi.get_setting("my_second_setting", task=task))
+        self.assertEqual("my task value", b2luigi.get_setting("my_third_setting", task=task))
         

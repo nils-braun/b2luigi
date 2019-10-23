@@ -1,5 +1,5 @@
 from b2luigi.core.utils import create_cmd_from_task, get_task_file_dir, get_log_file_dir, add_on_failure_function
-from b2luigi.core.settings import get_task_setting
+from b2luigi.core.settings import get_setting
 
 import os
 import stat
@@ -12,11 +12,11 @@ def create_executable_wrapper(task):
     we create an executable bash script which is called instead of the application
     and which will setup everything accordingly before doing the actual work.
     """
-    shell = get_task_setting("shell", task=task, default="bash")
+    shell = get_setting("shell", task=task, default="bash")
     executable_wrapper_content = [f"#!/bin/{shell}", "set -e"]
 
     # 1. First part is the folder we need to change if given
-    working_dir = get_task_setting("working_dir", task=task, default=os.getcwd())
+    working_dir = get_setting("working_dir", task=task, default=os.getcwd())
     executable_wrapper_content.append(f"cd {working_dir}")
 
     executable_wrapper_content.append("echo 'Working in the folder:'; pwd")
@@ -24,14 +24,14 @@ def create_executable_wrapper(task):
     # 2. Second part of the executable wrapper, the environment.
     executable_wrapper_content.append("echo 'Setting up the environment'")
     # (a) If given, use the environment script
-    env_setup_script = get_task_setting("env_script", task=task, default="")
+    env_setup_script = get_setting("env_script", task=task, default="")
     if env_setup_script:
         if not os.path.isfile(env_setup_script):
             raise FileNotFoundError(f"Environment setup script {env_setup_script} does not exist.")
         executable_wrapper_content.append(f"source {env_setup_script}")
 
     # (b) Now override with any environment from the task or settings
-    env_overrides = get_task_setting("env", task=task, default={})
+    env_overrides = get_setting("env", task=task, default={})
     for key, value in env_overrides.items():
         executable_wrapper_content.append(f"export {key}={value}")
 

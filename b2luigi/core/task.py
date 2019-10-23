@@ -44,7 +44,8 @@ class Task(luigi.Task):
         Always use in combination with `yield`.
         This function will automatically add all current parameter values to 
         the file name when used in the form
-        ``result_path/param_1=value/param_2=value/output_file_name``
+        
+            result_path/param_1=value/param_2=value/output_file_name
 
         This function will automatically use a ``LocalTarget``.
         If you do not want this, you can override the :obj:`_get_output_file_target` function.

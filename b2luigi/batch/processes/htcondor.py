@@ -98,6 +98,55 @@ _batch_job_status_cache = HTCondorJobStatusCache()
 
 class HTCondorProcess(BatchProcess):
     """
+
+
+
+HTCondor
+........
+To use HTCondor as batch system, you have to add the ``batch_system`` setting in the settings file like
+
+.. code-block:: json
+
+    {
+        "batch_system": "htcondor",
+        "result_path": "/path/to/results",
+        "log_folder":  "/path/to/logs",
+        "env_setup": "/path/to/env_setup.sh",
+        "htcondor_settings": {
+            "+ContainerOS": "Ubuntu1804"
+        }
+
+    }
+
+Additionaly, you have to provide a ``env_setup`` script that sets up the working environment on the execution node
+(in contrast to LSF, which uses the same environment as the submission node). It will be automatically sourced before
+each ``luigi`` task is executed.
+Another new setting is ``htcondor_settings``. This is a dictionary where you can specify settings that will be put in the
+job submission file used by HTCondor. These same settings are used for all jobs (tasks) that are submitted to the
+batch system. In the case above, ``"+ContainerOS": "Ubuntu1804"`` specifies an Ubuntu container used to execute the job
+(Note: This setting is only meant as an example. What you want to specify here depends on your the HTCondor setup
+you're using).
+
+.. hint::
+    Currently, the ``HTCondorProcess`` implementation assumes that your setup uses a shared file system. This means, that
+    the environment setup script, the result and the log directory have to be placed somewhere the execution node has access
+    to. In addition the executed python file has also to be accessible from the execution node.
+
+If you have job (task) specific settings, you can specify them by adding a ``htcondor_settings`` attribute
+to your task like this
+
+.. literalinclude:: ../../tests/htcondor/htcondor_example_b2luigi_2.py
+       :linenos:
+
+By assigning a dictionary to the ``htcondor_settings`` attribute (line 8-11 and 25-28), you can specify e.g the number of cpus or the
+required memory for the task. For an overview of possible settings refer to the
+`HTCondor documentation <https://htcondor.readthedocs.io/en/latest/users-manual/submitting-a-job.html#>`_.
+These settings have to valid HTCondor settings you would normally write into a job
+submission file.
+
+Currently, besides the actual task output, the ``results`` directory will also contain the HTCondor job submission file, the
+executable wrapper and a copy of the settings file.
+
     Reference implementation of the batch process for a HTCondor batch system.
 
     We assume that the batch system shares a file system with the submission node you
