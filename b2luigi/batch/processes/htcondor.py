@@ -180,7 +180,7 @@ class HTCondorProcess(BatchProcess):
 
         # Specify the executable
         executable_file = create_executable_wrapper(self.task)
-        submit_file_content.append(f"executable = {executable_file}")
+        submit_file_content.append(f"executable = {os.path.basename(executable_file)}")
 
         # Specify additional settings
         general_settings = get_setting("htcondor_settings", dict())
