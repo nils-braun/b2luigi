@@ -29,29 +29,26 @@ _batch_job_status_cache = LSFJobStatusCache()
 
 class LSFProcess(BatchProcess):
     """
-
-
-
-
-TODO:
-
-
-By default, all tasks will be sent to the short queue. This behavior can be changed on a per task level by giving
-the task a property called ``queue`` and setting it to the queue it should run on, e.g.
-
-.. code-block:: python
-
-    class MyLongTask(b2luigi.Task):
-        queue = "l"
-
-
     Reference implementation of the batch process for a LSF batch system.
 
-    We assume that the batch system shares a file system with the submission node you
-    are currently working on (or at least the current folder is also available there with the same path).
-    We also assume that we can run the same python interpreter there by just copying
-    the current environment and calling it from the same path.
-    Both requirements are fulfilled by a "normal" LSF setup, so you do not keep those in mind typically.
+    Additional to the basic batch setup (see :ref:`batch-label`), additional 
+    LSF-specific things are:
+
+    * the LSF queue can be controlled via the ``queue`` parameter, e.g.
+
+      .. code-block:: python
+
+        class MyLongTask(b2luigi.Task):
+            queue = "l"
+
+      The default is the short queue "s".
+
+    * By default, the environment variables from the scheduler are copied to
+      the workers.
+      This also applies we start in the same working directory and can reuse
+      the same executable etc.
+      Normally, you do not need to supply ``env_script`` or alike.
+       
     """
 
     def __init__(self, *args, **kwargs):

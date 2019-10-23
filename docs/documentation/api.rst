@@ -86,9 +86,9 @@ Other functions
 ---------------
 
 .. autofunction:: b2luigi.on_temporary_files
+.. autofunction:: b2luigi.core.utils.product_dict
 
 .. toctree::
     :maxdepth: 1
 
-    b2luigi.core.utils
     b2luigi.basf2_helper

@@ -26,21 +26,25 @@ def product_dict(**kwargs):
     Cross-product the given parameters and return a list of dictionaries.
 
     Example:
-    .. code-block:: python
 
-        >>> list(product_dict(arg_1=[1, 2], arg_2=[3, 4]))
-        [{'arg_1': 1, 'arg_2': 3}, {'arg_1': 1, 'arg_2': 4}, {'arg_1': 2, 'arg_2': 3}, {'arg_1': 2, 'arg_2': 4}]
+        .. code-block:: python
 
-    The thus produced list can directly be used as inputs for a required tasks:
+            >>> list(product_dict(arg_1=[1, 2], arg_2=[3, 4]))
+            [{'arg_1': 1, 'arg_2': 3}, {'arg_1': 1, 'arg_2': 4}, {'arg_1': 2, 'arg_2': 3}, {'arg_1': 2, 'arg_2': 4}]
 
-    .. code-block:: python
+        The thus produced list can directly be used as inputs for a required tasks:
 
-        def requires(self):
-            for args in product_dict(arg_1=[1, 2], arg_2=[3, 4]):
-                yield some_task(**args) 
+        .. code-block:: python
 
-    :param kwargs: Each keyword argument should be an iterable
-    :return: A list of kwargs where each list of input keyword arguments is cross-multiplied with every other.
+            def requires(self):
+                for args in product_dict(arg_1=[1, 2], arg_2=[3, 4]):
+                    yield some_task(**args) 
+
+    Parameters:
+        kwargs: Each keyword argument should be an iterable
+
+    Return:
+        A list of kwargs where each list of input keyword arguments is cross-multiplied with every other.
     """
     keys = kwargs.keys()
     vals = kwargs.values()
