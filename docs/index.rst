@@ -120,11 +120,13 @@ Main developer:
 
 *   Nils Braun (`nils-braun`_)
 
-Useful help and testing:
+Features, fixing, help and testing:
 
 *   Felix Metzner
 *   Patrick Ecker
 *   Jochen Gemmler
+*   Michael Eliachevitch
+*   Maximilian Welsch
 
 Stolen ideas:
 
