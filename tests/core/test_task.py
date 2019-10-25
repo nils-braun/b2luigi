@@ -71,5 +71,8 @@ class TaskTestCase(B2LuigiTestCase):
 
         input_file_names = task.get_input_file_names("file_a")
 
+        # We are only interested in the last 3 parts of the folder
+        input_file_names = ["/".join(x.split("/")[-3:]) for x in input_file_names]
+
         for i in range(100):
             self.assertIn(f"results/some_parameter={i}/file_a", input_file_names)
