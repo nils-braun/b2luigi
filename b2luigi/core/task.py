@@ -64,7 +64,7 @@ class Task(luigi.Task):
 
 
         """
-        return {output_file_name: self._get_output_file_target(output_file_name, create_folder=True)}
+        return {output_file_name: self._get_output_file_target(output_file_name)}
 
     def get_input_file_names(self, key=None):
         """

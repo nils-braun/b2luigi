@@ -44,6 +44,8 @@ def create_executable_wrapper(task):
 
     # Now we can write the file
     executable_file_dir = get_task_file_dir(task)
+    os.makedirs(executable_file_dir, exist_ok=True)
+
     executable_wrapper_path = os.path.join(
         executable_file_dir, "executable_wrapper.sh")
 
@@ -64,8 +66,9 @@ def run_task_remote(task):
     call. 
     """
     log_file_dir = get_log_file_dir(task)
-    stdout_log_file = log_file_dir + "stdout"
-    stderr_log_file = log_file_dir + "stderr"
+    os.makedirs(log_file_dir, exist_ok=True)
+    stdout_log_file = os.path.join(log_file_dir, "stdout")
+    stderr_log_file = os.path.join(log_file_dir, "stderr")
 
     executable_file = create_executable_wrapper(task)
 

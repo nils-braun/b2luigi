@@ -168,14 +168,15 @@ class HTCondorProcess(BatchProcess):
 
         # Specify where to write the log to
         log_file_dir = get_log_file_dir(self.task)
+        os.makedirs(log_file_dir, exist_ok=True)
 
-        stdout_log_file = log_file_dir + "stdout"
+        stdout_log_file = os.path.join(log_file_dir, "stdout")
         submit_file_content.append(f"output = {stdout_log_file}")
 
-        stderr_log_file = log_file_dir + "stderr"
+        stderr_log_file = os.path.join(log_file_dir, "stderr")
         submit_file_content.append(f"error = {stderr_log_file}")
 
-        job_log_file = log_file_dir + "job.log"
+        job_log_file = os.path.join(log_file_dir, "job.log")
         submit_file_content.append(f"log = {job_log_file}")
 
         # Specify the executable
@@ -198,6 +199,8 @@ class HTCondorProcess(BatchProcess):
         # Now we can write the submit file
         output_path = get_task_file_dir(self.task)
         submit_file_path = os.path.join(output_path, "job.submit")
+
+        os.makedirs(output_path, exist_ok=True)
 
         with open(submit_file_path, "w") as submit_file:
             submit_file.write("\n".join(submit_file_content))

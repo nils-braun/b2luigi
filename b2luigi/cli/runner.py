@@ -8,6 +8,7 @@ import os
 from b2luigi.batch.workers import SendJobWorkerSchedulerFactory
 from b2luigi.core.settings import set_setting
 from b2luigi.core.utils import task_iterator, get_all_output_files_in_tree
+from b2luigi.core.utils import create_output_dirs
 
 
 def run_as_batch_worker(task_list, cli_args, kwargs):
@@ -23,6 +24,7 @@ def run_as_batch_worker(task_list, cli_args, kwargs):
             # TODO: We do not process the information if (a) we have a new dependency and (b) why the task has failed.
             # TODO: Would be also nice to run the event handlers
             try:
+                create_output_dirs(task)
                 task.run()
                 task.on_success()
             except BaseException as ex:
