@@ -16,7 +16,7 @@ def create_executable_wrapper(task):
     executable_wrapper_content = [f"#!/bin/{shell}", "set -e"]
 
     # 1. First part is the folder we need to change if given
-    working_dir = get_setting("working_dir", task=task, default=os.path.dirname(get_filename()))
+    working_dir = get_setting("working_dir", task=task, default=os.path.abspath(os.path.dirname(get_filename())))
     executable_wrapper_content.append(f"cd {working_dir}")
 
     executable_wrapper_content.append("echo 'Working in the folder:'; pwd")
