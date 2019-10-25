@@ -5,7 +5,15 @@ install:
   - pip install flit 
   - pip install -U pytest pytest-cov python-coveralls
   - flit install -s
-script:
-  - pytest -v --cov b2luigi --cov-report term-missing
-after_success:
-  - coveralls
+
+jobs:
+  include:
+    - stage: tests
+      script: 
+        - pytest -v --cov b2luigi --cov-report term-missing
+      after_success:
+        - coveralls
+    - stage: deploy
+      script: flit publish
+      if: tag IS present
+      
