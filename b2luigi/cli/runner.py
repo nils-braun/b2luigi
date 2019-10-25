@@ -39,11 +39,15 @@ def run_as_batch_worker(task_list, cli_args, kwargs):
 
 
 def run_batched(task_list, cli_args, kwargs):
-    kwargs["worker_scheduler_factory"] = SendJobWorkerSchedulerFactory()
-    run_local(task_list, cli_args, kwargs)
+    run_luigi(task_list, cli_args, kwargs)
 
 
 def run_local(task_list, cli_args, kwargs):
+    set_setting("batch_system", "local")
+    run_luigi(task_list, cli_args, kwargs)
+
+
+def run_luigi(task_list, cli_args, kwargs):
     if cli_args.scheduler_host or cli_args.scheduler_port:
         core_settings = luigi.interface.core()
         host = cli_args.scheduler_host or core_settings.scheduler_host
@@ -52,6 +56,8 @@ def run_local(task_list, cli_args, kwargs):
         kwargs["scheduler_port"] = port
     else:
         kwargs["local_scheduler"] = True
+
+    kwargs["worker_scheduler_factory"] = SendJobWorkerSchedulerFactory()
 
     kwargs.setdefault("log_level", "INFO")
     luigi.build(task_list, **kwargs)
