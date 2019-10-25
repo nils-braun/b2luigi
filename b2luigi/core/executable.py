@@ -1,4 +1,4 @@
-from b2luigi.core.utils import create_cmd_from_task, get_task_file_dir, get_log_file_dir, add_on_failure_function
+from b2luigi.core.utils import create_cmd_from_task, get_task_file_dir, get_log_file_dir, add_on_failure_function, get_filename
 from b2luigi.core.settings import get_setting
 
 import os
@@ -16,7 +16,7 @@ def create_executable_wrapper(task):
     executable_wrapper_content = [f"#!/bin/{shell}", "set -e"]
 
     # 1. First part is the folder we need to change if given
-    working_dir = get_setting("working_dir", task=task, default=os.getcwd())
+    working_dir = get_setting("working_dir", task=task, default=os.path.dirname(get_filename()))
     executable_wrapper_content.append(f"cd {working_dir}")
 
     executable_wrapper_content.append("echo 'Working in the folder:'; pwd")
