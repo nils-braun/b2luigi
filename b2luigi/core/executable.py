@@ -1,4 +1,4 @@
-from b2luigi.core.utils import create_cmd_from_task, get_task_file_dir, get_log_file_dir, add_on_failure_function, get_filename
+from b2luigi.core.utils import create_cmd_from_task, get_task_file_dir, get_log_file_dir, add_on_failure_function, get_filename, map_folder
 from b2luigi.core.settings import get_setting
 
 import os
@@ -26,7 +26,9 @@ def create_executable_wrapper(task):
     # (a) If given, use the environment script
     env_setup_script = get_setting("env_script", task=task, default="")
     if env_setup_script:
-        if not os.path.isfile(env_setup_script):
+        # The script will be called from the directory of the script. So we have to make sure the
+        # env_script is reachable from there (not from where we are currently)
+        if not os.path.isfile(map_folder(env_setup_script)):
             raise FileNotFoundError(f"Environment setup script {env_setup_script} does not exist.")
         executable_wrapper_content.append(f"source {env_setup_script}")
 
