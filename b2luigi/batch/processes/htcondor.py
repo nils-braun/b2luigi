@@ -11,7 +11,7 @@ import sys
 from b2luigi.core.settings import get_setting
 from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.batch.cache import BatchJobStatusCache
-from b2luigi.core.utils import get_log_file_dir, get_task_file_dir
+from b2luigi.core.utils import get_log_file_dir, get_task_file_dir, map_folder
 from b2luigi.core.executable import create_executable_wrapper
 
 
@@ -189,6 +189,34 @@ class HTCondorProcess(BatchProcess):
             general_settings.update(self.task.htcondor_settings)
         except AttributeError:
             pass
+
+        transfer_files = get_setting("transfer_files", task=self.task, default=[])
+        if transfer_files:
+            result_path = get_setting("result_path", task=self.task, default="")
+            if not result_path or result_path == ".":
+                raise ValueError("If using transfer_files, the result_path must be given explicitely (and non-empty or '.')")
+            
+            working_dir = get_setting("working_dir", task=self.task, default="")
+            if not working_dir or working_dir != ".":
+                raise ValueError("If using transfer_files, the working_dir must be explicitely set to '.'")
+
+            general_settings.setdefault("should_transfer_files", "YES")
+            general_settings.setdefault("when_to_transfer_output", "ON_EXIT")
+            
+            transfer_files = set(transfer_files)
+
+            for transfer_file in transfer_files:
+                if os.path.abspath(transfer_file) != transfer_file:
+                    raise ValueError(f"You should only give absolute file names in transfer_files! {os.path.abspath(transfer_file)} != {transfer_file}")
+
+            env_setup_script = get_setting("env_script", task=self.task, default="")
+            if env_setup_script:
+                # TODO: make sure to call it relatively
+                transfer_files.add(os.path.abspath(env_setup_script))
+
+            general_settings.setdefault("transfer_input_files", ",".join(transfer_files))
+            general_settings.setdefault("transfer_output_files",  result_path)
+            general_settings.setdefault("initialdir", map_folder("."))
         
         for key, item in general_settings.items():
             submit_file_content.append(f"{key} = {item}")
