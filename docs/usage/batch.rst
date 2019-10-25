@@ -57,18 +57,33 @@ Therefore ``b2luigi`` provides you with three mechanism to set the environment f
     b2luigi.set_setting("executable", ["python3"])
 
 
-Different File System 
----------------------
+File System 
+-----------
 
 Depending on your batch system, the filesystem on the worker processing the task and the scheduler machine can be different or even unrelated.
-However, ``b2luigi`` needs at least three common folders: the result folder, the log folder and the folder of your script.
+Different batch systems and batch systems implementations treat this fact differently.
+In the following, the basic procedure and assumption is explained.
+Any deviation from this is described in the next section.
+
+``b2luigi`` needs at least three folders to be accessible from the scheduling as well as worker machine: 
+the result folder, the log folder and the folder of your script(s).
 If possible, use absolute paths for the result and log directory to prevent any problems.
 
-In some cases, the batch system starts the job in an arbitrary folder on the workers.
+.. hint:: 
+
+    All relative paths given to e.g. the ``result_path`` or the ``log_folder`` are always evaluated 
+    relative to the folder where your script lives.
+    To prevent any disambiguities, try to use absolute paths whenever possible.
+
+Some batch system starts the job in an arbitrary folder on the workers instead of the current folder on the scheduler.
 That is why ``b2luigi`` will change the directory into the path of your called script before starting the job.
+
 In case your script is accessible from a different location on the worker than on the scheduling machine, you can give the setting ``working_dir``
 to specify where the job should run.
 Your script needs to be in this folder and every relative path (e.g. for results or log) will be evaluated from there.
+
+Some batch systems (e.g. htcondor) support file copy mechanisms from the scheduler to the worker sytems.
+Please checkout the specifics below.
 
 Drawbacks of the batch mode
 ---------------------------

@@ -136,6 +136,19 @@ Later, we will build the average of those numbers.
         local sub project. Read the documentation on :meth:`b2luigi.get_setting` for
         more information on how to use it.
 
+    .. hint:: 
+        The result path (as well as any other paths, e.g. the log folders) are always evaluated
+        relatively to your script file.
+        This means ``results`` will always be created in the folder where your script is,
+        not where your current working directory is.
+        If you are unsure on the location, call 
+
+        .. code-block:: bash
+
+            python3 simple-example.py --show-output
+
+        More on file systems is described in :ref:`batch-label`, which is also mostly
+        true for non-batch calculations.
 
 5.  Let's add some more tasks to our little example. We want to use the currently created files
     and add them all together to an average number.
