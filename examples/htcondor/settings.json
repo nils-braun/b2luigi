@@ -1,0 +1,8 @@
+{
+	"batch_system": "htcondor",
+	"env_script": "setup_script.sh",
+	"executable": ["python3"],
+	"htcondor_settings": {
+		"some": "settings",
+	}
+}

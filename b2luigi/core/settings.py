@@ -6,27 +6,65 @@ import contextlib
 _current_global_settings = {}
 
 
-def get_setting(key, default=None):
+def get_setting(key, default=None, task=None):
     """
     ``b2luigi`` adds a settings management to ``luigi`` 
     and also uses it at various places.
+    Many batch systems, the output and log path, the environment
+    etc. is controlled via these settings.
 
-    With this function, you can get the current value of
-    a specific setting with the given key.
+    There are four ways settings could be defined.
+    They are used in the following order (an earlier setting
+    overrides a later one):
+
+    1. If the currently processed (or scheduled) task has a property
+       of the given name, it is used.
+       Please note that you can either set the property directly, e.g.
+
+       .. code-block:: python
+ 
+         class MyTask(b2luigi.Task):
+             batch_system = "htcondor"
+
+       or by using a function (which might even depend on the parameters)
+ 
+       .. code-block:: python
+ 
+         class MyTask(b2luigi.Task):
+             @property
+             def batch_system(self):
+                 return "htcondor"
+
+       The latter is especially useful for batch system specific settings 
+       such as requested wall time etc.
+
+    2. Settings set directly by the user in your script with a call to 
+       :meth:`b2luigi.set_setting`.
+    3. Settings specified in the ``settings.json`` in the folder of your 
+       script *or any folder above that*.
+       This makes it possible to have general project settings (e.g. the output path 
+       or the batch system) and a specific ``settings.json`` for your sub-project.
+
+    With this function, you can get the current value of a specific setting with the given key.
     If there is no setting defined with this name,
-    either the default is returned or, if you did not 
-    supply any default, a value error is raised.
+    either the default is returned or, if you did not supply any default, a value error is raised.
 
-    For information on how settings are set, please 
-    see :obj:`set_setting`.
     Settings can be of any type, but are mostly strings.
 
     Parameters:
         key (:obj:`str`): The name of the parameter to query.
+        task: (:obj:`b2luigi.Task`): If given, check if the task has a parameter 
+            with this name.
         default (optional): If there is no setting which the name, 
             either return this default or if it is not set, 
             raise a ValueError.
     """
+    if task:
+        try:
+            return getattr(task, key)
+        except AttributeError:
+            pass
+
     try:
         return _current_global_settings[key]
     except KeyError:
@@ -45,25 +83,9 @@ def get_setting(key, default=None):
 
 def set_setting(key, value):
     """
-    There are two possibilities to set a setting with a given name:
-
-    * Either you use this function and supply the key and the value.
-      The setting is then defined globally for all following calls
-      to :obj:`get_setting` with the specific key.
-    * Or you add a file called ``settings.json`` the the current
-      working directory *or any folder above that*.
-      In the json file, you need to supply a key and a value for each
-      setting you want to have, e.g::
-
-        {
-            "result_path": "results",
-            "some_setting": "some_value"
-        }
-
-      By looking also in the parent folders for setting files, you can
-      define project settings in a top folder and specific settings
-      further down in your local folders.
-
+    Set the setting with the specified name - overriding any ``setting.json``.
+    If you want to have task specific settings, create a
+    parameter with the given name or your task.
     """
     _current_global_settings[key] = value
 

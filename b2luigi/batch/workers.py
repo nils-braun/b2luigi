@@ -18,10 +18,7 @@ class BatchSystems(enum.Enum):
 
 class SendJobWorker(luigi.worker.Worker):
     def _create_task_process(self, task):
-        try:
-            batch_system = task.batch_system
-        except AttributeError:
-            batch_system = BatchSystems(get_setting("batch_system", BatchSystems.lsf))
+        batch_system = BatchSystems(get_setting("batch_system", default=BatchSystems.lsf, task=task))
 
         if batch_system == BatchSystems.lsf:
             process_class = LSFProcess

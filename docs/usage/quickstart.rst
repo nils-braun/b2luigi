@@ -3,9 +3,11 @@
 Quick Start
 ===========
 
-LSF
-...
 We use a very simple task definition file and submit it to a LSF batch system.
+
+.. hint::
+    The default batch system currently is LSF, so if you do not change it, LSF will be 
+    used. Check out :ref:`batch-label` for more information.
 
 Our task will be very simple: we want to create 100 files with some random number in it.
 Later, we will build the average of those numbers.
@@ -32,6 +34,14 @@ Later, we will build the average of those numbers.
         But we strongly advice you to use ``b2luigi``'s task, as it has some more
         superior functions (see below).
 
+    Please not that we imported ``b2luigi`` with 
+
+    .. code-block:: python 
+
+        import b2luigi as luigi 
+
+    This makes the transition between ``b2luigi`` and ``luigi`` even simpler!
+
 2.  Call the newly created file with python:
 
     .. code-block:: bash
@@ -39,19 +49,22 @@ Later, we will build the average of those numbers.
         python simple-example.py --batch
 
     Instead of giving the batch parameter in as argument, you can also add it
-    to the ``b2luigi.process(.., batch=True)`` call.
+    to the ``luigi.process(.., batch=True)`` call.
 
     Each task will be scheduled as a batch job to your LSF queue.
     Using the dependency management of ``luigi``, the batch jobs are only scheduled when all dependencies are fulfilled
     saving you some unneeded CPU time on the batch system.
     This means although you have requested 200 workers, you only need
     100 workers to fulfill the tasks, so only 100 batch jobs will be started.
-    On your local machine runs only the scheduling mechanism needing only a small amount of CPUs.
+    On your local machine runs only the scheduling mechanism needing only a small amount of a single CPU power.
 
     .. hint::
 
-        If you have no LSF queue ready, you can also remove the `batch` argument.
+        If you have no LSF queue ready or you do not want to run on the batch, 
+        you can also remove the `batch` argument.
         This will fall back to a normal ``luigi`` execution.
+        Please see :ref:`batch-label` for more information on batch execution
+        and the discussion of other batch systems.
 
 3.  After the job is completed, you will see something like:
 
@@ -67,13 +80,14 @@ Later, we will build the average of those numbers.
 
         ===== Luigi Execution Summary =====
 
-    The log files for each task are written to the `logs` folder.
+    The log files for each task are written to the ``logs`` folder.
 
     After a job is submitted, ``b2luigi`` will check if it is still running or not and handle failed or done tasks correctly.
 
-4.  The defined outputs will in most of the cases depend on the parameters of the task, as
+4.  The defined output file names will in most of the cases depend on the parameters of the task, as
     you do not want to override your files from different tasks.
-    The cumbersome work of keeping track of the correct outputs can be handled by ``b2luigi``,
+    However this means, you always need to include all parameters in the file name to keep them different.
+    This cumbersome work can be handled by ``b2luigi`` automatically ,
     which will also help you ordering your files at no cost.
     This is especially useful in larger projects, when many people are defining and executing tasks.
 
@@ -83,11 +97,11 @@ Later, we will build the average of those numbers.
     .. literalinclude:: ../../tests/doc_examples/simple_example_b2luigi.py
        :linenos:
 
-    Before you execute the file (e.g. with ``--batch``), add a ``settings.json`` with the following content
-    in your current working directory:
+    Before continuing, remove the output of the former calculation.
 
-    .. literalinclude:: ../../tests/doc_examples/settings.json
-       :language: json
+    .. code-block:: bash 
+
+        rm -rf results 
 
     If you now call
 
@@ -97,12 +111,31 @@ Later, we will build the average of those numbers.
 
     you are basically doing the same as before, with some very nice benefits:
 
-        * The parameter values are automatically added to the output file (have a look into the `results/`
-          folder to see how it works)
-        * The ``settings.json`` will be used by all tasks in this folder and in each sub-folder.
-          You can use it to define project settings (like result folders) and specific settings for your
-          local sub project. Read the documentation on :meth:`b2luigi.get_setting` for
-          more information on how to use it.
+        * The parameter values are automatically added to the output file (have a look into the ``results/``
+          folder to see how it works and where the results are stored)
+        * The output for different parameters are stored on different locations, so no need to fear overriding 
+          results.
+        * The format of the folder structure makes it easy to work on it using bash commands as well as 
+          automated procedures.
+    
+    .. hint::
+        In the example, the base path for the results is defined in the python file with 
+
+        .. code-block:: python 
+
+            b2luigi.set_setting("result_path", "results")
+
+        Instead, you can also add a ``settings.json`` with the following content
+        in the folder where your script lives:
+
+        .. literalinclude:: ../../tests/doc_examples/settings.json
+            :language: json
+
+        The ``settings.json`` will be used by all tasks in this folder and in each sub-folder.
+        You can use it to define project settings (like result folders) and specific settings for your
+        local sub project. Read the documentation on :meth:`b2luigi.get_setting` for
+        more information on how to use it.
+
 
 5.  Let's add some more tasks to our little example. We want to use the currently created files
     and add them all together to an average number.
@@ -128,116 +161,5 @@ Later, we will build the average of those numbers.
     from before (the random numbers) and will not run the task again!
     It will only output a file in `results/average.txt` with a number near 0.5.
 
-You are now ready to face some more :ref:`advanced-label` or have a look into the :ref:`faq-label`.
-
-Choosing the LSF queue
-----------------------
-
-By default, all tasks will be sent to the short queue. This behaviour can be changed on a per task level by giving
-the task a property called ``queue`` and setting it to the queue it should run on, e.g.
-
-.. code-block:: python
-
-    class MyLongTask(b2luigi.Task):
-        queue = "l"
-
-
-
-Start a Central Scheduler
--------------------------
-
-When the number of tasks grows, it is sometimes hard to keep track of all of them (despite the summary in the end).
-For this, ``luigi`` brings a nice visualisation tool called the central scheduler.
-
-To start this you need to call the ``luigid`` executable.
-Where to find this depends on your installation type:
-
-a. If you have a installed ``b2luigi`` without user flag, you can just call the executable as it is already in your path:
-
-.. code-block:: bash
-
-    luigid --port PORT
-
-b. If you have a local installation, luigid is installed into your home directory:
-
-.. code-block:: bash
-
-    ~/.local/bin/luigid --port PORT
-
-The default port is 8082, but you can choose any non-occupied port.
-
-The central scheduler will register the tasks you want to process and keep track of which tasks are already done.
-
-To use this scheduler, call ``b2luigi`` by giving the connection details:
-
-.. code-block:: bash
-
-    python simple-task.py [--batch] --scheduler-host HOST --scheduler-port PORT
-
-which works for batch as well as non-batch jobs.
-You can now visit the url http://HOST:PORT with your browser and see a nice summary of the current progress
-of your tasks.
-
-
-Drawbacks of the batch mode
----------------------------
-
-Although the batch mode has many benefits, it would be unfair to not mention its downsides:
-
-*   We are currently assuming that you have the same environment setup on the batch system as locally
-    (actually, we are copying the console environment variables) and we will call the python executable which runs
-    your scheduling job.
-*   You have to choose the queue depending in your requirements (e.g. wall clock time) by yourself. So you need to make
-    sure that the tasks will actually finish before the batch system kills them because of timeout.
-*   There is currently no resubmission implemented. This means dying jobs because of batch system failures are just
-    dead. But because of the dependency checking mechanism of ``luigi`` it is simple to just redo the calculation
-    and re-calculate what is missing.
-*   The ``luigi`` feature to request new dependencies while task running (via yield) is not implemented for
-    the batch mode.
-
-
-HTCondor
-........
-To use HTCondor as batch system, you have to add the ``batch_system`` setting in the settings file like
-
-.. code-block:: json
-
-    {
-        "batch_system": "htcondor",
-        "result_path": "/path/to/results",
-        "log_folder":  "/path/to/logs",
-        "env_setup": "/path/to/env_setup.sh",
-        "htcondor_settings": {
-            "+ContainerOS": "Ubuntu1804"
-        }
-
-    }
-
-Additionaly, you have to provide a ``env_setup`` script that sets up the working environment on the execution node
-(in contrast to LSF, which uses the same environment as the submission node). It will be automatically sourced before
-each ``luigi`` task is executed.
-Another new setting is ``htcondor_settings``. This is a dictionary where you can specify settings that will be put in the
-job submission file used by HTCondor. These same settings are used for all jobs (tasks) that are submitted to the
-batch system. In the case above, ``"+ContainerOS": "Ubuntu1804"`` specifies an Ubuntu container used to execute the job
-(Note: This setting is only meant as an example. What you want to specify here depends on your the HTCondor setup
-you're using).
-
-.. hint::
-    Currently, the ``HTCondorProcess`` implementation assumes that your setup uses a shared file system. This means, that
-    the environment setup script, the result and the log directory have to be placed somewhere the execution node has access
-    to. In addition the executed python file has also to be accessible from the execution node.
-
-If you have job (task) specific settings, you can specify them by adding a ``htcondor_settings`` attribute
-to your task like this
-
-.. literalinclude:: ../../tests/htcondor/htcondor_example_b2luigi_2.py
-       :linenos:
-
-By assigning a dictionary to the ``htcondor_settings`` attribute (line 8-11 and 25-28), you can specify e.g the number of cpus or the
-required memory for the task. For an overview of possible settings refer to the
-`HTCondor documentation <https://htcondor.readthedocs.io/en/latest/users-manual/submitting-a-job.html#>`_.
-These settings have to valid HTCondor settings you would normally write into a job
-submission file.
-
-Currently, besides the actual task output, the ``results`` directory will also contain the HTCondor job submission file, the
-executable wrapper and a copy of the settings file.
+You are now ready to read some more documentation in :ref:`api-documentation-label` or have a look into the :ref:`faq-label`.
+Please also check out the different :ref:`run-modes-label`.

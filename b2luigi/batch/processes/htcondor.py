@@ -8,9 +8,11 @@ import subprocess
 import enum
 import sys
 
-from b2luigi.core.utils import get_setting, get_output_dirs, create_cmd_from_task
-from b2luigi.batch.processes import BatchProcess, JobStatus, BatchJobStatusCache
-from b2luigi.core.utils import get_log_file_dir
+from b2luigi.core.settings import get_setting
+from b2luigi.batch.processes import BatchProcess, JobStatus
+from b2luigi.batch.cache import BatchJobStatusCache
+from b2luigi.core.utils import get_log_file_dir, get_task_file_dir
+from b2luigi.core.executable import create_executable_wrapper
 
 
 class HTCondorJobStatusCache(BatchJobStatusCache):
@@ -31,49 +33,52 @@ class HTCondorJobStatusCache(BatchJobStatusCache):
         job to its `JobStatus`. The output is given as `string` and cannot be directly parsed into a json
         dictionary. It has the following form:
             [
-                {....}
+                {...}
                 ,
                 {...}
                 ,
-
                 {...}
             ]
-        The {....} are the different dictionaries including the specified attributes.
+        The {...} are the different dictionaries including the specified attributes.
         Sometimes it might happen that a job is completed in between the status checks. Then its final status
-        can be found in the `condor_history` file (works mostly in the same way as `condor_q`.
-        Both commands are used in order to find the `JobStatus`.
+        can be found in the `condor_history` file (works mostly in the same way as `condor_q`).
+        Both commands are used in order to find out the `JobStatus`.
         """
         # https://htcondor.readthedocs.io/en/latest/man-pages/condor_q.html
-        q_cmd = ["condor_q", "-json", "-attributes", "ClusterId,ProcId,JobStatus"]
-        # https://htcondor.readthedocs.io/en/latest/man-pages/condor_history.html
-        history_cmd = ["condor_history", "-json", "-attributes", "ClusterId,ProcId,JobStatus"]
+        q_cmd = ["condor_q", "-json", "-attributes", "ClusterId,JobStatus,ExitStatus"]
 
         if job_id:
-            q_cmd.append(str(job_id))
-            output = subprocess.check_output(q_cmd)
+            output = subprocess.check_output(q_cmd + [str(job_id)])
         else:
             output = subprocess.check_output(q_cmd)
+
+        seen_ids = self._fill_from_output(output)
+
+        # If the specified job can not be found in the condor_q output, we need to request its history
+        if job_id and job_id not in seen_ids:
+            # https://htcondor.readthedocs.io/en/latest/man-pages/condor_history.html
+            history_cmd = ["condor_history", "-json", "-attributes", "ClusterId,JobStatus,ExitCode", "-match", "1", str(job_id)]
+            output = subprocess.check_output(history_cmd)
+
+            self._fill_from_output(output)
+
+    def _fill_from_output(self, output):
         output = output.decode()
 
-        dict_list = []
-        for status_dict in output.lstrip("[\n").rstrip("\n]\n").split("\n,\n"):
-            if status_dict:
-                dict_list.append(json.loads(status_dict))
+        seen_ids = set()
+
+        if not output:
+            return seen_ids
+
+        for status_dict in json.loads(output):
+            if status_dict["JobStatus"] == HTCondorJobStatus.completed and status_dict["ExitCode"]:
+                self[status_dict["ClusterId"]] = HTCondorJobStatus.failed
             else:
-                continue
+                self[status_dict["ClusterId"]] = status_dict["JobStatus"]
 
-        if job_id:
-            if job_id not in [status_dict["ClusterId"] for status_dict in dict_list]:
-                history_cmd.append(str(job_id))
-                output = subprocess.check_output(history_cmd)
-                output = output.decode()
-                output = output.lstrip("[\n").rstrip("\n]\n").split("\n,\n")
-                if output:
-                    for status_dict in output:
-                        dict_list.append(json.loads(status_dict))
+            seen_ids.add(status_dict["ClusterId"])
 
-        for status_dict in dict_list:
-            self[status_dict["ClusterId"]] = status_dict["JobStatus"]  # int -> int
+        return seen_ids
 
 
 class HTCondorJobStatus(enum.IntEnum):
@@ -85,6 +90,7 @@ class HTCondorJobStatus(enum.IntEnum):
     removed = 3
     completed = 4
     held = 5
+    failed = 999
 
 
 _batch_job_status_cache = HTCondorJobStatusCache()
@@ -94,31 +100,33 @@ class HTCondorProcess(BatchProcess):
     """
     Reference implementation of the batch process for a HTCondor batch system.
 
-    We assume that the batch system shares a file system with the submission node you
-    are currently working on (or at least the current folder and the result/log directory
-    are also available there with the same path).
-    An environment has to be set up on its own for each job. For that, a environment
-    setup script has to be provided in the ``settings.json`` file.
-    If no own python cmd is specified, the task is executed with the current ``python3``
-    available after the environment is setup.
-    General settings (may be depended on your HTCondor setup) that affect all jobs (tasks)
-    can be specified in the ``settings.json`` by adding a ``htcondor_settings`` entry.
-    Job specific settings, e.g. number of cpus or required memory can be specified by adding
-    a ``htcondor_settings`` attribute to the task. It's value has to be a dictionary containing
-    also HTCondor settings as key/value pairs.
+    Additional to the basic batch setup (see :ref:`batch-label`), additional 
+    HTCondor-specific things are:
+
+    * Please note that most of the HTCondor applications do not have the same
+      environment setup on submission and worker machines, so you might always want to give an 
+      ``env_script``, an ``env`` setting and/or a different ``executable``.
+    * You can give an ``htcondor_setting`` dict setting flag for additional options, such as 
+      requested memory etc. It's value has to be a dictionary containing also HTCondor settings as key/value pairs. 
+      These options will be written into the job submission file.
+      For an overview of possible settings refer to the 
+      `HTCondor documentation <https://htcondor.readthedocs.io/en/latest/users-manual/submitting-a-job.html#>`_.
+
+    Example:
+
+        .. literalinclude:: ../../examples/htcondor/htcondor_example.py
+           :linenos:
+      
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # reassign task_cmd since the current python3 command provided by
-        # the new environment should be used by default
-        self.task_cmd, self.task_env = create_cmd_from_task(self.task, "python3")
         self._batch_job_id = None
 
     def get_job_status(self):
-
-        assert self._batch_job_id
+        if not self._batch_job_id:
+            return JobStatus.aborted
 
         try:
             job_status = _batch_job_status_cache[self._batch_job_id]
@@ -129,98 +137,69 @@ class HTCondorProcess(BatchProcess):
             return JobStatus.successful
         elif job_status in [HTCondorJobStatus.idle, HTCondorJobStatus.running]:
             return JobStatus.running
-        elif job_status in [HTCondorJobStatus.removed, HTCondorJobStatus.held]:
+        elif job_status in [HTCondorJobStatus.removed, HTCondorJobStatus.held, HTCondorJobStatus.failed]:
             return JobStatus.aborted
         else:
             raise ValueError(f"Unknown HTCondor Job status: {job_status}")
 
     def start_job(self):
-        submit_file_path = self._create_htcondor_submit_file()
+        submit_file = self._create_htcondor_submit_file()
 
-        submit_file_dir, submit_file = os.path.split(submit_file_path)
-        cmd = ["condor_submit", submit_file]
+        # HTCondor submit needs to be called in the folder of the submit file
+        submit_file_dir, submit_file = os.path.split(submit_file)
+        output = subprocess.check_output(["condor_submit", submit_file], cwd=submit_file_dir)
 
-        # apparently you have to be in the same directory as the submit file
-        # to be able to submit jobs with htcondor
-        cur_dir = os.getcwd()
-
-        # have to copy settings file to job working directory since b2luigi has to
-        # take the result path from it
-        shutil.copyfile("settings.json", os.path.join(submit_file_dir, "settings.json"))
-        output = subprocess.check_output(cmd, env=self.task_env, cwd=submit_file_dir)
         output = output.decode()
         match = re.search(r"[0-9]+\.", output)
         if not match:
             raise RuntimeError("Batch submission failed with output " + output)
 
         self._batch_job_id = int(match.group(0)[:-1])
+        
 
     def kill_job(self):
         if not self._batch_job_id:
             return
-        subprocess.check_call(["condor_rm", str(self._batch_job_id)], stdout=subprocess.DEVNULL)
+
+        subprocess.run(["condor_rm", str(self._batch_job_id)], stdout=subprocess.DEVNULL)
 
     def _create_htcondor_submit_file(self):
-        output_path = get_output_dirs(self.task, create_folder=True)
-        submit_file_path = os.path.join(output_path, "job.submit")
-        executable_wrapper_path = self._create_executable_wrapper()
+        submit_file_content = []
 
+        # Specify where to write the log to
         log_file_dir = get_log_file_dir(self.task)
-        stderr_log_file = log_file_dir + "job.err"
-        stdout_log_file = log_file_dir + "job.out"
+
+        stdout_log_file = log_file_dir + "stdout"
+        submit_file_content.append(f"output = {stdout_log_file}")
+
+        stderr_log_file = log_file_dir + "stderr"
+        submit_file_content.append(f"error = {stderr_log_file}")
+
         job_log_file = log_file_dir + "job.log"
+        submit_file_content.append(f"log = {job_log_file}")
 
+        # Specify the executable
+        executable_file = create_executable_wrapper(self.task)
+        submit_file_content.append(f"executable = {os.path.basename(executable_file)}")
+
+        # Specify additional settings
         general_settings = get_setting("htcondor_settings", dict())
-
         try:
-            job_settings = self.task.htcondor_settings
+            general_settings.update(self.task.htcondor_settings)
         except AttributeError:
-            job_settings = {}
+            pass
+        
+        for key, item in general_settings.items():
+            submit_file_content.append(f"{key} = {item}")
+
+        # Finally also start the process
+        submit_file_content.append("queue 1")
+
+        # Now we can write the submit file
+        output_path = get_task_file_dir(self.task)
+        submit_file_path = os.path.join(output_path, "job.submit")
 
         with open(submit_file_path, "w") as submit_file:
-            submit_file.write(f"""
-            executable = {executable_wrapper_path}
-            should_transfer_files = YES
-            transfer_input_files = settings.json
-            log = {job_log_file}
-            output = {stdout_log_file}
-            error = {stderr_log_file}
-            """)
-
-            for key, item in general_settings.items():
-                submit_file.write(f"{key} = {item}\n")
-
-            for key, item in job_settings.items():
-                submit_file.write(f"{key} = {item}\n")
-
-            submit_file.write(f"queue 1\n")
+            submit_file.write("\n".join(submit_file_content))
 
         return submit_file_path
-
-    def _create_executable_wrapper(self):
-
-        env_setup_path = get_setting("env_setup")
-
-        if not os.path.isfile(env_setup_path):
-            raise FileNotFoundError(f"Environment setup script {env_setup_path} does not exist.")
-
-        output_path = get_output_dirs(self.task, create_folder=True)
-        shell = get_setting("shell", "bash")
-
-        executable_wrapper_path = os.path.join(output_path, "executable_wrapper.sh")
-
-        condor_executable_cmd = " ".join(self.task_cmd)
-        with open(executable_wrapper_path, "w") as exec_wrapper:
-            exec_wrapper.write(f"#!/bin/{shell}\n")
-            exec_wrapper.write(f"source {env_setup_path}\n")
-            exec_wrapper.write("echo 'Starting executable'\n")
-            exec_wrapper.write("cd /jwd\n")
-            exec_wrapper.write(f"{condor_executable_cmd}\n")
-
-        # make wrapper executable
-        st = os.stat(executable_wrapper_path)
-        os.chmod(executable_wrapper_path, st.st_mode | stat.S_IEXEC)
-
-        return executable_wrapper_path
-
-

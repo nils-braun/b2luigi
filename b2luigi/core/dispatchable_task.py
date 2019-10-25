@@ -5,37 +5,17 @@ import sys
 
 from b2luigi.core.settings import get_setting
 from b2luigi.core.task import Task
-from b2luigi.core.utils import get_log_file_dir, add_on_failure_function, create_cmd_from_task, create_output_dirs
-
-
-def _run_task_locally(task, run_function):
-    create_output_dirs(task)
-    run_function(task)
-
-
-def _run_task_remote(task):
-    add_on_failure_function(task)
-
-    filename = os.path.realpath(sys.argv[0])
-    log_file_dir = get_log_file_dir(task)
-    stderr_file_name = log_file_dir + "stderr"
-    stdout_file_name = log_file_dir + "stdout"
-
-    cmd, env = create_cmd_from_task(task)
-
-    with open(stdout_file_name, "w") as stdout_file:
-        with open(stderr_file_name, "w") as stderr_file:
-            return_code = subprocess.call(cmd, stdout=stdout_file, stderr=stderr_file,
-                                          cwd=os.path.dirname(filename), env=env)
-
-    if return_code:
-        raise RuntimeError(f"Execution failed with return code {return_code}")
+from b2luigi.core.utils import create_output_dirs
+from b2luigi.core.executable import run_task_remote
 
 
 def dispatch(run_function):
     """
     In cases you have a run function calling external, probably insecure functionalities,
     use this function wrapper around your run function.
+    It basically `emulates` a batch submission on your local computer (without any
+    batch system) with the benefit of having a totally separete execution path.
+    If your called task fails miserably (e.g. segfaults), it does not crash your main application.
 
     Example:
         The run function can include any code you want. When the task runs,
@@ -47,31 +27,34 @@ def dispatch(run_function):
 
             import b2luigi
 
-
             class MyTask(b2luigi.Task):
                 @b2luigi.dispatch
                 def run(self):
                     call_some_evil_function()
 
+    Note:
+        We are reusing the batch system implementation here, with all its settings
+        and nobs to setup the environment etc.
+        If you want to control it in more detail, please check out :ref:`batch-label`.
+
     Implementation note:
-        In the subprocess we are calling the current sys.executable (which should by python 
-        hopefully) with the current input file as a parameter, but let it only run this
+        In the subprocess we are calling the current executable (which should by python) 
+        with the current input file as a parameter, but let it only run this
         specific task (by handing over the task id and the `--batch-worker` option).
         The run function notices this and actually runs the task instead of dispatching again.
 
-    You have the possibility to control what exactly is used as executable
-    by setting the "executable" setting, which needs to be a list of strings.
     Additionally, you can add a ``cmd_prefix`` parameter to your class, which also
     needs to be a list of strings, which are prefixed to the current command (e.g.
-    if you want to add a profiler to all your tasks)
+    if you want to add a profiler to all your tasks).
     """
 
     @functools.wraps(run_function)
-    def wrapped_run_function(self):
+    def wrapped_run_function(task):
         if get_setting("local_execution", False):
-            _run_task_locally(self, run_function)
+            create_output_dirs(task)
+            run_function(task)
         else:
-            _run_task_remote(self)
+            run_task_remote(task)
 
     return wrapped_run_function
 
