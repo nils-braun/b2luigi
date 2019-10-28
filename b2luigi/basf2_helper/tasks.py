@@ -32,19 +32,6 @@ class Basf2Task(b2luigi.DispatchableTask):
 
         return return_dict
 
-    @property
-    def env(self):
-        env = os.environ.copy()
-        if get_basf2_git_hash() == self.git_hash:
-            return env
-
-        with open(f".environ_{self.git_hash}") as f:
-            for line in f:
-                key, value = line.strip().split("=", 1)
-                env[key] = value
-
-        return env
-
 
 
 class Basf2PathTask(Basf2Task):
