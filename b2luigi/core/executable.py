@@ -35,6 +35,8 @@ def create_executable_wrapper(task):
     # (b) Now override with any environment from the task or settings
     env_overrides = get_setting("env", task=task, default={})
     for key, value in env_overrides.items():
+        value = value.replace("'", "'\''")
+        value = f"'{value}'"
         executable_wrapper_content.append(f"export {key}={value}")
 
     executable_wrapper_content.append("echo 'Current environment:'; env")
