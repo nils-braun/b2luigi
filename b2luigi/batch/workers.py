@@ -7,6 +7,7 @@ from b2luigi.batch.processes.lsf import LSFProcess
 from b2luigi.batch.processes.htcondor import HTCondorProcess
 from b2luigi.batch.processes.test import TestProcess
 from b2luigi.core.settings import get_setting
+from b2luigi.core.utils import create_output_dirs
 
 
 class BatchSystems(enum.Enum):
@@ -27,6 +28,7 @@ class SendJobWorker(luigi.worker.Worker):
         elif batch_system == BatchSystems.test:
             process_class = TestProcess
         elif batch_system == BatchSystems.local:
+            create_output_dirs(task)
             return super()._create_task_process(task)
         else:
             raise NotImplementedError

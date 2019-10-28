@@ -1,4 +1,4 @@
-from b2luigi.core.utils import create_cmd_from_task, get_task_file_dir, get_log_file_dir, add_on_failure_function
+from b2luigi.core.utils import create_cmd_from_task, get_task_file_dir, get_log_file_dir, add_on_failure_function, get_filename, map_folder
 from b2luigi.core.settings import get_setting
 
 import os
@@ -16,7 +16,7 @@ def create_executable_wrapper(task):
     executable_wrapper_content = [f"#!/bin/{shell}", "set -e"]
 
     # 1. First part is the folder we need to change if given
-    working_dir = get_setting("working_dir", task=task, default=os.getcwd())
+    working_dir = get_setting("working_dir", task=task, default=os.path.abspath(os.path.dirname(get_filename())))
     executable_wrapper_content.append(f"cd {working_dir}")
 
     executable_wrapper_content.append("echo 'Working in the folder:'; pwd")
@@ -26,7 +26,9 @@ def create_executable_wrapper(task):
     # (a) If given, use the environment script
     env_setup_script = get_setting("env_script", task=task, default="")
     if env_setup_script:
-        if not os.path.isfile(env_setup_script):
+        # The script will be called from the directory of the script. So we have to make sure the
+        # env_script is reachable from there (not from where we are currently)
+        if not os.path.isfile(map_folder(env_setup_script)):
             raise FileNotFoundError(f"Environment setup script {env_setup_script} does not exist.")
         executable_wrapper_content.append(f"source {env_setup_script}")
 
@@ -44,6 +46,8 @@ def create_executable_wrapper(task):
 
     # Now we can write the file
     executable_file_dir = get_task_file_dir(task)
+    os.makedirs(executable_file_dir, exist_ok=True)
+
     executable_wrapper_path = os.path.join(
         executable_file_dir, "executable_wrapper.sh")
 
@@ -64,8 +68,9 @@ def run_task_remote(task):
     call. 
     """
     log_file_dir = get_log_file_dir(task)
-    stdout_log_file = log_file_dir + "stdout"
-    stderr_log_file = log_file_dir + "stderr"
+    os.makedirs(log_file_dir, exist_ok=True)
+    stdout_log_file = os.path.join(log_file_dir, "stdout")
+    stderr_log_file = os.path.join(log_file_dir, "stderr")
 
     executable_file = create_executable_wrapper(task)
 

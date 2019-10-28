@@ -1,6 +1,7 @@
 import json
 import re
 import subprocess
+import os
 
 from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.batch.cache import BatchJobStatusCache
@@ -81,8 +82,10 @@ class LSFProcess(BatchProcess):
             pass
 
         log_file_dir = get_log_file_dir(self.task)
-        stdout_log_file = log_file_dir + "stdout"
-        stderr_log_file = log_file_dir + "stderr"
+        os.makedirs(log_file_dir, exist_ok=True)
+
+        stdout_log_file = os.path.join(log_file_dir, "stdout")
+        stderr_log_file = os.path.join(log_file_dir, "stderr")
 
         command += ["-eo", stderr_log_file, "-oo", stdout_log_file]
 

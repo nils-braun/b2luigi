@@ -8,6 +8,7 @@ import os
 from b2luigi.batch.workers import SendJobWorkerSchedulerFactory
 from b2luigi.core.settings import set_setting
 from b2luigi.core.utils import task_iterator, get_all_output_files_in_tree
+from b2luigi.core.utils import create_output_dirs
 
 
 def run_as_batch_worker(task_list, cli_args, kwargs):
@@ -23,6 +24,7 @@ def run_as_batch_worker(task_list, cli_args, kwargs):
             # TODO: We do not process the information if (a) we have a new dependency and (b) why the task has failed.
             # TODO: Would be also nice to run the event handlers
             try:
+                create_output_dirs(task)
                 task.run()
                 task.on_success()
             except BaseException as ex:
@@ -37,11 +39,15 @@ def run_as_batch_worker(task_list, cli_args, kwargs):
 
 
 def run_batched(task_list, cli_args, kwargs):
-    kwargs["worker_scheduler_factory"] = SendJobWorkerSchedulerFactory()
-    run_local(task_list, cli_args, kwargs)
+    run_luigi(task_list, cli_args, kwargs)
 
 
 def run_local(task_list, cli_args, kwargs):
+    set_setting("batch_system", "local")
+    run_luigi(task_list, cli_args, kwargs)
+
+
+def run_luigi(task_list, cli_args, kwargs):
     if cli_args.scheduler_host or cli_args.scheduler_port:
         core_settings = luigi.interface.core()
         host = cli_args.scheduler_host or core_settings.scheduler_host
@@ -50,6 +56,8 @@ def run_local(task_list, cli_args, kwargs):
         kwargs["scheduler_port"] = port
     else:
         kwargs["local_scheduler"] = True
+
+    kwargs["worker_scheduler_factory"] = SendJobWorkerSchedulerFactory()
 
     kwargs.setdefault("log_level", "INFO")
     luigi.build(task_list, **kwargs)

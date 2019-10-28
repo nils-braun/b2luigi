@@ -221,39 +221,44 @@ def get_serialized_parameters(task):
     return serialized_parameters
 
 
-def create_output_file_name(task, base_filename, create_folder=False, result_path=None):
+def create_output_file_name(task, base_filename, result_path=None):
     serialized_parameters = get_serialized_parameters(task)
 
     if not result_path:
-        filename = os.path.realpath(sys.argv[0])
-        default_result_folder = os.path.join(os.path.dirname(filename), ".")
-        result_path = get_setting("result_path", task=task, default=default_result_folder)
+        # Be sure to evaluate things relative to the current executed file, not to where we are now
+        result_path = map_folder(get_setting("result_path", task=task, default="."))
 
     param_list = [f"{key}={value}" for key, value in serialized_parameters.items()]
     output_path = os.path.join(result_path, *param_list)
-
-    if create_folder:
-        os.makedirs(output_path, exist_ok=True)
 
     return os.path.join(output_path, base_filename)
 
 
 def get_log_file_dir(task):
-    filename = os.path.realpath(sys.argv[0])
-    default_log_folder = os.path.join(os.path.dirname(filename), "logs")
-    base_log_file_dir = get_setting("log_folder", task=task, default=default_log_folder)
-
+    # Be sure to evaluate things relative to the current executed file, not to where we are now
+    base_log_file_dir = map_folder(get_setting("log_folder", task=task, default="logs"))
     log_file_dir = create_output_file_name(task, task.get_task_family() + "/", result_path=base_log_file_dir)
-    os.makedirs(log_file_dir, exist_ok=True)
 
     return log_file_dir
 
 
 def get_task_file_dir(task):
     task_file_dir = create_output_file_name(task, task.get_task_family() + "/")
-    os.makedirs(task_file_dir, exist_ok=True)
 
     return task_file_dir
+
+
+def get_filename():
+    import __main__
+    filename = __main__.__file__
+
+    return filename
+
+def map_folder(input_folder):
+    filename = get_filename()
+    filepath = os.path.dirname(filename)
+
+    return os.path.join(filepath, input_folder)
 
 
 def _to_dict(d):
@@ -280,7 +285,7 @@ def _flatten(struct):
 
 
 def on_failure(self, exception):
-    log_file_dir = get_log_file_dir(self)
+    log_file_dir = os.path.abspath(get_log_file_dir(self))
 
     print(colorama.Fore.RED)
     print("Task", self.task_family, "failed!")
@@ -297,10 +302,16 @@ def add_on_failure_function(task):
 
 
 def create_cmd_from_task(task):
-    filename = os.path.realpath(sys.argv[0])
+    filename = os.path.basename(get_filename())
 
     cmd = get_setting("cmd_prefix", task=task, default=[])
-    cmd += get_setting("executable", task=task, default=[sys.executable])
+
+    executable = get_setting("executable", task=task, default=[sys.executable])
+
+    if isinstance(executable, str):
+        raise ValueError("Your specified executable needs to be a list of strings, e.g. [python3]")
+
+    cmd += executable
     cmd += [filename, "--batch-runner", "--task-id", task.task_id]
 
     return cmd
