@@ -1,12 +1,12 @@
-import b2luigi as luigi
+import b2luigi
 import random
 
 
-class MyNumberTask(luigi.Task):
-    some_parameter = luigi.Parameter()
+class MyNumberTask(b2luigi.Task):
+    some_parameter = b2luigi.IntParameter()
 
     def output(self):
-        return luigi.LocalTarget(f"results/output_file_{self.some_parameter}.txt")
+        return b2luigi.LocalTarget(f"results/output_file_{self.some_parameter}.txt")
 
     def run(self):
         random_number = random.random()
@@ -15,4 +15,6 @@ class MyNumberTask(luigi.Task):
 
 
 if __name__ == "__main__":
-    luigi.process([MyNumberTask(some_parameter=i) for i in range(100)])
+    b2luigi.set_setting("result_path", "results")
+    b2luigi.process([MyNumberTask(some_parameter=i) for i in range(100)], 
+                    workers=200)

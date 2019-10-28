@@ -22,6 +22,16 @@ Later, we will build the average of those numbers.
     A task can have parameters, as in our case the ``some_parameter`` defined in line 6.
     Each task needs to define, what it will output in its ``output`` function.
 
+    .. note:: 
+
+        We have defined a result path in the script with 
+
+        .. code-block:: python 
+
+            b2luigi.set_setting("results")
+
+        You can ignore that for not - we will come back to it later.
+
     In our run function, we generate a random number and write it to the output file,
     which is named after the parameter of the task and stored in a result folder.
 
@@ -34,13 +44,13 @@ Later, we will build the average of those numbers.
         But we strongly advice you to use ``b2luigi``'s task, as it has some more
         superior functions (see below).
 
-    Please not that we imported ``b2luigi`` with 
+    Please not that we could have imported ``b2luigi`` with 
 
     .. code-block:: python 
 
         import b2luigi as luigi 
 
-    This makes the transition between ``b2luigi`` and ``luigi`` even simpler!
+    to make the transition between ``b2luigi`` and ``luigi`` even simpler.
 
 2.  Call the newly created file with python:
 
@@ -66,9 +76,10 @@ Later, we will build the average of those numbers.
         Please see :ref:`batch-label` for more information on batch execution
         and the discussion of other batch systems.
 
+
 3.  After the job is completed, you will see something like:
 
-    .. code-block:: bash
+    .. code-block:: 
 
         ===== Luigi Execution Summary =====
 
@@ -117,6 +128,9 @@ Later, we will build the average of those numbers.
           results.
         * The format of the folder structure makes it easy to work on it using bash commands as well as 
           automated procedures.
+        * Other files related to your job, e.g. the submission files etc. are also placed into this
+          folder (this is why the very first example defined it already).
+        * The default is to use the folder where your script is located.
     
     .. hint::
         In the example, the base path for the results is defined in the python file with 
@@ -136,7 +150,7 @@ Later, we will build the average of those numbers.
         local sub project. Read the documentation on :meth:`b2luigi.get_setting` for
         more information on how to use it.
 
-    .. hint:: 
+    .. attention:: 
         The result path (as well as any other paths, e.g. the log folders) are always evaluated
         relatively to your script file.
         This means ``results`` will always be created in the folder where your script is,

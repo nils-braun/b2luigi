@@ -17,4 +17,5 @@ class MyNumberTask(b2luigi.Task):
 
 if __name__ == "__main__":
     b2luigi.set_setting("result_path", "results")
-    b2luigi.process([MyNumberTask(some_parameter=i) for i in range(10)])
+    b2luigi.process([MyNumberTask(some_parameter=i) for i in range(100)],
+                     workers=200)
