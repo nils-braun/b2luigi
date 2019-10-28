@@ -28,13 +28,31 @@ files. Be careful, though, as these log files will of course be overwritten if m
 task receive the same paths to write to!
 
 
+Can I exclude one job from batch processing
+-------------------------------------------
+
+The setting ``batch_system`` defines which submission method is used for scheduling 
+your tasks when using ``batch=True`` or ``--batch``.
+In most cases, you set your ``batch_system`` globally (e.g. in a ``settings.json``)
+file and start all your tasks with ``--batch`` or ``batch=True``.
+If you want a single task to run only locally (e.g. because of constraints in 
+the batch farm) you can set the ``batch_system`` only for this job by adding a member to this task:
+
+.. code-block:: python 
+
+    class MyLocalTask(b2luigi.Task):
+        batch_system = "local"
+
+        def run(self):
+            ...
+
 How do I handle parameter values which include "/" (or other unusual characters)?
 ---------------------------------------------------------------------------------
 
 ``b2luigi`` automatically generates the filenames for your output or log files out of
-the current tasks values in the form
+the current tasks values in the form::
 
-    ``<result-path>/param1=value1/param2=value2/..../filename.ext``
+    <result-path>/param1=value1/param2=value2/..../filename.ext
 
 The values are given by the serialisation of your parameter, which is basically its string representation.
 Sometimes, this representation may include characters not suitable for their usage as a path name,
