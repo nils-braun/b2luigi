@@ -65,9 +65,11 @@ Different batch systems and batch systems implementations treat this fact differ
 In the following, the basic procedure and assumption is explained.
 Any deviation from this is described in the next section.
 
-``b2luigi`` needs at least three folders to be accessible from the scheduling as well as worker machine: 
-the result folder, the log folder and the folder of your script(s).
+By default, ``b2luigi`` needs at least two folders to be accessible from the scheduling as well as worker machine: 
+the result folder and the folder of your script(s).
 If possible, use absolute paths for the result and log directory to prevent any problems.
+Some batch systems (e.g. htcondor) support file copy mechanisms from the scheduler to the worker systems.
+Please checkout the specifics below.
 
 .. hint:: 
 
@@ -81,9 +83,6 @@ That is why ``b2luigi`` will change the directory into the path of your called s
 In case your script is accessible from a different location on the worker than on the scheduling machine, you can give the setting ``working_dir``
 to specify where the job should run.
 Your script needs to be in this folder and every relative path (e.g. for results or log) will be evaluated from there.
-
-Some batch systems (e.g. htcondor) support file copy mechanisms from the scheduler to the worker sytems.
-Please checkout the specifics below.
 
 Drawbacks of the batch mode
 ---------------------------

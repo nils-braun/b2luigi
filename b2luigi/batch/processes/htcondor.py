@@ -103,11 +103,31 @@ class HTCondorProcess(BatchProcess):
     Additional to the basic batch setup (see :ref:`batch-label`), additional 
     HTCondor-specific things are:
 
-    * Please note that most of the HTCondor applications do not have the same
-      environment setup on submission and worker machines, so you might always want to give an 
+    * Please note that most of the HTCondor batch farms do not have the same
+      environment setup on submission and worker machines, so you probably want to give an 
       ``env_script``, an ``env`` setting and/or a different ``executable``.
+    * HTCondor supports copying files from submission to workers. This means if the
+      folder of your script(s)/python project/etc. is not accessible on the worker, you can
+      copy it from the submission machine by adding it to the setting ``transfer_files``.
+      This list can host both folders and files.
+      Please note that due to HTCondors file transfer mechanism, all specified folders
+      and files will be copied into the worker node flattened, so if you specify
+      `a/b/c.txt` you will end up with a file `c.txt`.
+      If you use the ``transfer_files`` mechanism, you need to set the ``working_dir`` setting to "."
+      as the files will end up in the current worker scratch folder. 
+      All specified files/folders should be absolute paths.
+
+      .. hint::
+        Please do not specify any parts or the full results folder. This will lead to unexpected
+        behavior. We are working on a solution to also copy results, but until this the
+        results folder is still expected to be shared.
+
+      If you copy your python project using this setting to thw worker machine, do not
+      forget to actually set it up in your setup script.
+      Additionally, you might want to copy your ``settings.json`` as well.
+
     * You can give an ``htcondor_setting`` dict setting flag for additional options, such as 
-      requested memory etc. It's value has to be a dictionary containing also HTCondor settings as key/value pairs. 
+      requested memory etc. It's value has to be a dictionary containing HTCondor settings as key/value pairs. 
       These options will be written into the job submission file.
       For an overview of possible settings refer to the 
       `HTCondor documentation <https://htcondor.readthedocs.io/en/latest/users-manual/submitting-a-job.html#>`_.
