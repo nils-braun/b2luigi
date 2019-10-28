@@ -191,11 +191,7 @@ class HTCondorProcess(BatchProcess):
             pass
 
         transfer_files = get_setting("transfer_files", task=self.task, default=[])
-        if transfer_files:
-            result_path = get_setting("result_path", task=self.task, default="")
-            if not result_path or result_path == ".":
-                raise ValueError("If using transfer_files, the result_path must be given explicitely (and non-empty or '.')")
-            
+        if transfer_files:            
             working_dir = get_setting("working_dir", task=self.task, default="")
             if not working_dir or working_dir != ".":
                 raise ValueError("If using transfer_files, the working_dir must be explicitely set to '.'")
@@ -215,8 +211,6 @@ class HTCondorProcess(BatchProcess):
                 transfer_files.add(os.path.abspath(env_setup_script))
 
             general_settings.setdefault("transfer_input_files", ",".join(transfer_files))
-            general_settings.setdefault("transfer_output_files",  result_path)
-            general_settings.setdefault("initialdir", map_folder("."))
         
         for key, item in general_settings.items():
             submit_file_content.append(f"{key} = {item}")
