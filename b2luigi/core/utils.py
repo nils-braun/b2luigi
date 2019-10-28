@@ -235,6 +235,10 @@ def create_output_file_name(task, base_filename, result_path=None):
 
 
 def get_log_file_dir(task):
+    if hasattr(task, 'get_log_file_dir'):
+        log_file_dir = task.get_log_file_dir()
+        return log_file_dir
+        
     # Be sure to evaluate things relative to the current executed file, not to where we are now
     base_log_file_dir = map_folder(get_setting("log_folder", task=task, default="logs"))
     log_file_dir = create_output_file_name(task, task.get_task_family() + "/", result_path=base_log_file_dir)
