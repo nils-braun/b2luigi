@@ -305,7 +305,13 @@ def create_cmd_from_task(task):
     filename = os.path.basename(get_filename())
 
     cmd = get_setting("cmd_prefix", task=task, default=[])
-    cmd += get_setting("executable", task=task, default=[sys.executable])
+
+    executable = get_setting("executable", task=task, default=[sys.executable])
+
+    if isinstance(executable, str):
+        raise ValueError("Your specified executable needs to be a list of strings, e.g. [python3]")
+
+    cmd += executable
     cmd += [filename, "--batch-runner", "--task-id", task.task_id]
 
     return cmd
