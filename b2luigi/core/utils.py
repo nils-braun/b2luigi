@@ -308,7 +308,13 @@ def add_on_failure_function(task):
 def create_cmd_from_task(task):
     filename = os.path.basename(get_filename())
 
-    cmd = get_setting("cmd_prefix", task=task, default=[])
+    prefix = get_setting("executable_prefix", task=task, default=[],
+                         deprecated_keys=["cmd_prefix"])
+
+    if isinstance(prefix, str):
+        raise ValueError("Your specified executable_prefix needs to be a list of strings, e.g. [strace]")
+
+    cmd = prefix
 
     executable = get_setting("executable", task=task, default=[sys.executable])
 
