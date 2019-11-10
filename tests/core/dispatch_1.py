@@ -22,5 +22,5 @@ class MyTask(b2luigi.DispatchableTask):
 
 
 if __name__ == "__main__":
-    b2luigi.set_setting("result_path", "results")
+    b2luigi.set_setting("result_dir", "results")
     b2luigi.process(MyTask())

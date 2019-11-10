@@ -137,7 +137,7 @@ Later, we will build the average of those numbers.
 
         .. code-block:: python 
 
-            b2luigi.set_setting("result_path", "results")
+            b2luigi.set_setting("result_dir", "results")
 
         Instead, you can also add a ``settings.json`` with the following content
         in the folder where your script lives:

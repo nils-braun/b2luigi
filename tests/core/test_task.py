@@ -15,7 +15,7 @@ class TaskTestCase(B2LuigiTestCase):
         
         task = TaskA(some_parameter=3)
 
-        b2luigi.set_setting("result_path", "results/some_crazy_path")
+        b2luigi.set_setting("result_dir", "results/some_crazy_path")
         
         self.assertEqual(get_filled_params(task), {"some_parameter": 3})
         self.assertFalse(task.get_input_file_names())

@@ -221,15 +221,15 @@ def get_serialized_parameters(task):
     return serialized_parameters
 
 
-def create_output_file_name(task, base_filename, result_path=None):
+def create_output_file_name(task, base_filename, result_dir=None):
     serialized_parameters = get_serialized_parameters(task)
 
-    if not result_path:
+    if not result_dir:
         # Be sure to evaluate things relative to the current executed file, not to where we are now
-        result_path = map_folder(get_setting("result_path", task=task, default="."))
+        result_dir = map_folder(get_setting("result_dir", task=task, default=".", deprecated_keys=["result_path"]))
 
     param_list = [f"{key}={value}" for key, value in serialized_parameters.items()]
-    output_path = os.path.join(result_path, *param_list)
+    output_path = os.path.join(result_dir, *param_list)
 
     return os.path.join(output_path, base_filename)
 
@@ -240,8 +240,9 @@ def get_log_file_dir(task):
         return log_file_dir
         
     # Be sure to evaluate things relative to the current executed file, not to where we are now
-    base_log_file_dir = map_folder(get_setting("log_folder", task=task, default="logs"))
-    log_file_dir = create_output_file_name(task, task.get_task_family() + "/", result_path=base_log_file_dir)
+    base_log_file_dir = map_folder(get_setting("log_dir", task=task, default="logs", 
+                                               deprecated_keys=["log_folder"]))
+    log_file_dir = create_output_file_name(task, task.get_task_family() + "/", result_dir=base_log_file_dir)
 
     return log_file_dir
 
