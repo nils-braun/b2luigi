@@ -1,12 +1,13 @@
 import json
 import os
 import contextlib
+import warnings
 
 # The global object hosting the current settings
 _current_global_settings = {}
 
 
-def get_setting(key, default=None, task=None):
+def get_setting(key, default=None, task=None, deprecated_keys=None):
     """
     ``b2luigi`` adds a settings management to ``luigi`` 
     and also uses it at various places.
@@ -58,24 +59,26 @@ def get_setting(key, default=None, task=None):
         default (optional): If there is no setting which the name, 
             either return this default or if it is not set, 
             raise a ValueError.
+        deprecated_keys (:obj:`List`): Former names of this setting,
+            will throw a warning when still used
     """
-    if task:
-        try:
-            return getattr(task, key)
-        except AttributeError:
-            pass
-
+    # First check if the correct name is set. If yes, just use it
     try:
-        return _current_global_settings[key]
+        return _get_setting_implementation(key=key, task=task)
     except KeyError:
-        for settings_file in _setting_file_iterator():
-            try:
-                with open(settings_file, "r") as f:
-                    j = json.load(f)
-                    return j[key]
-            except KeyError:
-                pass
+        pass
 
+    # Ok, now test the deprecated setting names, but issue a warning
+    if deprecated_keys:
+        for deprecated_key in deprecated_keys:
+            try:
+                value = _get_setting_implementation(key=deprecated_key, task=task)
+                _warn_deprecated_setting(deprecated_key, key)
+                return value
+            except KeyError:
+                pass 
+
+    # Still not found? At this point we can only return the default or raise an error
     if default is None:
         raise ValueError(f"No settings found for {key}!")
     return default
@@ -122,3 +125,46 @@ def with_new_settings():
     yield
 
     _current_global_settings = old_settings.copy()
+
+
+def _get_setting_implementation(key, task):
+    """
+    Implementation of the settings retrieval.
+    Either get it from the task,
+    or from the user-defined settings
+    or from the setting files.
+    If nothing is set, raise a KeyError.
+    """
+    # First check if the task has an attribute with this name
+    if task:
+        try:
+            return getattr(task, key)
+        except AttributeError:
+            pass
+
+    # Then check if the setting was set explicitely
+    try:
+        return _current_global_settings[key]
+    except KeyError:
+        pass
+
+    # And finally check the settings files
+    for settings_file in _setting_file_iterator():
+        try:
+            with open(settings_file, "r") as f:
+                j = json.load(f)
+                return j[key]
+        except KeyError:
+            pass
+
+    # The setting was not found, so raise a KeyError
+    raise KeyError(f"No settings found for {key}!")
+
+
+class DeprecatedSettingsWarning(DeprecationWarning):
+    pass
+
+def _warn_deprecated_setting(setting_name, new_name):
+    warnings.warn(f"The setting with the name {setting_name} is deprecated. "
+                  f"Please use {new_name} instead. Future versions might remove this setting.",
+                  DeprecatedSettingsWarning)

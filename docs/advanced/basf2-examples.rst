@@ -67,7 +67,7 @@ executable explicitly.
         b2luigi.set_setting("executable", ["python3"])
 
         # Where to store the results
-        b2luigi.set_setting("result_path", "results")
+        b2luigi.set_setting("result_dir", "results")
 
         b2luigi.process(Wrapper(), batch=True, workers=100)
 

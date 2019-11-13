@@ -73,7 +73,7 @@ Please checkout the specifics below.
 
 .. hint:: 
 
-    All relative paths given to e.g. the ``result_path`` or the ``log_folder`` are always evaluated 
+    All relative paths given to e.g. the ``result_dir`` or the ``log_dir`` are always evaluated 
     relative to the folder where your script lives.
     To prevent any disambiguities, try to use absolute paths whenever possible.
 

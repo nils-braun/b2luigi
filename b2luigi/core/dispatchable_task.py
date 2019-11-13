@@ -50,7 +50,7 @@ def dispatch(run_function):
 
     @functools.wraps(run_function)
     def wrapped_run_function(task):
-        if get_setting("local_execution", False):
+        if get_setting("_dispatch_local_execution", default=False, deprecated_keys=["local_execution"]):
             create_output_dirs(task)
             run_function(task)
         else:

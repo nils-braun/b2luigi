@@ -1,9 +1,11 @@
 import json
 import os
+import warnings
 
 from ..helpers import B2LuigiTestCase
 
 import b2luigi
+from b2luigi.core.settings import DeprecatedSettingsWarning
 
 
 class TaskTestCase(B2LuigiTestCase):
@@ -59,3 +61,25 @@ class TaskTestCase(B2LuigiTestCase):
         self.assertEqual("my value", b2luigi.get_setting("my_second_setting", task=task))
         self.assertEqual("my task value", b2luigi.get_setting("my_third_setting", task=task))
         
+
+    def test_deprecated_settings(self):
+        self.assertRaises(ValueError, b2luigi.get_setting, key="my_setting", 
+                          deprecated_keys=["my_old_setting"])
+
+        b2luigi.set_setting("my_old_setting", "my value")
+
+        with warnings.catch_warnings(record=True) as w:
+            self.assertEqual("my value", b2luigi.get_setting("my_setting", 
+                            deprecated_keys=["my_old_setting"]))
+
+            self.assertEqual(len(w), 1)
+            self.assertIsInstance(w[-1].message, DeprecatedSettingsWarning)
+            self.assertIn("deprecated", str(w[-1].message))
+
+        b2luigi.set_setting("my_setting", "my new_value")
+
+        with warnings.catch_warnings(record=True) as w:
+            self.assertEqual("my new_value", b2luigi.get_setting("my_setting", default="default", 
+                            deprecated_keys=["my_old_setting"]))
+
+            self.assertEqual(len(w), 0)
