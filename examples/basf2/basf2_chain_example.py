@@ -28,7 +28,7 @@ class SimulationTask(Basf2PathTask):
         if self.event_type == SimulationType.y4s:
             dec_file = Belle2.FileSystem.findFile('analysis/examples/tutorials/B2A101-Y4SEventGeneration.dec')
         elif self.event_type == SimulationType.continuum:
-            dec_file = Belle2.FileSystem.findFile('analysis/examples/tutorials/B2A102-ccbarEventGeneration.dec')
+            dec_file = Belle2.FileSystem.findFile('analysis/examples/simulations/B2A102-ccbarEventGeneration.dec')
         else:
             raise ValueError(f"Event type {self.event_type} is not valid. It should be either 'Y(4S)' or 'Continuum'!")
 
