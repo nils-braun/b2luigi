@@ -229,7 +229,7 @@ def create_output_file_name(task, base_filename, result_dir=None):
         result_dir = map_folder(get_setting("result_dir", task=task, default=".", deprecated_keys=["result_path"]))
 
     param_list = [f"{key}={value}" for key, value in serialized_parameters.items()]
-    output_path = os.path.join(result_dir, *param_list)
+    output_path = os.path.join(result_dir, task.get_task_family(), *param_list)
 
     return os.path.join(output_path, base_filename)
 
