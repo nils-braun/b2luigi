@@ -9,7 +9,8 @@ import types
 
 import colorama
 
-from b2luigi.core.settings import set_setting, get_setting
+from b2luigi.core.settings import get_setting
+
 
 @contextlib.contextmanager
 def remember_cwd():
@@ -238,9 +239,9 @@ def get_log_file_dir(task):
     if hasattr(task, 'get_log_file_dir'):
         log_file_dir = task.get_log_file_dir()
         return log_file_dir
-        
+
     # Be sure to evaluate things relative to the current executed file, not to where we are now
-    base_log_file_dir = map_folder(get_setting("log_dir", task=task, default="logs", 
+    base_log_file_dir = map_folder(get_setting("log_dir", task=task, default="logs",
                                                deprecated_keys=["log_folder"]))
     log_file_dir = create_output_file_name(task, task.get_task_family() + "/", result_dir=base_log_file_dir)
 
@@ -248,6 +249,10 @@ def get_log_file_dir(task):
 
 
 def get_task_file_dir(task):
+    if hasattr(task, 'get_task_file_dir'):
+        task_file_dir = task.get_task_file_dir()
+        return task_file_dir
+
     task_file_dir = create_output_file_name(task, task.get_task_family() + "/")
 
     return task_file_dir
@@ -258,6 +263,7 @@ def get_filename():
     filename = __main__.__file__
 
     return filename
+
 
 def map_folder(input_folder):
     filename = get_filename()
