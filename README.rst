@@ -21,6 +21,6 @@ You can find more information in the `documentation <https://b2luigi.readthedocs
 Please note, that most of the core features are handled by ``luigi``, so you might want to have a look into
 the `luigi documentation <https://luigi.readthedocs.io/en/latest/>`_.
 
-If you find any bugs or want to improve the documentation, please send me a pull request.
+If you find any bugs or want to add a feature or improve the documentation, please send me a pull request!
 
-This project is in beta. Please be extra cautious when using in production mode.
+This project is in still beta. Please be extra cautious when using in production mode.
