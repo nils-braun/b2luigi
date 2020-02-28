@@ -231,10 +231,10 @@ def create_output_file_name(task, base_filename, result_dir=None):
         result_dir = map_folder(get_setting("result_dir", task=task, default=".", deprecated_keys=["result_path"]))
 
     for key, value in serialized_parameters.items():
-        if "/" in value:
-           warnings.warn(f"Value of parameter ``{key}`` contains forward slash '/'. "
-                         "This will result in an additional subdirectory in the output path. "
-                         "Consider using a hashed parameter (e.g. ``b2luigi.Parameter(hashed=True)``)")
+        if isinstance(key, str) and "/" in value:
+            warnings.warn(f"Value of parameter ``{key}`` contains forward slash \"/\". "
+                          "This will result in an additional subdirectory in the output path. "
+                          "Consider using a hashed parameter (e.g. ``b2luigi.Parameter(hashed=True)``)")
 
     param_list = [f"{key}={value}" for key, value in serialized_parameters.items()]
     output_path = os.path.join(result_dir, *param_list)
