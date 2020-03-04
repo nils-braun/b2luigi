@@ -1,6 +1,10 @@
-import subprocess
 import shlex
+import subprocess
+
+from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
+from b2luigi.core.executable import create_executable_wrapper
+from b2luigi.core.settings import get_setting
 
 
 class Gbasf2Process(BatchProcess):
@@ -51,7 +55,7 @@ class Gbasf2Process(BatchProcess):
             "Error in job categorization, numbers of jobs in cateries don't add up to total"
 
         if n_done > 0 and n_being_processed == 0:
-            # TODO this also classsifies projects unsuccessful where some jobs failed
+            # this also classsifies projects unsuccessful where some jobs failed
             return JobStatus.successful
         if n_failed == n_jobs:
             return JobStatus.aborted
@@ -62,12 +66,17 @@ class Gbasf2Process(BatchProcess):
         raise RuntimeError("Could not determine JobStatus")
 
     def start_job(self):
-        command_str = (f"gbasf2 {self.wrapper_file_path} -f {self.pickle_file_path} -i {self.input_dataset} "
-                       f" -p {self.project_name} -s {self.release}")
+        executable_file = create_executable_wrapper(self.task)
+        gbasf2_project_name = get_setting("gbasf2_project_name")
+        gbasf2_input_dataset = get_setting("gbasf2_input_dataset")
+        gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash())
+        # TODO add support for wrapping steering file, either in executable_script or here
+        # maybe toggable via special settin
+        command_str = (f"gbasf2 {executable_file} -i {gbasf2_input_dataset} "
+                       f" -p {gbasf2_project_name} -s {gbasf2_release}")
         command = shlex.split(command_str)
         print(f"\nSending jobs to grid via command:\n{command_str}\n")
         subprocess.run(command, check=True, env=self.gbasf2_env)
-        self._send_to_grid()
 
     def kill_job(self):
         if not self._check_project_exists():
