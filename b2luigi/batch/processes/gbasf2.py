@@ -1,10 +1,14 @@
 import shlex
 import subprocess
+import time
+from warnings import warn
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
-from b2luigi.core.executable import create_executable_wrapper
 from b2luigi.core.settings import get_setting
+
+import basf2
+import basf2.pickle_path as b2pp
 
 
 class Gbasf2Process(BatchProcess):
@@ -38,45 +42,66 @@ class Gbasf2Process(BatchProcess):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.project_name = None
+        self.project_name = get_setting("project_name")
 
     def get_job_status(self):
         n_jobs_by_status = self._get_n_jobs_by_status()
         n_jobs = sum(n_jobs_by_status.values())
         n_done = n_jobs_by_status["Done"]
-        n_failed = sum([n_jobs_by_status["Failed"],
-                        n_jobs_by_status["Killed"],
-                        n_jobs_by_status["Deleted"],
-                        n_jobs_by_status["Stalled"]])
-        n_being_processed = sum([n_jobs_by_status["Waiting"],
-                                 n_jobs_by_status["Completed"],
-                                 n_jobs_by_status["Running"]])
-        assert n_failed + n_done + n_being_processed == n_jobs,\
+        n_failed = (n_jobs_by_status["Failed"] +
+                    n_jobs_by_status["Killed"] +
+                    n_jobs_by_status["Deleted"] +
+                    n_jobs_by_status["Stalled"])
+        n_being_processed = n_jobs_by_status["Running"] + n_jobs_by_status["Completed"]
+        n_waiting = n_jobs_by_status["Waiting"]
+        assert n_failed + n_done + n_waiting + n_being_processed == n_jobs,\
             "Error in job categorization, numbers of jobs in cateries don't add up to total"
 
-        if n_done > 0 and n_being_processed == 0:
-            # this also classsifies projects unsuccessful where some jobs failed
+        # TODO think what to do with partially failed projects, maybe resubmit?
+
+        # if n_done > 0 and n_being_processed == 0:
+        # return JobStatus.successful
+        # if n_failed == n_jobs:
+        #     return JobStatus.aborted
+        if n_done == n_jobs:
             return JobStatus.successful
-        if n_failed == n_jobs:
+        if n_failed > 0:
             return JobStatus.aborted
-        if n_jobs_by_status["Waiting"] == n_jobs:
+        if n_waiting == n_jobs:
             return JobStatus.idle
         if n_being_processed > 0:
             return JobStatus.running
         raise RuntimeError("Could not determine JobStatus")
 
     def start_job(self):
-        executable_file = create_executable_wrapper(self.task)
         gbasf2_project_name = get_setting("gbasf2_project_name")
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset")
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash())
-        # TODO add support for wrapping steering file, either in executable_script or here
-        # maybe toggable via special settin
-        command_str = (f"gbasf2 {executable_file} -i {gbasf2_input_dataset} "
+
+        pickle_file_path = "serialized_basf2_path.pkl"
+        self._write_path_to_file(pickle_file_path)
+        wrapper_file_path = "steering_file_wrapper.py"
+        self._create_wrapper_steering_file(pickle_file_path, wrapper_file_path)
+
+        command_str = (f"gbasf2 {wrapper_file_path} -f {pickle_file_path} -i {gbasf2_input_dataset} "
                        f" -p {gbasf2_project_name} -s {gbasf2_release}")
         command = shlex.split(command_str)
         print(f"\nSending jobs to grid via command:\n{command_str}\n")
         subprocess.run(command, check=True, env=self.gbasf2_env)
+
+    def run(self):
+        if self._check_project_exists():
+            print(f"Finished project \"{self.project_name}\" already exists.")
+        else:
+            self.start_job()
+            # wait as long as job is idle or running on grid and download it then
+            while self.get_job_status() in {JobStatus.running, JobStatus.idle}:
+                time.sleep(60)
+        if self.get_job_status() == JobStatus.successful():
+            self._download_dataset()
+        else:
+            warn("Job unsuccessful")
+            # TODO what now?
 
     def kill_job(self):
         if not self._check_project_exists():
@@ -84,7 +109,26 @@ class Gbasf2Process(BatchProcess):
         command = shlex.split(f"gb2_job_kill --force -p {self.project_name}")
         subprocess.run(command, check=True, env=self.gbasf2_env)
 
-    def _check_project_exists(self) -> bool:
+    def _write_path_to_file(self, pickle_file_path):
+        path = self.task.create_path()
+        path.add_module("Progress")
+        b2pp.write_path_to_file(path, pickle_file_path)
+        print(f"\nSaved serialized path in {pickle_file_path}\nwith content:\n")
+        basf2.print_path(path)
+
+    def _create_wrapper_steering_file(self, pickle_file_path, wrapper_file_path, max_event=0):
+        with open(wrapper_file_path, "w") as wrapper_file:
+            wrapper_file.write(f"""
+import basf2
+from basf2 import pickle_path as b2pp
+path = b2pp.get_path_from_file("{pickle_file_path}")
+basf2.print_path(path)
+basf2.process(path, max_event={max_event})
+print(basf2.statistics)
+            """
+                               )
+
+    def _check_project_exists(self):
         command = shlex.split(f"gb2_job_status -p {self.project_name}")
         output = subprocess.check_output(command, encoding="utf-8", env=self.gbasf2_env).strip()
         if output == "0 jobs are selected.":
@@ -114,7 +158,7 @@ class Gbasf2Process(BatchProcess):
             "Error when obtaining job summary, it does not contain the required status keys"
         return n_jobs_by_status
 
-    def _download_dataset(self, output_directory) -> None:
+    def _download_dataset(self, output_directory="."):
         command = shlex.split(f"gb2_ds_get --force {self.project_name}")
         print("Downloading dataset with command ", " ".join(command))
         output = subprocess.check_output(command, env=self.gbasf2_env, encoding="utf-8", cwd=output_directory)
