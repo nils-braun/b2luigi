@@ -91,12 +91,13 @@ class Gbasf2Process(BatchProcess):
 
     def run(self):
         if self._check_project_exists():
-            print(f"Finished project \"{self.project_name}\" already exists.")
+            print(f"Project \"{self.project_name}\" already exists.")
         else:
             self.start_job()
-            # wait as long as job is idle or running on grid and download it then
-            while self.get_job_status() in {JobStatus.running, JobStatus.idle}:
-                time.sleep(60)
+
+        while self.get_job_status() in {JobStatus.running, JobStatus.idle}:
+            time.sleep(60)
+
         if self.get_job_status() == JobStatus.successful():
             self._download_dataset()
         else:
