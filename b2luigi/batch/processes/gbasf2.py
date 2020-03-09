@@ -57,13 +57,12 @@ class Gbasf2Process(BatchProcess):
         assert n_failed + n_done + n_waiting + n_being_processed == n_jobs,\
             "Error in job categorization, numbers of jobs in cateries don't add up to total"
 
-        # TODO think what to do with partially failed projects, maybe resubmit?
-
-        # if n_done > 0 and n_being_processed == 0:
-        # return JobStatus.successful
-        # if n_failed == n_jobs:
-        #     return JobStatus.aborted
+        # At the moment, gbasf2 project success requires all sub-jobs to be have the "Done" status
+        # TODO at settin for different success requirements
+        # TODO maybe resubmit of partially successful jobs
         if n_done == n_jobs:
+            # download dataset on job success, not sure if this is the best place to do so
+            self._download_dataset()
             return JobStatus.successful
         if n_failed > 0:
             return JobStatus.aborted
@@ -88,21 +87,6 @@ class Gbasf2Process(BatchProcess):
         command = shlex.split(command_str)
         print(f"\nSending jobs to grid via command:\n{command_str}\n")
         subprocess.run(command, check=True, env=self.gbasf2_env)
-
-    def run(self):
-        if self._check_project_exists():
-            print(f"Project \"{self.project_name}\" already exists.")
-        else:
-            self.start_job()
-
-        while self.get_job_status() in {JobStatus.running, JobStatus.idle}:
-            time.sleep(60)
-
-        if self.get_job_status() == JobStatus.successful():
-            self._download_dataset()
-        else:
-            warn("Job unsuccessful")
-            # TODO what now?
 
     def kill_job(self):
         if not self._check_project_exists():
