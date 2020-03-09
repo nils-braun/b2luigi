@@ -111,7 +111,12 @@ class Gbasf2Process(BatchProcess):
         subprocess.run(command, check=True, env=self.gbasf2_env)
 
     def _write_path_to_file(self, pickle_file_path):
-        path = self.task.create_path()
+        try:
+            path = self.task.create_path()
+        except AttributeError as err:
+            print("Gbasf2 batch process can only used with tasks that generate basf2 paths with "
+                  "a ``create_path()`` method, e.g. are an instance of ``Basf2PathTask``.")
+            raise err
         path.add_module("Progress")
         b2pp.write_path_to_file(path, pickle_file_path)
         print(f"\nSaved serialized path in {pickle_file_path}\nwith content:\n")
