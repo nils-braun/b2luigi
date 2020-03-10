@@ -42,7 +42,7 @@ class Gbasf2Process(BatchProcess):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.project_name = get_setting("project_name")
+        self.project_name = get_setting("gbasf2_project_name")
 
     def get_job_status(self):
         n_jobs_by_status = self._get_n_jobs_by_status()
@@ -73,7 +73,6 @@ class Gbasf2Process(BatchProcess):
         raise RuntimeError("Could not determine JobStatus")
 
     def start_job(self):
-        gbasf2_project_name = get_setting("gbasf2_project_name")
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset")
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash())
 
@@ -83,7 +82,7 @@ class Gbasf2Process(BatchProcess):
         self._create_wrapper_steering_file(pickle_file_path, wrapper_file_path)
 
         command_str = (f"gbasf2 {wrapper_file_path} -f {pickle_file_path} -i {gbasf2_input_dataset} "
-                       f" -p {gbasf2_project_name} -s {gbasf2_release}")
+                       f" -p {self.project_name} -s {gbasf2_release}")
         command = shlex.split(command_str)
         print(f"\nSending jobs to grid via command:\n{command_str}\n")
         subprocess.run(command, check=True, env=self.gbasf2_env)
