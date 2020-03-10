@@ -1,7 +1,5 @@
 import shlex
 import subprocess
-import time
-from warnings import warn
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
