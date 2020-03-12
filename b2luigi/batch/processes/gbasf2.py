@@ -64,19 +64,34 @@ class Gbasf2Process(BatchProcess):
         assert n_failed + n_done + n_waiting + n_being_processed == n_jobs,\
             "Error in job categorization, numbers of jobs in cateries don't add up to total"
 
-        # At the moment, gbasf2 project success requires all sub-jobs to be have the "Done" status
-        # TODO at setting for different success requirements
-        # TODO maybe resubmit of partially successful jobs
-        if n_done == n_jobs:
-            # download dataset on job success, not sure if this is the best place to do so
-            self._download_dataset()
-            return JobStatus.successful
-        if n_failed > 0:
-            return JobStatus.aborted
         if n_waiting == n_jobs:
             return JobStatus.idle
         if n_being_processed > 0:
             return JobStatus.running
+
+        # Setting for the success requirement of a gbasf2 project, e.g. if all
+        # sub-jobs need to be done or to allow for some failed jobs
+        gbasf2_require_all_jobs_done = get_setting("gbasf2_require_all_jobs_done", default=True)
+
+        if gbasf2_require_all_jobs_done:
+            # Require all jobs to be done for project success, any job failure results in a failed project
+            if n_done == n_jobs:
+                # download dataset on job success
+                self._download_dataset()
+                return JobStatus.successful
+            if n_failed > 0:
+                return JobStatus.aborted
+        else:
+            # in this case require allow for some failed jobs, return project
+            # success if some jobs were successful and no jobs are running
+            # anymore, even if some jobs in project failed, as long as not all failed.
+            if n_done > 0 and n_being_processed + n_waiting == 0:
+                self._download_dataset()
+                return JobStatus.successful
+            if n_failed == n_jobs:
+                return JobStatus.aborted
+        # TODO maybe resubmit of partially successful jobs
+        # TODO think of better way to download dataset on project succcess than as sideffect in this function
         raise RuntimeError("Could not determine JobStatus")
 
     def start_job(self):
