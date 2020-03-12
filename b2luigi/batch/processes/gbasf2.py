@@ -190,3 +190,10 @@ print(basf2.statistics)
         print(output)
         if output.strip() == "No file found":
             raise RuntimeError(f"No output data for gbasf2 project {self.project_name} found.")
+        # TODO: in the output dataset there is a root file created for each
+        # file in the input dataset.The output files are have numbers added to
+        # the filenames specified by the file names e.g. in the ``RootOutput``
+        # and ``VariablesToNtuple`` modules. That makes it hard for the user to
+        # define the output requirements in the ``output`` method of his task.
+        # So maybe merge the output files or do something else to facilitate
+        # defining outputs and checking that job is complete.
