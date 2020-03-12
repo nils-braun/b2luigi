@@ -43,6 +43,15 @@ class Gbasf2Process(BatchProcess):
         self.project_name = get_setting("gbasf2_project_name")
 
     def get_job_status(self):
+        """
+        Exract the status of all sub-jobs in a gbasf2 project from
+        ``gb2_job_status`` and return an overall project status, e.g. if all
+        jobs are done return successful
+        """
+        # If project is does not exist on grid yet, so can't query for gbasf2 project status
+        if not self._check_project_exists():
+            return JobStatus.idle
+
         n_jobs_by_status = self._get_n_jobs_by_status()
         n_jobs = sum(n_jobs_by_status.values())
         n_done = n_jobs_by_status["Done"]
@@ -56,7 +65,7 @@ class Gbasf2Process(BatchProcess):
             "Error in job categorization, numbers of jobs in cateries don't add up to total"
 
         # At the moment, gbasf2 project success requires all sub-jobs to be have the "Done" status
-        # TODO at settin for different success requirements
+        # TODO at setting for different success requirements
         # TODO maybe resubmit of partially successful jobs
         if n_done == n_jobs:
             # download dataset on job success, not sure if this is the best place to do so
@@ -86,12 +95,16 @@ class Gbasf2Process(BatchProcess):
         subprocess.run(command, check=True, env=self.gbasf2_env)
 
     def kill_job(self):
+        """Kill gbasf2 project"""
         if not self._check_project_exists():
             return
         command = shlex.split(f"gb2_job_kill --force -p {self.project_name}")
         subprocess.run(command, check=True, env=self.gbasf2_env)
 
     def _write_path_to_file(self, pickle_file_path):
+        """
+        Serialize and save the ``basf2.Path`` returned by ``self.task.create_path()`` to a python pickle file.
+        """
         try:
             path = self.task.create_path()
         except AttributeError as err:
@@ -104,6 +117,9 @@ class Gbasf2Process(BatchProcess):
         basf2.print_path(path)
 
     def _create_wrapper_steering_file(self, pickle_file_path, wrapper_file_path, max_event=0):
+        """
+        Create a steering file to send to the grid that executes the pickled basf2 path from ``self.task.create_path()``.
+        """
         with open(wrapper_file_path, "w") as wrapper_file:
             wrapper_file.write(f"""
 import basf2
@@ -116,6 +132,9 @@ print(basf2.statistics)
                                )
 
     def _check_project_exists(self):
+        """
+        Check if we can find the project on the grid with gb2_job_status.
+        """
         command = shlex.split(f"gb2_job_status -p {self.project_name}")
         output = subprocess.check_output(command, encoding="utf-8", env=self.gbasf2_env).strip()
         if output == "0 jobs are selected.":
@@ -126,6 +145,9 @@ print(basf2.statistics)
                            " could not determine if project exists")
 
     def _get_n_jobs_by_status(self):
+        """
+        Returns a dictionary with different gbasf2 job status as keys and the number of jobs in each category as values.
+        """
         assert self._check_project_exists(), f"Project {self.project_name} doest not exist yet"
 
         command = shlex.split(f"gb2_job_status -p {self.project_name}")
@@ -146,6 +168,7 @@ print(basf2.statistics)
         return n_jobs_by_status
 
     def _download_dataset(self, output_directory="."):
+        """Download the results from a gbasf2 project, stored as a dataset on the grid."""
         command = shlex.split(f"gb2_ds_get --force {self.project_name}")
         print("Downloading dataset with command ", " ".join(command))
         output = subprocess.check_output(command, env=self.gbasf2_env, encoding="utf-8", cwd=output_directory)
