@@ -92,7 +92,7 @@ class Gbasf2Process(BatchProcess):
                 return JobStatus.successful
             if n_failed == n_jobs:
                 return JobStatus.aborted
-        # TODO maybe resubmit of partially successful jobs
+        # TODO reschedule failed jobs via ``gb2_job_reschedule``
         # TODO think of better way to download dataset on project succcess than as sideffect in this function
         raise RuntimeError("Could not determine JobStatus")
 
@@ -113,7 +113,10 @@ class Gbasf2Process(BatchProcess):
         """Kill gbasf2 project"""
         if not self._check_project_exists():
             return
-        command = shlex.split(f"gb2_job_kill --force -p {self.project_name}")
+        # Note: The two commands ``gb2_job_delete`` and ``gb2_job_kill`` differ
+        # in that deleted jobs are killed and removed from the job database,
+        # while only killed jobs can be restarted.
+        command = shlex.split(f"gb2_job_delete --force -p {self.project_name}")
         subprocess.run(command, check=True, env=self.gbasf2_env)
 
     def _write_path_to_file(self):
