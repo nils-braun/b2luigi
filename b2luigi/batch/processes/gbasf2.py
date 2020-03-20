@@ -39,8 +39,8 @@ class Gbasf2Process(BatchProcess):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.project_name = get_setting("gbasf2_project_name")
+        # TODO maybe make sure that project name is unique in some way for the chosen set of luigi parameters
+        self.project_name = get_setting("gbasf2_project_name", task=self.task)
 
     def get_job_status(self):
         """
@@ -71,7 +71,7 @@ class Gbasf2Process(BatchProcess):
 
         # Setting for the success requirement of a gbasf2 project, e.g. if all
         # sub-jobs need to be done or to allow for some failed jobs
-        gbasf2_require_all_jobs_done = get_setting("gbasf2_require_all_jobs_done", default=True)
+        gbasf2_require_all_jobs_done = get_setting("gbasf2_require_all_jobs_done", default=True, task=self.task)
 
         if gbasf2_require_all_jobs_done:
             # Require all jobs to be done for project success, any job failure results in a failed project
@@ -95,8 +95,9 @@ class Gbasf2Process(BatchProcess):
         raise RuntimeError("Could not determine JobStatus")
 
     def start_job(self):
-        gbasf2_input_dataset = get_setting("gbasf2_input_dataset")
-        gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash())
+        # TODO input dataset weird results
+        gbasf2_input_dataset = get_setting("gbasf2_input_dataset", task=self.task)
+        gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
 
         pickle_file_path = "serialized_basf2_path.pkl"
         self._write_path_to_file(pickle_file_path)
