@@ -41,6 +41,8 @@ class Gbasf2Process(BatchProcess):
         super().__init__(*args, **kwargs)
         # TODO maybe make sure that project name is unique in some way for the chosen set of luigi parameters
         self.project_name = get_setting("gbasf2_project_name", task=self.task)
+        self.pickle_file_path = "serialized_basf2_path.pkl"
+        self.wrapper_file_path = "steering_file_wrapper.py"
 
     def get_job_status(self):
         """
@@ -65,7 +67,7 @@ class Gbasf2Process(BatchProcess):
             "Error in job categorization, numbers of jobs in cateries don't add up to total"
 
         if n_waiting == n_jobs:
-            return JobStatus.idle
+            return JobStatus.running
         if n_being_processed > 0:
             return JobStatus.running
 
@@ -95,16 +97,13 @@ class Gbasf2Process(BatchProcess):
         raise RuntimeError("Could not determine JobStatus")
 
     def start_job(self):
-        # TODO input dataset weird results
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset", task=self.task)
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
 
-        pickle_file_path = "serialized_basf2_path.pkl"
-        self._write_path_to_file(pickle_file_path)
-        wrapper_file_path = "steering_file_wrapper.py"
-        self._create_wrapper_steering_file(pickle_file_path, wrapper_file_path)
+        self._write_path_to_file()
+        self._create_wrapper_steering_file()
 
-        command_str = (f"gbasf2 {wrapper_file_path} -f {pickle_file_path} -i {gbasf2_input_dataset} "
+        command_str = (f"gbasf2 {self.wrapper_file_path} -f {self.pickle_file_path} -i {gbasf2_input_dataset} "
                        f" -p {self.project_name} -s {gbasf2_release}")
         command = shlex.split(command_str)
         print(f"\nSending jobs to grid via command:\n{command_str}\n")
@@ -117,7 +116,7 @@ class Gbasf2Process(BatchProcess):
         command = shlex.split(f"gb2_job_kill --force -p {self.project_name}")
         subprocess.run(command, check=True, env=self.gbasf2_env)
 
-    def _write_path_to_file(self, pickle_file_path):
+    def _write_path_to_file(self):
         """
         Serialize and save the ``basf2.Path`` returned by ``self.task.create_path()`` to a python pickle file.
         """
@@ -128,19 +127,19 @@ class Gbasf2Process(BatchProcess):
                   "a ``create_path()`` method, e.g. are an instance of ``Basf2PathTask``.")
             raise err
         path.add_module("Progress")
-        b2pp.write_path_to_file(path, pickle_file_path)
-        print(f"\nSaved serialized path in {pickle_file_path}\nwith content:\n")
+        b2pp.write_path_to_file(path, self.pickle_file_path)
+        print(f"\nSaved serialized path in {self.pickle_file_path}\nwith content:\n")
         basf2.print_path(path)
 
-    def _create_wrapper_steering_file(self, pickle_file_path, wrapper_file_path, max_event=0):
+    def _create_wrapper_steering_file(self, max_event=0):
         """
         Create a steering file to send to the grid that executes the pickled basf2 path from ``self.task.create_path()``.
         """
-        with open(wrapper_file_path, "w") as wrapper_file:
+        with open(self.wrapper_file_path, "w") as wrapper_file:
             wrapper_file.write(f"""
 import basf2
 from basf2 import pickle_path as b2pp
-path = b2pp.get_path_from_file("{pickle_file_path}")
+path = b2pp.get_path_from_file("{self.pickle_file_path}")
 basf2.print_path(path)
 basf2.process(path, max_event={max_event})
 print(basf2.statistics)
