@@ -1,9 +1,12 @@
+import os
 import shlex
 import subprocess
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.core.settings import get_setting
+from b2luigi.core.utils import get_log_file_dir
+from jinja2 import Template
 
 import basf2
 import basf2.pickle_path as b2pp
@@ -97,6 +100,8 @@ class Gbasf2Process(BatchProcess):
         raise RuntimeError("Could not determine JobStatus")
 
     def start_job(self):
+        log_file_dir = get_log_file_dir(self.task)
+        os.makedirs(log_file_dir, exist_ok=True)
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset", task=self.task)
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
 
@@ -134,20 +139,22 @@ class Gbasf2Process(BatchProcess):
         print(f"\nSaved serialized path in {self.pickle_file_path}\nwith content:\n")
         basf2.print_path(path)
 
-    def _create_wrapper_steering_file(self, max_event=0):
+    def _create_wrapper_steering_file(self):
         """
-        Create a steering file to send to the grid that executes the pickled basf2 path from ``self.task.create_path()``.
+        Create a steering file to send to the grid that executes the pickled
+        basf2 path from ``self.task.create_path()``.
         """
+        # read a jinja2 template for the steerinfile that should execute the pickled path
+        with open("templates/gbasf2_steering_file_wrapper.jinja2", "r") as template_file:
+            template = Template(template_file.read())
+            # replace some variable values in the template
+            steering_file_content = template.render(
+                pickle_file_path=self.pickle_file_path,
+                max_event=get_setting("max_event", default=0, task=self.task),
+            )
+        # write the template with the replacements to a new file which should be sent to the grid
         with open(self.wrapper_file_path, "w") as wrapper_file:
-            wrapper_file.write(f"""
-import basf2
-from basf2 import pickle_path as b2pp
-path = b2pp.get_path_from_file("{self.pickle_file_path}")
-basf2.print_path(path)
-basf2.process(path, max_event={max_event})
-print(basf2.statistics)
-            """
-                               )
+            wrapper_file.write(steering_file_content)
 
     def _check_project_exists(self):
         """
