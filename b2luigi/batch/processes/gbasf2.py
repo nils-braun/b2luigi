@@ -5,7 +5,7 @@ import subprocess
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.core.settings import get_setting
-from b2luigi.core.utils import get_log_file_dir
+from b2luigi.core.utils import get_log_file_dir, get_task_file_dir
 from jinja2 import Template
 
 import basf2
@@ -44,8 +44,16 @@ class Gbasf2Process(BatchProcess):
         super().__init__(*args, **kwargs)
         # TODO maybe make sure that project name is unique in some way for the chosen set of luigi parameters
         self.project_name = get_setting("gbasf2_project_name", task=self.task)
-        self.pickle_file_name = "serialized_basf2_path.pkl"
-        self.wrapper_file_name = "steering_file_wrapper.py"
+
+        # output file directory of the task to wrap with gbasf2, where we will
+        # store the pickled basf2 path and the created steerinfile to execute
+        # that path
+        task_file_dir = get_task_file_dir(self.task)
+        os.makedirs(task_file_dir, exist_ok=True)
+        #: file name in which the pickled basf2 path from ``self.task.create_path()`` will be stored
+        self.pickle_file_path = os.path.join(task_file_dir, "serialized_basf2_path.pkl")
+        #: file name for steering file that executes pickled path, which will be send to the grid
+        self.wrapper_file_path = os.path.join(task_file_dir, "steering_file_wrapper.py")
 
     def get_job_status(self):
         """
@@ -108,7 +116,7 @@ class Gbasf2Process(BatchProcess):
         self._write_path_to_file()
         self._create_wrapper_steering_file()
 
-        command_str = (f"gbasf2 {self.wrapper_file_name} -f {self.pickle_file_name} -i {gbasf2_input_dataset} "
+        command_str = (f"gbasf2 {self.wrapper_file_path} -f {self.pickle_file_path} -i {gbasf2_input_dataset} "
                        f" -p {self.project_name} -s {gbasf2_release}")
         command = shlex.split(command_str)
         print(f"\nSending jobs to grid via command:\n{command_str}\n")
@@ -135,8 +143,8 @@ class Gbasf2Process(BatchProcess):
                   "a ``create_path()`` method, e.g. are an instance of ``Basf2PathTask``.")
             raise err
         path.add_module("Progress")
-        b2pp.write_path_to_file(path, self.pickle_file_name)
-        print(f"\nSaved serialized path in {self.pickle_file_name}\nwith content:\n")
+        b2pp.write_path_to_file(path, self.pickle_file_path)
+        print(f"\nSaved serialized path in {self.pickle_file_path}\nwith content:\n")
         basf2.print_path(path)
 
     def _create_wrapper_steering_file(self):
@@ -151,11 +159,11 @@ class Gbasf2Process(BatchProcess):
             template = Template(template_file.read())
             # replace some variable values in the template
             steering_file_content = template.render(
-                pickle_file_path=self.pickle_file_name,
+                pickle_file_path=self.pickle_file_path,
                 max_event=get_setting("max_event", default=0, task=self.task),
             )
         # write the template with the replacements to a new file which should be sent to the grid
-        with open(self.wrapper_file_name, "w") as wrapper_file:
+        with open(self.wrapper_file_path, "w") as wrapper_file:
             wrapper_file.write(steering_file_content)
 
     def _check_project_exists(self):
