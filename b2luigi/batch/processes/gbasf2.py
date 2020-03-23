@@ -145,7 +145,9 @@ class Gbasf2Process(BatchProcess):
         basf2 path from ``self.task.create_path()``.
         """
         # read a jinja2 template for the steerinfile that should execute the pickled path
-        with open("templates/gbasf2_steering_file_wrapper.jinja2", "r") as template_file:
+        file_dir = os.path.dirname(os.path.realpath(__file__))
+        template_file_path = os.path.join(file_dir, "templates/gbasf2_steering_file_wrapper.jinja2")
+        with open(template_file_path, "r") as template_file:
             template = Template(template_file.read())
             # replace some variable values in the template
             steering_file_content = template.render(
