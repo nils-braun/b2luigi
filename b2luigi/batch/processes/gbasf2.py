@@ -158,13 +158,12 @@ class Gbasf2Process(BatchProcess):
         with open(template_file_path, "r") as template_file:
             template = Template(template_file.read())
             # replace some variable values in the template
-            steering_file_content = template.render(
+            steering_file_stream = template.stream(
                 pickle_file_path=self.pickle_file_path,
                 max_event=get_setting("max_event", default=0, task=self.task),
             )
-        # write the template with the replacements to a new file which should be sent to the grid
-        with open(self.wrapper_file_path, "w") as wrapper_file:
-            wrapper_file.write(steering_file_content)
+            # write the template with the replacements to a new file which should be sent to the grid
+            steering_file_stream.dump(self.wrapper_file_path)
 
     def _check_project_exists(self):
         """
