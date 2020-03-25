@@ -52,6 +52,7 @@ class Gbasf2Process(BatchProcess):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # TODO maybe make sure that project name is unique in some way for the chosen set of luigi parameters
+        #: gbasf2 project name
         self.project_name = get_setting("gbasf2_project_name", task=self.task)
 
         # output file directory of the task to wrap with gbasf2, where we will
@@ -148,9 +149,11 @@ class Gbasf2Process(BatchProcess):
         try:
             path = self.task.create_path()
         except AttributeError as err:
-            print("Gbasf2 batch process can only used with tasks that generate basf2 paths with "
-                  "a ``create_path()`` method, e.g. are an instance of ``Basf2PathTask``.")
-            raise err
+            raise Exception(
+                "Gbasf2 batch process can only used with tasks that generate basf2 paths with "
+                "a ``create_path()`` method, e.g. are an instance of ``Basf2PathTask``."
+            ) from err
+
         path.add_module("Progress")
         b2pp.write_path_to_file(path, self.pickle_file_path)
         print(f"\nSaved serialized path in {self.pickle_file_path}\nwith content:\n")
