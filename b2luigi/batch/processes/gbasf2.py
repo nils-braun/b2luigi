@@ -20,21 +20,30 @@ class Gbasf2Process(BatchProcess):
     creating and managing jobs in a project is left to gbasf2.
     """
 
-    gbasf2_setup_script = "setup_gbasf2.sh"
-
     @property
     def gbasf2_env(self):
         """
-        Return dictionary with gbasf2 environment from ``self.gbasf2_setup_script``.
+        Return the gbasf2 environment dict.
 
-        Runs the script only once and then caches the result in ``self._cached_gbasf2_env``
-        to prevent unnecessary password prompts.
+        When first called, it executes the setup script from the
+        ``gbasf2_install_directory`` setting and ``gb2_proxy_init -g belle``
+        command.  Then, it stores the result in the ``self._cached_gbasf2_env``
+        property and just returns that on subsequent calls, so that the user
+        does not have provide his password each time this function is called.
+        This property can be used as the ``env`` parameter in subprocess calls,
+        to execute gbasf2 commands in this environment
         """
+
         if self._cached_gbasf2_env is None:
-            print(f"Setting up environment, sourcing {self.gbasf2_setup_script}")
-            command = shlex.split(f"env -i bash -c 'source {self.gbasf2_setup_script} > /dev/null && env'")
-            output = subprocess.check_output(command, encoding="utf-8")
-            self._cached_gbasf2_env = dict(line.split("=", 1) for line in output.splitlines())
+            gbasf2_install_dir = get_setting("gbasf2_install_directory", default="~/gbasf2KEK", task=self.task)
+            gbasf2_setup_path = os.path.join(gbasf2_install_dir, "BelleDIRAC/gbasf2/tools/setup")
+            # complete bash command to set up the gbasf2 environment
+            # piping output to /dev/null, because we want that our final script only prints the ``env`` output
+            gbasf2_setup_command_str = f"source {gbasf2_setup_path} > /dev/null && gb2_proxy_init -g belle > /dev/null"
+            # command to execute the gbasf2 setup command in a fresh shell and output the produced environment
+            echo_gbasf2_env_command = shlex.split(f"env -i bash -c '{gbasf2_setup_command_str} > /dev/null && env'")
+            gbasf2_env_string = subprocess.check_output(echo_gbasf2_env_command, encoding="utf-8")
+            self._cached_gbasf2_env = dict(line.split("=", 1) for line in gbasf2_env_string.splitlines())
         return self._cached_gbasf2_env
 
     #: cached gbasf2 enviromnent, initiallized and accessed via ``self.gbasf2_env``
