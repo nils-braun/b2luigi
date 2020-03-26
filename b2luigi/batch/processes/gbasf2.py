@@ -100,22 +100,56 @@ class Gbasf2Process(BatchProcess):
             # Require all jobs to be done for project success, any job failure results in a failed project
             if n_done == n_jobs:
                 # download dataset on job success
-                self._download_dataset()
+                self._job_on_success_action()
                 return JobStatus.successful
             if n_failed > 0:
+                self._download_logs()
                 return JobStatus.aborted
         else:
             # in this case require allow for some failed jobs, return project
             # success if some jobs were successful and no jobs are running
             # anymore, even if some jobs in project failed, as long as not all failed.
             if n_done > 0 and n_being_processed + n_waiting == 0:
-                self._download_dataset()
+                self._job_on_success_action()
                 return JobStatus.successful
             if n_failed == n_jobs:
+                self._download_logs()
                 return JobStatus.aborted
         # TODO reschedule failed jobs via ``gb2_job_reschedule``
-        # TODO think of better way to download dataset on project succcess than as sideffect in this function
         raise RuntimeError("Could not determine JobStatus")
+
+    def _job_on_success_action(self):
+        """
+        Things to do after the job had been successful, e.g. downloading the dataset and logs
+        """
+        self._download_dataset()
+        self._download_logs()
+
+    def _download_logs(self):
+        """
+        Download sandbox files from grid with logs for each job in the gbasf2 project.
+
+        It wraps ``gb2_job_output``, which downloads the job sandbox, which has the following structure:
+
+        .. code-block:: text
+
+            log
+            └── <project name>
+                ├── <first job id>
+                │   ├── job.info
+                │   ├── Script1_basf2helper.py.log # basf2 outputs
+                │   └── std.out
+                ├── <second job id>
+                │   ├── ...
+                ...
+
+        These are stored in the task log dir.
+        """
+        log_file_dir = get_log_file_dir(self.task)
+        os.makedirs(log_file_dir, exist_ok=True)
+        download_logs_command = shlex.split("gb2_job_output -p {self.project_name}", )
+        subprocess.run(download_logs_command, check=True, cwd=log_file_dir, env=self.gbasf2_env)
+
 
     def start_job(self):
         log_file_dir = get_log_file_dir(self.task)
