@@ -258,5 +258,5 @@ class Gbasf2Process(BatchProcess):
 
         These are stored in the task log dir.
         """
-        download_logs_command = shlex.split("gb2_job_output -p {self.project_name}", )
+        download_logs_command = shlex.split(f"gb2_job_output -p {self.project_name}")
         subprocess.run(download_logs_command, check=True, cwd=self.log_file_dir, env=self.gbasf2_env)
