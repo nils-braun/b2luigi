@@ -65,6 +65,9 @@ class Gbasf2Process(BatchProcess):
         #: file name for steering file that executes pickled path, which will be send to the grid
         self.wrapper_file_path = os.path.join(task_file_dir, "steering_file_wrapper.py")
 
+        self.log_file_dir = get_log_file_dir(self.task)
+        os.makedirs(self.log_file_dir, exist_ok=True)
+
     def get_job_status(self):
         """
         Exract the status of all sub-jobs in a gbasf2 project from
@@ -145,15 +148,10 @@ class Gbasf2Process(BatchProcess):
 
         These are stored in the task log dir.
         """
-        log_file_dir = get_log_file_dir(self.task)
-        os.makedirs(log_file_dir, exist_ok=True)
         download_logs_command = shlex.split("gb2_job_output -p {self.project_name}", )
-        subprocess.run(download_logs_command, check=True, cwd=log_file_dir, env=self.gbasf2_env)
-
+        subprocess.run(download_logs_command, check=True, cwd=self.log_file_dir, env=self.gbasf2_env)
 
     def start_job(self):
-        log_file_dir = get_log_file_dir(self.task)
-        os.makedirs(log_file_dir, exist_ok=True)
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset", task=self.task)
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
 
