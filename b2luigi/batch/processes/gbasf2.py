@@ -136,7 +136,47 @@ class Gbasf2Process(BatchProcess):
         self._create_wrapper_steering_file()
 
         gbasf2_command_str = (f"gbasf2 {self.wrapper_file_path} -f {self.pickle_file_path} -i {gbasf2_input_dataset} " +
-                              f" -p {self.project_name} -s {gbasf2_release}")
+                              f" -p {self.project_name} -s {gbasf2_release} ")
+
+        # now add some additional optional options to the gbasf2 job submission string
+
+        # whether to ask user for confirmation before submitting job
+        force_submission = get_setting("gbasf2_force_submission", default=True, task=self.task)
+        if force_submission:
+            gbasf2_command_str += " --force "
+
+        # estimated cpu time in minutes
+        cpu_minutes = get_setting("gbasf2_cputime", default=False, task=self.task)
+        if cpu_minutes is not False:
+            gbasf2_command_str += f" --cputime {cpu_minutes} "
+
+        # estimated number or processed events per second
+        evtpersec = get_setting("gbasf2_evtpersec", default=False, task=self.task)
+        if evtpersec is not False:
+            gbasf2_command_str += f" --evtpersec {evtpersec} "
+
+        # gbasf2 job priority
+        priority = get_setting("gbasf2_priority", default=False, task=self.task)
+        if priority is not False:
+            assert 0 <= priority <= 10, "Priority should be integer between 0 and 10."
+            gbasf2_command_str += f" --priority {priority} "
+
+        # gbasf2 job type (e.g. User, Production, ...)
+        jobtype = get_setting("gbasf2_jobtype", default=False, task=self.task)
+        if jobtype is not False:
+            gbasf2_command_str += f" --jobtype {jobtype} "
+
+        # additional basf2 options to use on grid
+        basf2opt = get_setting("gbasf2_basf2opt", default=False, task=self.task)
+        if basf2opt is not False:
+            gbasf2_command_str += f" --basf2opt='{basf2opt}' "
+
+        # optional string of additional parameters to append to gbasf2 command
+        gbasf2_additional_params = get_setting("gbasf2_additional_params", default=False, task=self.task)
+        if basf2opt is not False:
+            gbasf2_command_str += f" {gbasf2_additional_params} "
+
+        # submit gbasf2 project
         gbasf2_command = shlex.split(gbasf2_command_str)
         print(f"\nSending jobs to grid via command:\n{gbasf2_command_str}\n")
         subprocess.run(gbasf2_command, check=True, env=self.gbasf2_env)
