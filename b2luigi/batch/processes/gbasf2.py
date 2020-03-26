@@ -135,11 +135,11 @@ class Gbasf2Process(BatchProcess):
         self._write_path_to_file()
         self._create_wrapper_steering_file()
 
-        command_str = (f"gbasf2 {self.wrapper_file_path} -f {self.pickle_file_path} -i {gbasf2_input_dataset} "
-                       f" -p {self.project_name} -s {gbasf2_release}")
-        command = shlex.split(command_str)
-        print(f"\nSending jobs to grid via command:\n{command_str}\n")
-        subprocess.run(command, check=True, env=self.gbasf2_env)
+        gbasf2_command_str = (f"gbasf2 {self.wrapper_file_path} -f {self.pickle_file_path} -i {gbasf2_input_dataset} " +
+                              f" -p {self.project_name} -s {gbasf2_release}")
+        gbasf2_command = shlex.split(gbasf2_command_str)
+        print(f"\nSending jobs to grid via command:\n{gbasf2_command_str}\n")
+        subprocess.run(gbasf2_command, check=True, env=self.gbasf2_env)
 
     def kill_job(self):
         """Kill gbasf2 project"""
@@ -222,13 +222,18 @@ class Gbasf2Process(BatchProcess):
             "Error when obtaining job summary, it does not contain the required status keys"
         return n_jobs_by_status
 
-    def _download_dataset(self, output_directory="."):
+    def _download_dataset(self):
         """Download the results from a gbasf2 project, stored as a dataset on the grid."""
+        # Define setting for directory, into which the output dataset should be
+        # downloaded. The ``gb2_ds_get`` command will create in that a directory
+        # with the name of the project, which will contain the root files.
+        gbasf2_download_dir = get_setting("gbasf2_download_directory", default=".", task=self.task)
+        os.makedirs(gbasf2_download_dir, exist_ok=True)
         command = shlex.split(f"gb2_ds_get --force {self.project_name}")
         print("Downloading dataset with command ", " ".join(command))
-        output = subprocess.check_output(command, env=self.gbasf2_env, encoding="utf-8", cwd=output_directory)
+        output = subprocess.check_output(command, env=self.gbasf2_env, encoding="utf-8", cwd=gbasf2_download_dir)
         print(output)
-        if output.strip() == "No file found":
+        if "No file found" in output:
             raise RuntimeError(f"No output data for gbasf2 project {self.project_name} found.")
         # TODO: in the output dataset there is a root file created for each
         # file in the input dataset.The output files are have numbers added to
