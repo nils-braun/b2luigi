@@ -128,29 +128,6 @@ class Gbasf2Process(BatchProcess):
         self._download_dataset()
         self._download_logs()
 
-    def _download_logs(self):
-        """
-        Download sandbox files from grid with logs for each job in the gbasf2 project.
-
-        It wraps ``gb2_job_output``, which downloads the job sandbox, which has the following structure:
-
-        .. code-block:: text
-
-            log
-            └── <project name>
-                ├── <first job id>
-                │   ├── job.info
-                │   ├── Script1_basf2helper.py.log # basf2 outputs
-                │   └── std.out
-                ├── <second job id>
-                │   ├── ...
-                ...
-
-        These are stored in the task log dir.
-        """
-        download_logs_command = shlex.split("gb2_job_output -p {self.project_name}", )
-        subprocess.run(download_logs_command, check=True, cwd=self.log_file_dir, env=self.gbasf2_env)
-
     def start_job(self):
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset", task=self.task)
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
@@ -260,3 +237,26 @@ class Gbasf2Process(BatchProcess):
         # define the output requirements in the ``output`` method of his task.
         # So maybe merge the output files or do something else to facilitate
         # defining outputs and checking that job is complete.
+
+    def _download_logs(self):
+        """
+        Download sandbox files from grid with logs for each job in the gbasf2 project.
+
+        It wraps ``gb2_job_output``, which downloads the job sandbox, which has the following structure:
+
+        .. code-block:: text
+
+            log
+            └── <project name>
+                ├── <first job id>
+                │   ├── job.info
+                │   ├── Script1_basf2helper.py.log # basf2 outputs
+                │   └── std.out
+                ├── <second job id>
+                │   ├── ...
+                ...
+
+        These are stored in the task log dir.
+        """
+        download_logs_command = shlex.split("gb2_job_output -p {self.project_name}", )
+        subprocess.run(download_logs_command, check=True, cwd=self.log_file_dir, env=self.gbasf2_env)
