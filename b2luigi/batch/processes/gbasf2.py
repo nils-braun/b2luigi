@@ -1,6 +1,7 @@
 import os
 import shlex
 import subprocess
+import warnings
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
@@ -141,6 +142,16 @@ class Gbasf2Process(BatchProcess):
         self._download_logs()
 
     def start_job(self):
+        if self._check_project_exists() and self.get_job_status() == JobStatus.running:
+            # If project already has been submitted to grid and is running,
+            # don't start new project, but wait for current one to finish and
+            # download that. Just issue warning. If the job exists on the grid
+            # but is Done/Successfull or Failed, continue to submit new job,
+            # because then the user will have to deal with an interactive prompt
+            # by gbasf2 that appears when submittinto an existing project.
+            warnings.warn(f"Project {self.project_name} is already submitted to grid."
+                          "Project is therefore not restarted, instead waiting for existing project to finish.")
+            return
         # TODO: support tasks which don't need input dataset
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset", task=self.task)
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
