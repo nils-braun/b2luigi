@@ -18,6 +18,11 @@ class Gbasf2Process(BatchProcess):
 
     A BatchProcess job corresponds to a whole project in gbasf2.  The task of
     creating and managing jobs in a project is left to gbasf2.
+
+    Example:
+
+        .. literalinclude:: ../../examples/gbasf2/gbasf2_example.py
+           :linenos:
     """
 
     @property
