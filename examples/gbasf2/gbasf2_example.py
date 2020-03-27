@@ -3,7 +3,7 @@ from os.path import join
 import b2luigi
 from b2luigi.basf2_helper.tasks import Basf2PathTask
 
-import mdst_analysis
+import example_mdst_analysis
 
 
 class MyAnalysisTask(Basf2PathTask):
@@ -18,7 +18,7 @@ class MyAnalysisTask(Basf2PathTask):
                                 "r00000/mixed/mdst/sub00/mdst_000255_prod00009434_task10020000255.root")
 
     def create_path(self):
-        return mdst_analysis.create_analysis_path()
+        return example_mdst_analysis.create_analysis_path()
 
     def output(self):
         return b2luigi.LocalTarget(MyAnalysisTask.gbasf2_project_name)

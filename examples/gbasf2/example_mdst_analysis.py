@@ -27,13 +27,12 @@ def create_analysis_path():
     stdPi("higheff", path=path)
     mA.reconstructDecay('D0:Kpi -> K-:higheff pi+:higheff', '1.7 < M < 1.9', path=path)
     # use try except to have this code work for both the old and new function names for the tree fit
-    try:
-        vx.treeFit('D0:Kpi', 0.1, path=path)
-    except AttributeError:
-        vx.vertexTree('D0:Kpi', 0.1, path=path)
     mA.matchMCTruth('D0:Kpi', path=path)
     mA.reconstructDecay('B- -> D0:Kpi pi-:higheff', '5.2 < Mbc < 5.3', path=path)
-    mA.vertexTree('B+', 0.1, path=path)
+    try:
+        vx.treeFit('B+', 0.1, path=path)
+    except AttributeError:
+        vx.vertexTree('B+', 0.1, path=path)
     mA.setAnalysisConfigParams({"mcMatchingVersion": "BelleII"}, path)
     mA.matchMCTruth('B-', path=path)
     mA.variablesToNtuple('D0:Kpi', ['M', 'p', 'E', 'useCMSFrame(p)', 'useCMSFrame(E)', 'daughter(0, kaonID)',
