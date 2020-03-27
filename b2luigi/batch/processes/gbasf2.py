@@ -263,7 +263,8 @@ class Gbasf2Process(BatchProcess):
         # {'Completed': 0, 'Deleted': 0, 'Done': 255, 'Failed': 0,
         # 'Killed': 0, 'Running': 0, 'Stalled': 0, 'Waiting': 0}
         job_summary_string = output.splitlines()[-1].strip()
-        print(f"Status of jobs in project {self.project_name}:", job_summary_string)
+        if get_setting("gbasf2_print_project_status", default=True, task=self.task):
+            print(f"Status of jobs in project {self.project_name}:", job_summary_string)
         n_jobs_by_status = dict((summary_substring.split(":", 1)[0].strip(),
                                  int(summary_substring.split(":", 1)[1].strip()))
                                 for summary_substring in job_summary_string.split())
