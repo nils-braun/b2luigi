@@ -1,5 +1,4 @@
 {
-    "gbasf2_force_submission": true,
     "gbasf2_require_all_jobs_done": true,
     "gbasf2_print_project_status": true,
     "gbasf2_download_dir": "."
