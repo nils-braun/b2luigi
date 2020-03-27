@@ -140,6 +140,7 @@ class Gbasf2Process(BatchProcess):
         self._download_logs()
 
     def start_job(self):
+        # TODO: support tasks which don't need input dataset
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset", task=self.task)
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
 
