@@ -101,9 +101,7 @@ class Gbasf2Process(BatchProcess):
         assert n_failed + n_done + n_waiting + n_being_processed == n_jobs,\
             "Error in job categorization, numbers of jobs in cateries don't add up to total"
 
-        if n_waiting == n_jobs:
-            return JobStatus.running
-        if n_being_processed > 0:
+        if n_waiting + n_being_processed == n_jobs:
             return JobStatus.running
 
         # Setting for the success requirement of a gbasf2 project, e.g. if all
