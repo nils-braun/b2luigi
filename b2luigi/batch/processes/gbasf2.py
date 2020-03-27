@@ -152,6 +152,7 @@ class Gbasf2Process(BatchProcess):
             warnings.warn(f"Project {self.project_name} is already submitted to grid."
                           "Project is therefore not restarted, instead waiting for existing project to finish.")
             return
+
         # TODO: support tasks which don't need input dataset
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset", task=self.task)
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
@@ -165,11 +166,11 @@ class Gbasf2Process(BatchProcess):
         # now add some additional optional options to the gbasf2 job submission string
 
         # whether to ask user for confirmation before submitting job
-        force_submission = get_setting("gbasf2_force_submission", default=True, task=self.task)
+        force_submission = get_setting("gbasf2_force_submission", default=False, task=self.task)
         if force_submission:
             gbasf2_command_str += " --force "
 
-        # estimated cpu time in minutes
+        # estimated cpu time per sub-job in minutes
         cpu_minutes = get_setting("gbasf2_cputime", default=False, task=self.task)
         if cpu_minutes is not False:
             gbasf2_command_str += f" --cputime {cpu_minutes} "
