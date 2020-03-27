@@ -42,7 +42,7 @@ class Gbasf2Process(BatchProcess):
         if self._cached_gbasf2_env is None:
             gbasf2_install_dir = get_setting("gbasf2_install_directory", default="~/gbasf2KEK", task=self.task)
             gbasf2_setup_path = os.path.join(gbasf2_install_dir, "BelleDIRAC/gbasf2/tools/setup")
-            if not os.path.isfile(gbasf2_setup_path):
+            if not os.path.isfile(os.path.expanduser(gbasf2_setup_path)):
                 raise FileNotFoundError(
                     f"Could not find gbasf2 setup files in ``{gbasf2_install_dir}``.\n" +
                     "Make sure to that gbasf2 is installed at the location specified by the " +
