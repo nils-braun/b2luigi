@@ -42,6 +42,12 @@ class Gbasf2Process(BatchProcess):
         if self._cached_gbasf2_env is None:
             gbasf2_install_dir = get_setting("gbasf2_install_directory", default="~/gbasf2KEK", task=self.task)
             gbasf2_setup_path = os.path.join(gbasf2_install_dir, "BelleDIRAC/gbasf2/tools/setup")
+            if not os.path.isfile(gbasf2_setup_path):
+                raise FileNotFoundError(
+                    f"Could not find gbasf2 setup files in ``{gbasf2_install_dir}``.\n" +
+                    "Make sure to that gbasf2 is installed at the location specified by the " +
+                    "``gbasf2_install_dir`` setting."
+                )
             # complete bash command to set up the gbasf2 environment
             # piping output to /dev/null, because we want that our final script only prints the ``env`` output
             gbasf2_setup_command_str = f"source {gbasf2_setup_path} > /dev/null && gb2_proxy_init -g belle > /dev/null"
