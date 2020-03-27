@@ -22,6 +22,9 @@ class Gbasf2Process(BatchProcess):
     Example:
 
         .. literalinclude:: ../../examples/gbasf2/gbasf2_example.py
+           :caption: File ``examples/gbasf2/gbasf2_example.py``, creates task to
+                     exectute on grid with basf2 path from steering file
+                     ``examples/gbasf2/example_mdst_analysis.py``
            :linenos:
     """
 
