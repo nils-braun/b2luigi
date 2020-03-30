@@ -153,15 +153,22 @@ class Gbasf2Process(BatchProcess):
                           "Project is therefore not restarted, instead waiting for existing project to finish.")
             return
 
-        # TODO: support tasks which don't need input dataset
-        gbasf2_input_dataset = get_setting("gbasf2_input_dataset", task=self.task)
-        gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
-
         self._write_path_to_file()
         self._create_wrapper_steering_file()
 
-        gbasf2_command_str = (f"gbasf2 {self.wrapper_file_path} -f {self.pickle_file_path} -i {gbasf2_input_dataset} " +
-                              f" -p {self.project_name} -s {gbasf2_release} ")
+        gbasf2_input_dataset = get_setting("gbasf2_input_dataset", task=self.task)
+        gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
+
+        gbasf2_additional_files = get_setting("gbasf2_additional_files", default=False, task=self.task)
+        if gbasf2_additional_files is not False:
+            assert isinstance(gbasf2_additional_files, list)
+            additional_files_str = " ".join(gbasf2_additional_files)
+        else:
+            additional_files_str = ""
+
+        # TODO: support tasks which don't need input dataset
+        gbasf2_command_str = (f"gbasf2 {self.wrapper_file_path} -f {self.pickle_file_path} {additional_files_str} " +
+                              f" -i {gbasf2_input_dataset}  -p {self.project_name} -s {gbasf2_release} ")
 
         # now add some additional optional options to the gbasf2 job submission string
 
