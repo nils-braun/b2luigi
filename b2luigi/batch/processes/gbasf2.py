@@ -73,9 +73,17 @@ class Gbasf2Process(BatchProcess):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # TODO maybe make sure that project name is unique in some way for the chosen set of luigi parameters
         #: gbasf2 project name
-        self.project_name = get_setting("gbasf2_project_name", task=self.task)
+        # Is either an attribute or luigi parameter or setting.
+        try:
+            self.project_name = self.task.gbasf2_project_name
+        except AttributeError as err:
+            raise Exception(
+                "Task can only be used with the gbasf2 batch process if it has ``gbasf2_project_name`` " +
+                "as a luigi parameter or attribute. Make sure that the project name is unique for different " +
+                f"instances of ``{type(self.task).__name__}()`` with different parameters."
+            ) from err
+
 
         # output file directory of the task to wrap with gbasf2, where we will
         # store the pickled basf2 path and the created steerinfile to execute
