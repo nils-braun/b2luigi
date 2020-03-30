@@ -161,7 +161,8 @@ class Gbasf2Process(BatchProcess):
 
         gbasf2_additional_files = get_setting("gbasf2_additional_files", default=False, task=self.task)
         if gbasf2_additional_files is not False:
-            assert isinstance(gbasf2_additional_files, list)
+            # make sure that gbasf2_additional_files is not a string, for which " ".join will yield unexpected results
+            assert not isinstance(gbasf2_additional_files, str), "gbasf2_additional_files should be a list or tuple, not a string."
             additional_files_str = " ".join(gbasf2_additional_files)
         else:
             additional_files_str = ""
