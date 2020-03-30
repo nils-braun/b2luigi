@@ -2,7 +2,6 @@ import os
 
 import b2luigi
 from b2luigi.basf2_helper.tasks import Basf2PathTask
-from b2luigi.core.settings import get_setting
 
 import example_mdst_analysis
 
