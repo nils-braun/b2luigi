@@ -73,9 +73,8 @@ class Gbasf2Process(BatchProcess):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        #: gbasf2 project name
-        # Is either an attribute or luigi parameter or setting.
         try:
+            #: gbasf2 project name, must be property/attribute, e.g. a luigi parameter
             self.project_name = self.task.gbasf2_project_name
         except AttributeError as err:
             raise Exception(
@@ -84,6 +83,9 @@ class Gbasf2Process(BatchProcess):
                 f"instances of ``{type(self.task).__name__}()`` with different parameters."
             ) from err
 
+        assert len(self.project_name) <= 32,\
+            f"Maximum lenght of project name should be 32 characters, has {len(self.project_name)} chars"
+        assert self.project_name.isalnum(), "Only alphanumeric project names are officially supported by gbasf2"
 
         # output file directory of the task to wrap with gbasf2, where we will
         # store the pickled basf2 path and the created steerinfile to execute
