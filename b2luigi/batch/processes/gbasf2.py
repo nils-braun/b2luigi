@@ -20,14 +20,21 @@ class Gbasf2Process(BatchProcess):
     A BatchProcess job corresponds to a whole project in gbasf2.  The task of
     creating and managing jobs in a project is left to gbasf2.
 
-    Example:
+    Example file to execute analysis path created in
+    ``examples/gbasf2/example_mdst_analysis`` on grid via gbasf2:
 
-        .. literalinclude:: ../../examples/gbasf2/gbasf2_example.py
-           :caption: File ``examples/gbasf2/gbasf2_example.py``, creates task to
-                     exectute on grid with basf2 path from steering file
-                     ``examples/gbasf2/example_mdst_analysis.py``
-           :linenos:
+    ..  literalinclude:: ../../examples/gbasf2/gbasf2_example.py
+        :caption: File: ``examples/gbasf2/gbasf2_example.py``
+        :linenos:
+
+    Some settings are done as task-specific class attributes, others are defined
+    in the ``settings.json``:
+
+    ..  literalinclude:: ../../examples/gbasf2/settings.json
+        :caption: File: ``examples/gbasf2/settings.json``
+        :linenos:
     """
+
 
     @property
     def gbasf2_env(self):
