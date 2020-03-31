@@ -35,6 +35,35 @@ class Gbasf2Process(BatchProcess):
         :linenos:
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        try:
+            #: gbasf2 project name, must be property/attribute, e.g. a luigi parameter
+            #  Setting it via a setting.json file is not supported to make sure users set unique project names
+            self.gbasf2_project_name = self.task.gbasf2_project_name
+        except AttributeError as err:
+            raise Exception(
+                "Task can only be used with the gbasf2 batch process if it has ``gbasf2_project_name`` " +
+                "as a luigi parameter or attribute. Make sure that the project name is unique for different " +
+                f"instances of ``{type(self.task).__name__}()`` with different parameters."
+            ) from err
+
+        assert len(self.gbasf2_project_name) <= 32,\
+            f"Maximum lenght of project name should be 32 characters, has {len(self.gbasf2_project_name)} chars"
+        assert self.gbasf2_project_name.isalnum(), "Only alphanumeric project names are officially supported by gbasf2"
+
+        # Output file directory of the task to wrap with gbasf2, where we will
+        # store the pickled basf2 path and the created steerinfile to execute
+        # that path.
+        task_file_dir = get_task_file_dir(self.task)
+        os.makedirs(task_file_dir, exist_ok=True)
+        #: file name in which the pickled basf2 path from ``self.task.create_path()`` will be stored
+        self.pickle_file_path = os.path.join(task_file_dir, "serialized_basf2_path.pkl")
+        #: file name for steering file that executes pickled path, which will be send to the grid
+        self.wrapper_file_path = os.path.join(task_file_dir, "steering_file_wrapper.py")
+
+        self.log_file_dir = get_log_file_dir(self.task)
+        os.makedirs(self.log_file_dir, exist_ok=True)
 
     @property
     def gbasf2_env(self):
@@ -70,35 +99,6 @@ class Gbasf2Process(BatchProcess):
 
     #: cached gbasf2 enviromnent, initiallized and accessed via ``self.gbasf2_env``
     _cached_gbasf2_env = None
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        try:
-            #: gbasf2 project name, must be property/attribute, e.g. a luigi parameter
-            self.gbasf2_project_name = self.task.gbasf2_project_name
-        except AttributeError as err:
-            raise Exception(
-                "Task can only be used with the gbasf2 batch process if it has ``gbasf2_project_name`` " +
-                "as a luigi parameter or attribute. Make sure that the project name is unique for different " +
-                f"instances of ``{type(self.task).__name__}()`` with different parameters."
-            ) from err
-
-        assert len(self.gbasf2_project_name) <= 32,\
-            f"Maximum lenght of project name should be 32 characters, has {len(self.gbasf2_project_name)} chars"
-        assert self.gbasf2_project_name.isalnum(), "Only alphanumeric project names are officially supported by gbasf2"
-
-        # output file directory of the task to wrap with gbasf2, where we will
-        # store the pickled basf2 path and the created steerinfile to execute
-        # that path
-        task_file_dir = get_task_file_dir(self.task)
-        os.makedirs(task_file_dir, exist_ok=True)
-        #: file name in which the pickled basf2 path from ``self.task.create_path()`` will be stored
-        self.pickle_file_path = os.path.join(task_file_dir, "serialized_basf2_path.pkl")
-        #: file name for steering file that executes pickled path, which will be send to the grid
-        self.wrapper_file_path = os.path.join(task_file_dir, "steering_file_wrapper.py")
-
-        self.log_file_dir = get_log_file_dir(self.task)
-        os.makedirs(self.log_file_dir, exist_ok=True)
 
     def get_job_status(self):
         """
