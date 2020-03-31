@@ -75,7 +75,7 @@ class Gbasf2Process(BatchProcess):
         super().__init__(*args, **kwargs)
         try:
             #: gbasf2 project name, must be property/attribute, e.g. a luigi parameter
-            self.project_name = self.task.gbasf2_project_name
+            self.gbasf2_project_name = self.task.gbasf2_project_name
         except AttributeError as err:
             raise Exception(
                 "Task can only be used with the gbasf2 batch process if it has ``gbasf2_project_name`` " +
@@ -83,9 +83,9 @@ class Gbasf2Process(BatchProcess):
                 f"instances of ``{type(self.task).__name__}()`` with different parameters."
             ) from err
 
-        assert len(self.project_name) <= 32,\
-            f"Maximum lenght of project name should be 32 characters, has {len(self.project_name)} chars"
-        assert self.project_name.isalnum(), "Only alphanumeric project names are officially supported by gbasf2"
+        assert len(self.gbasf2_project_name) <= 32,\
+            f"Maximum lenght of project name should be 32 characters, has {len(self.gbasf2_project_name)} chars"
+        assert self.gbasf2_project_name.isalnum(), "Only alphanumeric project names are officially supported by gbasf2"
 
         # output file directory of the task to wrap with gbasf2, where we will
         # store the pickled basf2 path and the created steerinfile to execute
@@ -166,14 +166,14 @@ class Gbasf2Process(BatchProcess):
             # but is Done/Successfull or Failed, continue to submit new job,
             # because then the user will have to deal with an interactive prompt
             # by gbasf2 that appears when submittinto an existing project.
-            warnings.warn(f"Project {self.project_name} is already submitted to grid."
+            warnings.warn(f"Project {self.gbasf2_project_name} is already submitted to grid."
                           "Project is therefore not restarted, instead waiting for existing project to finish.")
             return
 
         self._write_path_to_file()
         self._create_wrapper_steering_file()
 
-        gbasf2_input_dataset = get_setting("gbasf2_input_dataset", task=self.task)
+
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
 
         gbasf2_additional_files = get_setting("gbasf2_additional_files", default=False, task=self.task)
@@ -186,8 +186,15 @@ class Gbasf2Process(BatchProcess):
 
         # TODO: support tasks which don't need input dataset
         gbasf2_command_str = (f"gbasf2 {self.wrapper_file_path} -f {self.pickle_file_path} {additional_files_str} " +
-                              f" -i {gbasf2_input_dataset}  -p {self.project_name} -s {gbasf2_release} ")
+                              f"-p {self.gbasf2_project_name} -s {gbasf2_release} ")
 
+        gbasf2_input_dataset = get_setting("gbasf2_input_dataset", default=False, task=self.task)
+        if gbasf2_input_dataset is not False:
+            gbasf2_command_str += f" -i {gbasf2_input_dataset} "
+
+        gbasf2_n_repition_jobs = get_setting("gbasf2_n_repition_job", default=False, task=self.task)
+        if gbasf2_n_repition_jobs is not False:
+            gbasf2_command_str += f" --repetition {gbasf2_n_repition_jobs} "
         # now add some additional optional options to the gbasf2 job submission string
 
         # whether to ask user for confirmation before submitting job
@@ -238,7 +245,7 @@ class Gbasf2Process(BatchProcess):
         # Note: The two commands ``gb2_job_delete`` and ``gb2_job_kill`` differ
         # in that deleted jobs are killed and removed from the job database,
         # while only killed jobs can be restarted.
-        command = shlex.split(f"gb2_job_delete --force -p {self.project_name}")
+        command = shlex.split(f"gb2_job_delete --force -p {self.gbasf2_project_name}")
         subprocess.run(command, check=True, env=self.gbasf2_env)
 
     def _write_path_to_file(self):
@@ -280,7 +287,7 @@ class Gbasf2Process(BatchProcess):
         """
         Check if we can find the project on the grid with gb2_job_status.
         """
-        command = shlex.split(f"gb2_job_status -p {self.project_name}")
+        command = shlex.split(f"gb2_job_status -p {self.gbasf2_project_name}")
         output = subprocess.check_output(command, encoding="utf-8", env=self.gbasf2_env).strip()
         if output == "0 jobs are selected.":
             return False
@@ -293,16 +300,16 @@ class Gbasf2Process(BatchProcess):
         """
         Returns a dictionary with different gbasf2 job status as keys and the number of jobs in each category as values.
         """
-        assert self._check_project_exists(), f"Project {self.project_name} doest not exist yet"
+        assert self._check_project_exists(), f"Project {self.gbasf2_project_name} doest not exist yet"
 
-        command = shlex.split(f"gb2_job_status -p {self.project_name}")
+        command = shlex.split(f"gb2_job_status -p {self.gbasf2_project_name}")
         output = subprocess.check_output(command, encoding="utf-8", env=self.gbasf2_env)
         # get job summary dict in the form of e.g.
         # {'Completed': 0, 'Deleted': 0, 'Done': 255, 'Failed': 0,
         # 'Killed': 0, 'Running': 0, 'Stalled': 0, 'Waiting': 0}
         job_summary_string = output.splitlines()[-1].strip()
         if get_setting("gbasf2_print_project_status", default=True, task=self.task):
-            print(f"Status of jobs in project {self.project_name}:", job_summary_string)
+            print(f"Status of jobs in project {self.gbasf2_project_name}:", job_summary_string)
         n_jobs_by_status = dict((summary_substring.split(":", 1)[0].strip(),
                                  int(summary_substring.split(":", 1)[1].strip()))
                                 for summary_substring in job_summary_string.split())
@@ -320,12 +327,12 @@ class Gbasf2Process(BatchProcess):
         # with the name of the project, which will contain the root files.
         gbasf2_download_dir = get_setting("gbasf2_download_directory", default=".", task=self.task)
         os.makedirs(gbasf2_download_dir, exist_ok=True)
-        command = shlex.split(f"gb2_ds_get --force {self.project_name}")
+        command = shlex.split(f"gb2_ds_get --force {self.gbasf2_project_name}")
         print("Downloading dataset with command ", " ".join(command))
         output = subprocess.check_output(command, env=self.gbasf2_env, encoding="utf-8", cwd=gbasf2_download_dir)
         print(output)
         if "No file found" in output:
-            raise RuntimeError(f"No output data for gbasf2 project {self.project_name} found.")
+            raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
         # TODO: in the output dataset there is a root file created for each
         # file in the input dataset.The output files are have numbers added to
         # the filenames specified by the file names e.g. in the ``RootOutput``
@@ -354,5 +361,5 @@ class Gbasf2Process(BatchProcess):
 
         These are stored in the task log dir.
         """
-        download_logs_command = shlex.split(f"gb2_job_output -p {self.project_name}")
+        download_logs_command = shlex.split(f"gb2_job_output -p {self.gbasf2_project_name}")
         subprocess.run(download_logs_command, check=True, cwd=self.log_file_dir, env=self.gbasf2_env)
