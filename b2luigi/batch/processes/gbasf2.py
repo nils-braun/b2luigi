@@ -65,6 +65,10 @@ class Gbasf2Process(BatchProcess):
         self.log_file_dir = get_log_file_dir(self.task)
         os.makedirs(self.log_file_dir, exist_ok=True)
 
+        # Store dictionary with n_jobs_by_status in attribute to check if it changed,
+        # useful for printing job status on change only
+        self._n_jobs_by_status = ""
+
     @property
     def gbasf2_env(self):
         """
@@ -111,6 +115,14 @@ class Gbasf2Process(BatchProcess):
             return JobStatus.idle
 
         n_jobs_by_status = self._get_n_jobs_by_status()
+
+        # print summary of jobs in project if setting is set and job status changed
+        if (get_setting("gbasf2_print_project_status", default=True, task=self.task) and
+                n_jobs_by_status != self._n_jobs_by_status):
+            job_summary_string = " ".join(f"{status}: {njobs}," for status, njobs in n_jobs_by_status.items())
+            print(f"Status of jobs in project {self.gbasf2_project_name}:", job_summary_string)
+        self._n_jobs_by_status = n_jobs_by_status
+
         n_jobs = sum(n_jobs_by_status.values())
         n_done = n_jobs_by_status["Done"]
         n_failed = (n_jobs_by_status["Failed"] +
@@ -172,7 +184,6 @@ class Gbasf2Process(BatchProcess):
 
         self._write_path_to_file()
         self._create_wrapper_steering_file()
-
 
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
 
@@ -308,8 +319,6 @@ class Gbasf2Process(BatchProcess):
         # {'Completed': 0, 'Deleted': 0, 'Done': 255, 'Failed': 0,
         # 'Killed': 0, 'Running': 0, 'Stalled': 0, 'Waiting': 0}
         job_summary_string = output.splitlines()[-1].strip()
-        if get_setting("gbasf2_print_project_status", default=True, task=self.task):
-            print(f"Status of jobs in project {self.gbasf2_project_name}:", job_summary_string)
         n_jobs_by_status = dict((summary_substring.split(":", 1)[0].strip(),
                                  int(summary_substring.split(":", 1)[1].strip()))
                                 for summary_substring in job_summary_string.split())
