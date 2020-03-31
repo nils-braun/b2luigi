@@ -62,4 +62,4 @@ class MasterTask(b2luigi.WrapperTask):
 
 
 if __name__ == '__main__':
-    b2luigi.process(MasterTask(), batch=True, workers=1)
+    b2luigi.process(MasterTask(), batch=True, workers=2)
