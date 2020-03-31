@@ -23,7 +23,6 @@ class MyAnalysisTask(Basf2PathTask):
     # also be defined in the settings.json
     gbasf2_download_dir = "."
     gbasf2_cputime = 5  # expected time per job in minutes
-    gbasf2_priority = 5
 
     def create_path(self):
         return example_mdst_analysis.create_analysis_path(mbc_range=self.mbc_range)
