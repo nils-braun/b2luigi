@@ -10,7 +10,7 @@ import vertex as vx
 from stdCharged import stdK, stdPi
 
 
-def create_analysis_path(mbc_cut_string='5.2 < Mbc < 5.3'):
+def create_analysis_path(mbc_range=[5.2, 5.3]):
     """
     Example of a minimal reconstruction with a cut as a changeable function
     parameter, adapted from code in the ``B2T_Basics_3_FirstAnalysis.ipynb``
@@ -29,7 +29,7 @@ def create_analysis_path(mbc_cut_string='5.2 < Mbc < 5.3'):
     mA.reconstructDecay('D0:Kpi -> K-:higheff pi+:higheff', '1.7 < M < 1.9', path=path)
     # use try except to have this code work for both the old and new function names for the tree fit
     mA.matchMCTruth('D0:Kpi', path=path)
-    mA.reconstructDecay('B- -> D0:Kpi pi-:higheff', mbc_cut_string, path=path)
+    mA.reconstructDecay('B- -> D0:Kpi pi-:higheff', f"{mbc_range[0]} < mbc < {mbc_range[1]}", path=path)
     try:
         vx.treeFit('B+', 0.1, path=path)
     except AttributeError:

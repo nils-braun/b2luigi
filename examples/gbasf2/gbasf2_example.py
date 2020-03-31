@@ -10,7 +10,7 @@ import example_mdst_analysis
 class MyAnalysisTask(Basf2PathTask):
     batch_system = "gbasf2"
 
-    mbc_range = b2luigi.Parameter(hashed=True)
+    mbc_range = b2luigi.ListParameter(hashed=True)
 
     # In this example we define the project name and input dataset as luigi
     # parameters. Thus, they have to be defined when instantiating the task.
@@ -50,7 +50,7 @@ class MasterTask(b2luigi.WrapperTask):
                                             "r00000/mixed/mdst/sub00/mdst_000255_prod00009434_task10020000255.root")
         max_event = 100
         # create two analysis task for two different MBC cuts. Each will be its own gbasf2 project
-        for mbc_lower_cut in (5.1, 5.2):
+        for mbc_lower_cut in [5.1, 5.2]:
             mbc_range = (mbc_lower_cut, 5.3)
             parameter_hash = hashlib.md5(f"{max_event}_{mbc_range}_{gbasf2_input_dataset}".encode()).hexdigest()[0:10]
             unique_project_name = f"luigiExample{parameter_hash}"
@@ -63,4 +63,4 @@ class MasterTask(b2luigi.WrapperTask):
 
 
 if __name__ == '__main__':
-    b2luigi.process(MasterTask, batch=True)
+    b2luigi.process(MasterTask(), batch=True, workers=1)
