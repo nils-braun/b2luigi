@@ -10,7 +10,7 @@ import example_mdst_analysis
 class MyAnalysisTask(Basf2PathTask):
     batch_system = "gbasf2"
 
-    mbc_cut_string = b2luigi.Parameter(hashed=True)
+    mbc_range = b2luigi.Parameter(hashed=True)
 
     # In this example we define the project name and input dataset as luigi
     # parameters. Thus, they have to be defined when instantiating the task.
@@ -26,7 +26,7 @@ class MyAnalysisTask(Basf2PathTask):
     gbasf2_priority = 5
 
     def create_path(self):
-        return example_mdst_analysis.create_analysis_path(mbc_cut_string=self.mbc_cut_string)
+        return example_mdst_analysis.create_analysis_path(mbc_range=self.mbc_range)
 
     def output(self):
         """
@@ -48,14 +48,14 @@ if __name__ == '__main__':
     gbasf2_input_dataset = os.path.join("/belle/MC/release-04-00-03/DB00000757/MC13a/prod00009434/s00/e1003/4S/",
                                         "r00000/mixed/mdst/sub00/mdst_000255_prod00009434_task10020000255.root")
     max_event = 100
-    mbc_cut_string = '5.2 < Mbc < 5.3'
+    mbc_range = (5.2, 5.3)
     # Add hash of significant parameters to project name to ensure project name is unique for each set of params
-    parameter_hash = hashlib.md5(f"{max_event}_{mbc_cut_string}_{gbasf2_input_dataset}".encode()).hexdigest()[0:10]
+    parameter_hash = hashlib.md5(f"{max_event}_{mbc_range}_{gbasf2_input_dataset}".encode()).hexdigest()[0:10]
     unique_project_name = f"luigiExample{parameter_hash}"
     task = MyAnalysisTask(
         gbasf2_input_dataset=gbasf2_input_dataset,
         max_event=max_event,
-        mbc_cut_string=mbc_cut_string,
+        mbc_range=mbc_range,
         gbasf2_project_name=unique_project_name
     )
     b2luigi.process(task, batch=True)
