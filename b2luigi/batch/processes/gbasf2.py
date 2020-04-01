@@ -20,6 +20,14 @@ class Gbasf2Process(BatchProcess):
     A BatchProcess job corresponds to a whole project in gbasf2.  The task of
     creating and managing jobs in a project is left to gbasf2.
 
+    .. Limitations::
+       - The gbasf2 batch process for luigi can only be used for tasks
+         inhereting from ``Basf2PathTask`` or other tasks with a
+         ``create_path()`` method that returns a basf2 path.
+       - It can only be used for pickable/serializable basf2 paths, as it stores
+         the path created by ``create_path`` in a python pickle file and runs that on the grid.
+       - That means that aliases are, at least of now, not supported
+
     Example file to execute analysis path created in
     ``examples/gbasf2/example_mdst_analysis`` on grid via gbasf2:
 
