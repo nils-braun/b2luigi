@@ -29,7 +29,7 @@ def create_analysis_path(mbc_range=[5.2, 5.3]):
     mA.reconstructDecay('D0:Kpi -> K-:higheff pi+:higheff', '1.7 < M < 1.9', path=path)
     # use try except to have this code work for both the old and new function names for the tree fit
     mA.matchMCTruth('D0:Kpi', path=path)
-    mA.reconstructDecay('B- -> D0:Kpi pi-:higheff', f"{mbc_range[0]} < mbc < {mbc_range[1]}", path=path)
+    mA.reconstructDecay('B- -> D0:Kpi pi-:higheff', f"{mbc_range[0]} < Mbc < {mbc_range[1]}", path=path)
     try:
         vx.treeFit('B+', 0.1, path=path)
     except AttributeError:
