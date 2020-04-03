@@ -20,7 +20,7 @@ class Gbasf2Process(BatchProcess):
     A BatchProcess job corresponds to a whole project in gbasf2.  The task of
     creating and managing jobs in a project is left to gbasf2.
 
-    .. Limitations::
+    .. hint::
        - The gbasf2 batch process for luigi can only be used for tasks
          inhereting from ``Basf2PathTask`` or other tasks with a
          ``create_path()`` method that returns a basf2 path.
