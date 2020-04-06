@@ -159,30 +159,16 @@ class Gbasf2Process(BatchProcess):
         if n_waiting + n_being_processed + n_done == self._n_jobs and n_done < self._n_jobs:
             return JobStatus.running
 
-        # Setting for the success requirement of a gbasf2 project, e.g. if all
-        # sub-jobs need to be done or to allow for some failed jobs
-        gbasf2_require_all_jobs_done = get_setting("gbasf2_require_all_jobs_done", default=True, task=self.task)
+        # Require all jobs to be done for project success, any job failure results in a failed project
+        if n_done == self._n_jobs:
+            # download dataset on job success
+            self._job_on_success_action()
+            return JobStatus.successful
 
-        if gbasf2_require_all_jobs_done:
-            # Require all jobs to be done for project success, any job failure results in a failed project
-            if n_done == self._n_jobs:
-                # download dataset on job success
-                self._job_on_success_action()
-                return JobStatus.successful
-            if n_failed > 0:
-                self._download_logs()
-                return JobStatus.aborted
-        else:
-            # in this case require allow for some failed jobs, return project
-            # success if some jobs were successful and no jobs are running
-            # anymore, even if some jobs in project failed, as long as not all failed.
-            if n_done > 0 and n_done + n_failed == self._n_jobs:
-                self._job_on_success_action()
-                return JobStatus.successful
-            if n_failed == self._n_jobs:
-                self._download_logs()
-                return JobStatus.aborted
-        # TODO reschedule failed jobs via ``gb2_job_reschedule``
+        if n_failed > 0:
+            self._download_logs()
+            return JobStatus.aborted
+
         raise RuntimeError("Could not determine JobStatus")
 
     def _job_on_success_action(self):
