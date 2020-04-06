@@ -179,6 +179,7 @@ class Gbasf2Process(BatchProcess):
         self._download_logs()
 
     def start_job(self):
+        """Submit new gbasf2 project to grid"""
         if self._check_project_exists() and self.get_job_status() == JobStatus.running:
             # If project already has been submitted to grid and is running,
             # don't start new project, but wait for current one to finish and
