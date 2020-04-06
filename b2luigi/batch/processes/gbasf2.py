@@ -105,7 +105,7 @@ class Gbasf2Process(BatchProcess):
             gbasf2_setup_command_str = f"source {gbasf2_setup_path} > /dev/null && gb2_proxy_init -g belle > /dev/null"
             # command to execute the gbasf2 setup command in a fresh shell and output the produced environment
             echo_gbasf2_env_command = shlex.split(f"env -i bash -c '{gbasf2_setup_command_str} > /dev/null && env'")
-            gbasf2_env_string = subprocess.check_output(echo_gbasf2_env_command, encoding="utf-8")
+            gbasf2_env_string = subprocess.run(echo_gbasf2_env_command, check=True, stdout=subprocess.PIPE, encoding="utf-8").stdout
             self._cached_gbasf2_env = dict(line.split("=", 1) for line in gbasf2_env_string.splitlines())
         return self._cached_gbasf2_env
 
@@ -307,8 +307,8 @@ class Gbasf2Process(BatchProcess):
         Check if we can find the project on the grid with gb2_job_status.
         """
         command = shlex.split(f"gb2_job_status -p {self.gbasf2_project_name}")
-        output = subprocess.check_output(command, encoding="utf-8", env=self.gbasf2_env).strip()
-        if output == "0 jobs are selected.":
+        output = subprocess.run(command, check=True, stdout=subprocess.PIPE, encoding="utf-8", env=self.gbasf2_env).stdout
+        if output.strip() == "0 jobs are selected.":
             return False
         if "--- Summary of Selected Jobs ---" in output:
             return True
@@ -322,7 +322,7 @@ class Gbasf2Process(BatchProcess):
         assert self._check_project_exists(), f"Project {self.gbasf2_project_name} doest not exist yet"
 
         command = shlex.split(f"gb2_job_status -p {self.gbasf2_project_name}")
-        output = subprocess.check_output(command, encoding="utf-8", env=self.gbasf2_env)
+        output = subprocess.run(command, check=True, output=subprocess.PIPE, encoding="utf-8", env=self.gbasf2_env).stdout
         # get job summary dict in the form of e.g.
         # {'Completed': 0, 'Deleted': 0, 'Done': 255, 'Failed': 0,
         # 'Killed': 0, 'Running': 0, 'Stalled': 0, 'Waiting': 0}
@@ -346,7 +346,7 @@ class Gbasf2Process(BatchProcess):
         os.makedirs(gbasf2_download_dir, exist_ok=True)
         command = shlex.split(f"gb2_ds_get --force {self.gbasf2_project_name}")
         print("Downloading dataset with command ", " ".join(command))
-        output = subprocess.check_output(command, env=self.gbasf2_env, encoding="utf-8", cwd=gbasf2_download_dir)
+        output = subprocess.run(command, check=True, env=self.gbasf2_env, output=subprocess.PIPE, encoding="utf-8", cwd=gbasf2_download_dir).stdout
         print(output)
         if "No file found" in output:
             raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
