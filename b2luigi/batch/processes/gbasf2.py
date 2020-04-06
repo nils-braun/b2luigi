@@ -73,8 +73,10 @@ class Gbasf2Process(BatchProcess):
         self.log_file_dir = get_log_file_dir(self.task)
         os.makedirs(self.log_file_dir, exist_ok=True)
 
-        # Store dictionary with n_jobs_by_status in attribute to check if it changed,
-        # useful for printing job status on change only
+        #: Number of total jobs in the gbasf2 project
+        self._n_jobs = None
+        #: Store dictionary with n_jobs_by_status in attribute to check if it changed,
+        #  useful for printing job status on change only
         self._n_jobs_by_status = ""
 
     @property
@@ -131,7 +133,7 @@ class Gbasf2Process(BatchProcess):
             print(f"Status of jobs in project {self.gbasf2_project_name}:", job_summary_string)
         self._n_jobs_by_status = n_jobs_by_status
 
-        n_jobs = sum(n_jobs_by_status.values())
+        n_jobs_with_state = sum(n_jobs_by_status.values())
         n_done = n_jobs_by_status["Done"]
         n_failed = (n_jobs_by_status["Failed"] +
                     n_jobs_by_status["Killed"] +
@@ -139,11 +141,22 @@ class Gbasf2Process(BatchProcess):
                     n_jobs_by_status["Stalled"])
         n_being_processed = n_jobs_by_status["Running"] + n_jobs_by_status["Completed"]
         n_waiting = n_jobs_by_status["Waiting"]
-        assert n_failed + n_done + n_waiting + n_being_processed == n_jobs,\
+        assert n_failed + n_done + n_waiting + n_being_processed == n_jobs_with_state,\
             "Error in job categorization, numbers of jobs in cateries don't add up to total"
 
+        # Sometimes, a job does not appear in any of the job status categories,
+        # e.g. on state change. Therefore we compare the number of the jobs
+        # summary with the number of jobs with a state with ``self._n_jobs`` set
+        # during job submission and and if the number of jobs with a state is
+        # smaller, we return ``running`` in order to wait until the both numbers
+        # are equal
+        if n_jobs_with_state < self._n_jobs:
+            return JobStatus.running
+        assert n_jobs_with_state == self._n_jobs,\
+            f"{self._n_jobs} were submitted, but job summary only lists {n_jobs_with_state} jobs with a state"
+
         # if all jobs in project are waitin running or done, but not all are done or failed, project is running
-        if n_waiting + n_being_processed + n_done == n_jobs and n_done + n_failed < n_jobs:
+        if n_waiting + n_being_processed + n_done == self._n_jobs and n_done < self._n_jobs:
             return JobStatus.running
 
         # Setting for the success requirement of a gbasf2 project, e.g. if all
@@ -152,7 +165,7 @@ class Gbasf2Process(BatchProcess):
 
         if gbasf2_require_all_jobs_done:
             # Require all jobs to be done for project success, any job failure results in a failed project
-            if n_done == n_jobs:
+            if n_done == self._n_jobs:
                 # download dataset on job success
                 self._job_on_success_action()
                 return JobStatus.successful
@@ -163,10 +176,10 @@ class Gbasf2Process(BatchProcess):
             # in this case require allow for some failed jobs, return project
             # success if some jobs were successful and no jobs are running
             # anymore, even if some jobs in project failed, as long as not all failed.
-            if n_done > 0 and n_done + n_failed == n_jobs:
+            if n_done > 0 and n_done + n_failed == self._n_jobs:
                 self._job_on_success_action()
                 return JobStatus.successful
-            if n_failed == n_jobs:
+            if n_failed == self._n_jobs:
                 self._download_logs()
                 return JobStatus.aborted
         # TODO reschedule failed jobs via ``gb2_job_reschedule``
@@ -198,7 +211,10 @@ class Gbasf2Process(BatchProcess):
         # submit gbasf2 project
         gbasf2_command = self._build_gbasf2_submit_command()
         print("\nSending jobs to grid via command:\n", " ".join(gbasf2_command))
-        subprocess.run(gbasf2_command, check=True, env=self.gbasf2_env)
+        gbasf2_output = _check_output_with_live_shell_output(gbasf2_command, env=self.gbasf2_env)
+        for line in gbasf2_output:
+            if "Number of jobs:" in line:
+                self._n_jobs = int(line.split(":", 1)[1])
 
     def kill_job(self):
         """Kill gbasf2 project"""
@@ -391,3 +407,32 @@ class Gbasf2Process(BatchProcess):
         """
         download_logs_command = shlex.split(f"gb2_job_output -p {self.gbasf2_project_name}")
         subprocess.run(download_logs_command, check=True, cwd=self.log_file_dir, env=self.gbasf2_env)
+
+
+def _check_output_with_live_shell_output(cmd, encoding="utf-8", *popenargs, **kwargs):
+    """
+    Run command, printing live output to shell and return string with final
+    output.
+
+    Similar to ``subprocess.check_output()``, but also prints live output to
+    user shell.  This is important for calling interactive commands that ask for
+    user input.  There, the prompt asking the user for his input, which appears
+    before the end of the process, should not be suppressed, otherwise the user
+    is not aware that he is being asked for input.
+
+    Adapted to from the following blog post by Kannan Ponnusamy:
+    https://www.endpoint.com/blog/2015/01/28/getting-realtime-output-using-python
+    """
+    output = ""
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, *popenargs, **kwargs) as proc:
+        while True:
+            output_line = proc.stdout.readline().decode(encoding)
+            output += output_line
+            if output_line == '' and proc.poll() is not None:
+                break
+            if output_line:
+                print(output_line.strip())
+        retcode = proc.poll()
+    if retcode:
+        raise subprocess.CalledProcessError(retcode, cmd)
+    return output
