@@ -193,6 +193,26 @@ class Gbasf2Process(BatchProcess):
         self._write_path_to_file()
         self._create_wrapper_steering_file()
 
+        # submit gbasf2 project
+        gbasf2_command = self._build_gbasf2_submit_command()
+        print("\nSending jobs to grid via command:\n", " ".join(gbasf2_command))
+        subprocess.run(gbasf2_command, check=True, env=self.gbasf2_env)
+
+    def kill_job(self):
+        """Kill gbasf2 project"""
+        if not self._check_project_exists():
+            return
+        # Note: The two commands ``gb2_job_delete`` and ``gb2_job_kill`` differ
+        # in that deleted jobs are killed and removed from the job database,
+        # while only killed jobs can be restarted.
+        command = shlex.split(f"gb2_job_delete --force -p {self.gbasf2_project_name}")
+        subprocess.run(command, check=True, env=self.gbasf2_env)
+
+    def _build_gbasf2_submit_command(self):
+        """
+        Function to create the gbasf2 submit command to pass to subprocess.run
+        from the task options and attributes.
+        """
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
 
         gbasf2_additional_files = get_setting("gbasf2_additional_files", default=False, task=self.task)
@@ -252,20 +272,9 @@ class Gbasf2Process(BatchProcess):
         if basf2opt is not False:
             gbasf2_command_str += f" {gbasf2_additional_params} "
 
-        # submit gbasf2 project
         gbasf2_command = shlex.split(gbasf2_command_str)
-        print(f"\nSending jobs to grid via command:\n{gbasf2_command_str}\n")
-        subprocess.run(gbasf2_command, check=True, env=self.gbasf2_env)
+        return gbasf2_command
 
-    def kill_job(self):
-        """Kill gbasf2 project"""
-        if not self._check_project_exists():
-            return
-        # Note: The two commands ``gb2_job_delete`` and ``gb2_job_kill`` differ
-        # in that deleted jobs are killed and removed from the job database,
-        # while only killed jobs can be restarted.
-        command = shlex.split(f"gb2_job_delete --force -p {self.gbasf2_project_name}")
-        subprocess.run(command, check=True, env=self.gbasf2_env)
 
     def _write_path_to_file(self):
         """
