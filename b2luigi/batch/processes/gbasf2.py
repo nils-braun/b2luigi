@@ -142,7 +142,8 @@ class Gbasf2Process(BatchProcess):
         assert n_failed + n_done + n_waiting + n_being_processed == n_jobs,\
             "Error in job categorization, numbers of jobs in cateries don't add up to total"
 
-        if n_done < n_jobs and n_waiting + n_being_processed + n_done == n_jobs:
+        # if all jobs in project are waitin running or done, but not all are done or failed, project is running
+        if n_waiting + n_being_processed + n_done == n_jobs and n_done + n_failed < n_jobs:
             return JobStatus.running
 
         # Setting for the success requirement of a gbasf2 project, e.g. if all
@@ -162,7 +163,7 @@ class Gbasf2Process(BatchProcess):
             # in this case require allow for some failed jobs, return project
             # success if some jobs were successful and no jobs are running
             # anymore, even if some jobs in project failed, as long as not all failed.
-            if n_done > 0 and n_being_processed + n_waiting == 0:
+            if n_done > 0 and n_done + n_failed == n_jobs:
                 self._job_on_success_action()
                 return JobStatus.successful
             if n_failed == n_jobs:
