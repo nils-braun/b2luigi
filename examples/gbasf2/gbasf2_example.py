@@ -57,7 +57,7 @@ class MasterTask(b2luigi.WrapperTask):
                 mbc_range=mbc_range,
                 gbasf2_project_name=unique_project_name,
                 gbasf2_input_dataset=gbasf2_input_dataset,
-                max_event=100,
+                max_event=max_event,
             )
 
 
