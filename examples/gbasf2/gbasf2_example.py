@@ -51,8 +51,8 @@ class MasterTask(b2luigi.WrapperTask):
         # create two analysis task for two different MBC cuts. Each will be its own gbasf2 project
         for mbc_lower_cut in [5.15]:
             mbc_range = (mbc_lower_cut, 5.3)
-            parameter_hash = hashlib.md5(f"{max_event}{mbc_range}{gbasf2_input_dataset}".encode()).hexdigest()[0:10]
-            unique_project_name = f"luigiExample{parameter_hash}"
+            task_id_hash = self.task_id.split("_")[-1]
+            unique_project_name = f"luigiExample{task_id_hash}"
             yield MyAnalysisTask(
                 mbc_range=mbc_range,
                 gbasf2_project_name=unique_project_name,
