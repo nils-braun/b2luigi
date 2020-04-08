@@ -396,7 +396,7 @@ class Gbasf2Process(BatchProcess):
         subprocess.run(download_logs_command, check=True, cwd=self.log_file_dir, env=self.gbasf2_env)
 
 
-def _check_output_with_live_shell_output(cmd, encoding="utf-8", *popenargs, **kwargs):
+def _check_output_with_live_shell_output(cmd, *popenargs, encoding="utf-8", **kwargs):
     """
     Run command, printing live output to shell and return string with final
     output.
