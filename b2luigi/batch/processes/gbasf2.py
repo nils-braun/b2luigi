@@ -336,7 +336,7 @@ class Gbasf2Process(BatchProcess):
         assert self._check_project_exists(), f"Project {self.gbasf2_project_name} doest not exist yet"
 
         command = shlex.split(f"gb2_job_status -p {self.gbasf2_project_name}")
-        output = subprocess.run(command, check=True, output=PIPE, encoding="utf-8", env=self.gbasf2_env).stdout
+        output = subprocess.run(command, check=True, stdout=PIPE, encoding="utf-8", env=self.gbasf2_env).stdout
         # get job summary dict in the form of e.g.
         # {'Completed': 0, 'Deleted': 0, 'Done': 255, 'Failed': 0,
         # 'Killed': 0, 'Running': 0, 'Stalled': 0, 'Waiting': 0}
@@ -360,7 +360,7 @@ class Gbasf2Process(BatchProcess):
         os.makedirs(gbasf2_download_dir, exist_ok=True)
         command = shlex.split(f"gb2_ds_get --force {self.gbasf2_project_name}")
         print("Downloading dataset with command ", " ".join(command))
-        output = subprocess.run(command, check=True, env=self.gbasf2_env, output=PIPE, encoding="utf-8", cwd=gbasf2_download_dir).stdout
+        output = subprocess.run(command, check=True, env=self.gbasf2_env, stdout=PIPE, encoding="utf-8", cwd=gbasf2_download_dir).stdout
         print(output)
         if "No file found" in output:
             raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
