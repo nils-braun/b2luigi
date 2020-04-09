@@ -168,13 +168,13 @@ class Gbasf2Process(BatchProcess):
 
     def start_job(self):
         """Submit new gbasf2 project to grid"""
-        if self._check_project_exists() and self.get_job_status() == JobStatus.running:
+        if self._check_project_exists() and self.get_job_status() in {JobStatus.successful, JobStatus.running}:
             # If project already has been submitted to grid and is running,
             # don't start new project, but wait for current one to finish and
             # download that. Just issue warning. If the job exists on the grid
-            # but is Done/Successfull or Failed, continue to submit new job,
-            # because then the user will have to deal with an interactive prompt
-            # by gbasf2 that appears when submittinto an existing project.
+            # but is Failed, continue to submit new job, because then the user
+            # will have to deal with an interactive prompt by gbasf2 that
+            # appears when submittinto an existing project.
             warnings.warn(f"Project {self.gbasf2_project_name} is already submitted to grid."
                           "Project is therefore not restarted, instead waiting for existing project to finish.")
             return
