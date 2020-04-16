@@ -1,4 +1,6 @@
 import os
+from collections import Counter
+import json
 import shlex
 import subprocess
 from subprocess import PIPE
@@ -43,6 +45,9 @@ class Gbasf2Process(BatchProcess):
         :caption: File: ``examples/gbasf2/settings.json``
         :linenos:
     """
+
+    # directory of the file in which this class is defined
+    _file_dir = os.path.dirname(os.path.realpath(__file__))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -115,15 +120,29 @@ class Gbasf2Process(BatchProcess):
 
     def get_job_status(self):
         """
-        Exract the status of all sub-jobs in a gbasf2 project from
-        ``gb2_job_status`` and return an overall project status, e.g. if all
-        jobs are done return successful
+        Get overall status of the gbasf2 project.
+
+        First obtain the status of all (sub-) jobs in a gbasf2 project, similar
+        to ``gb2_job_status``, and return an overall project status, e.g. when
+        all jobs are done, return ``JobStatus.successful`` to show that the
+        gbasf2 project succeeded.
+
+        The status of each individual job can be one of::
+
+            [Submitting, Submitted, Received, Checking, Staging, Waiting, Matched, Rescheduled,
+             Running, Stalled, Completing, Done, Completed, Failed, Deleted, Killed]
+
+        (Taken from  https://github.com/DIRACGrid/DIRAC/blob/rel-v7r1/WorkloadManagementSystem/Client/JobStatus.py)
+
         """
         # If project is does not exist on grid yet, so can't query for gbasf2 project status
         if not self._check_project_exists():
             return JobStatus.idle
 
-        n_jobs_by_status = self._get_n_jobs_by_status()
+        job_status_dict = self._get_job_status_dict()
+        n_jobs_by_status = Counter()
+        for _, job_info in job_status_dict.items():
+            n_jobs_by_status[job_info["Status"]] += 1
 
         # print summary of jobs in project if setting is set and job status changed
         if (get_setting("gbasf2_print_project_status", default=True, task=self.task) and
@@ -132,19 +151,19 @@ class Gbasf2Process(BatchProcess):
             print(f"Status of jobs in project {self.gbasf2_project_name}:", job_summary_string)
         self._n_jobs_by_status = n_jobs_by_status
 
-        n_jobs = sum(n_jobs_by_status.values())
+        n_jobs = len(job_status_dict)
         n_done = n_jobs_by_status["Done"]
         n_failed = (n_jobs_by_status["Failed"] +
                     n_jobs_by_status["Killed"] +
-                    n_jobs_by_status["Deleted"] +
-                    n_jobs_by_status["Stalled"])
-        n_being_processed = n_jobs_by_status["Running"] + n_jobs_by_status["Completed"]
-        n_waiting = n_jobs_by_status["Waiting"]
-        assert n_failed + n_done + n_waiting + n_being_processed == n_jobs,\
-            "Error in job categorization, numbers of jobs in cateries don't add up to total"
+                    n_jobs_by_status["Deleted"])
+        n_in_final_state = n_done + n_failed
 
-        # if all jobs in project are waitin running or done, but not all are done or failed, project is running
-        if n_waiting + n_being_processed + n_done == n_jobs and n_done + n_failed < n_jobs:
+        # at the moment we have a hard criteria that if one job in project failed, the task is considered failed
+        if n_failed > 0:
+            self._download_logs()
+            return JobStatus.aborted
+
+        if n_in_final_state < n_jobs:
             return JobStatus.running
 
         # Require all jobs to be done for project success, any job failure results in a failed project
@@ -152,10 +171,6 @@ class Gbasf2Process(BatchProcess):
             # download dataset on job success
             self._job_on_success_action()
             return JobStatus.successful
-
-        if n_failed > 0:
-            self._download_logs()
-            return JobStatus.aborted
 
         raise RuntimeError("Could not determine JobStatus")
 
@@ -264,7 +279,6 @@ class Gbasf2Process(BatchProcess):
         gbasf2_command = shlex.split(gbasf2_command_str)
         return gbasf2_command
 
-
     def _write_path_to_file(self):
         """
         Serialize and save the ``basf2.Path`` returned by ``self.task.create_path()`` to a python pickle file.
@@ -288,8 +302,7 @@ class Gbasf2Process(BatchProcess):
         basf2 path from ``self.task.create_path()``.
         """
         # read a jinja2 template for the steerinfile that should execute the pickled path
-        file_dir = os.path.dirname(os.path.realpath(__file__))
-        template_file_path = os.path.join(file_dir, "templates/gbasf2_steering_file_wrapper.jinja2")
+        template_file_path = os.path.join(self._file_dir, "templates/gbasf2_steering_file_wrapper.jinja2")
         with open(template_file_path, "r") as template_file:
             template = Template(template_file.read())
             # replace some variable values in the template
@@ -313,27 +326,40 @@ class Gbasf2Process(BatchProcess):
         raise RuntimeError("Output of gb2_job_status did not contain expected strings,"
                            " could not determine if project exists")
 
-    def _get_n_jobs_by_status(self):
+    def _get_job_status_dict(self):
         """
-        Returns a dictionary with different gbasf2 job status as keys and the number of jobs in each category as values.
+        Returns a dictionary for all jobs in the project with a structure like the following,
+        which I have taken and adapted from an example output::
+
+            {
+                "<JobID>": {
+                    "SubmissionTime": "2020-03-27 13:08:49",
+                    "Owner": "<dirac username>",
+                    "JobGroup": "<ProjectName>",
+                    "ApplicationStatus": "Done",
+                    "HeartBeatTime": "2020-03-27 16:01:39",
+                    "Site": "LCG.KEK.jp",
+                    "MinorStatus": "Execution Complete",
+                    "LastUpdateTime": "2020-03-27 16:01:40",
+                    "Status": "<Job Status>"
+                }
+            ...
+            }
+
+        For that purpose, the script in ``gbasf2_job_status.py`` is called.
+        That script directly interfaces with Dirac via its API, but it only works with the
+        gbasf2 environment and python2, which is why it is called as a subprocess.
+        The job status dictionary is passed to this function via json.
         """
         assert self._check_project_exists(), f"Project {self.gbasf2_project_name} doest not exist yet"
 
-        command = shlex.split(f"gb2_job_status -p {self.gbasf2_project_name}")
-        output = subprocess.run(command, check=True, stdout=PIPE, encoding="utf-8", env=self.gbasf2_env).stdout
-        # get job summary dict in the form of e.g.
-        # {'Completed': 0, 'Deleted': 0, 'Done': 255, 'Failed': 0,
-        # 'Killed': 0, 'Running': 0, 'Stalled': 0, 'Waiting': 0}
-        job_summary_string = output.splitlines()[-1].strip()
-        n_jobs_by_status = dict((summary_substring.split(":", 1)[0].strip(),
-                                 int(summary_substring.split(":", 1)[1].strip()))
-                                for summary_substring in job_summary_string.split())
-        status_keys = list(n_jobs_by_status.keys())
-        status_keys.sort()
-        assert status_keys == ['Completed', 'Deleted', 'Done', 'Failed',
-                               'Killed', 'Running', 'Stalled', 'Waiting'],\
-            "Error when obtaining job summary, it does not contain the required status keys"
-        return n_jobs_by_status
+        job_status_script_path = os.path.join(self._file_dir, "gbasf2_utils/gbasf2_job_status.py")
+        job_status_command = shlex.split(f"{job_status_script_path} -p {self.gbasf2_project_name}")
+        job_status_json_string = subprocess.run(
+            job_status_command, check=True, stdout=PIPE, encoding="utf-8", env=self.gbasf2_env
+        ).stdout
+        job_status_dict = json.loads(job_status_json_string)
+        return job_status_dict
 
     def _download_dataset(self):
         """Download the results from a gbasf2 project, stored as a dataset on the grid."""
@@ -344,7 +370,8 @@ class Gbasf2Process(BatchProcess):
         os.makedirs(gbasf2_download_dir, exist_ok=True)
         command = shlex.split(f"gb2_ds_get --force {self.gbasf2_project_name}")
         print("Downloading dataset with command ", " ".join(command))
-        output = subprocess.run(command, check=True, env=self.gbasf2_env, stdout=PIPE, encoding="utf-8", cwd=gbasf2_download_dir).stdout
+        output = subprocess.run(command, check=True, env=self.gbasf2_env,
+                            ``stdout=PIPE, encoding="utf-8", cwd=gbasf2_download_dir).stdout
         print(output)
         if "No file found" in output:
             raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
