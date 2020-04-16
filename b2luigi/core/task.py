@@ -66,6 +66,18 @@ class Task(luigi.Task):
         """
         return {output_file_name: self._get_output_file_target(output_file_name)}
 
+
+    @staticmethod
+    def _transform_input(input_generator, key=None):
+        input_list = utils.flatten_to_list_of_dicts(input_generator)
+        file_paths = utils.flatten_to_file_paths(input_list)
+
+        if key is not None:
+            return file_paths[key]
+        else:
+            return file_paths
+
+
     def get_input_file_names(self, key=None):
         """
         Get a dictionary of input file names of the tasks, which are defined in our requirements.
@@ -79,13 +91,55 @@ class Task(luigi.Task):
             If key is none, returns a dictionary of keys to list of file paths.
             Else, returns only the list of file paths for this given key.
         """
-        input_list = utils.flatten_to_list_of_dicts(self.input())
-        file_paths = utils.flatten_to_file_paths(input_list)
+        return self._transform_input(self.input(), key)
 
-        if key is not None:
-            return file_paths[key]
-        else:
-            return file_paths
+
+    def get_input_file_names_from_dict(self, requirement_key, key=None):
+        """
+        Get a dictionary of input file names of the tasks, which are defined in our requirements.
+        The requirement method should return a dict whose values are generator expressions (!)
+        yielding required task objects.
+
+        Example:
+
+            class TaskB(luigi.Task):
+    
+                def requires(self):
+                    return {
+                        "a": (TaskA(5.0, i) for i in range(100)),
+                        "b": (TaskA(1.0, i) for i in range(100)),
+                    }
+
+                def run(self):
+                    result_a = do_something_with_a(
+                        self.get_input_file_names_from_dict("a")
+                    )
+                    result_b = do_something_with_b(
+                        self.get_input_file_names_from_dict("b")
+                    )
+
+                    combine_a_and_b(
+                        result_a, 
+                        result_b, 
+                        self.get_output_file_name("combined_results.txt")
+                    )
+
+                def output(self):
+                    yield self.add_to_output("combined_results.txt")
+
+
+        Either use the key argument or dictionary indexing with the key given to :obj:`add_to_output`
+        to get back a list (!) of file paths.
+
+        Args:
+            requirement_key (:obj:`str`): Specifies the required task expression.
+            key (:obj:`str`, optional): If given, only return a list of file paths with this given key.
+
+        Return:
+            If key is none, returns a dictionary of keys to list of file paths.
+            Else, returns only the list of file paths for this given key.
+        """
+        return self._transform_input(self.input()[requirement_key], key)
 
     def get_output_file_name(self, key):
         """
