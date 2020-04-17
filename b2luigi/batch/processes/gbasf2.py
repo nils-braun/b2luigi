@@ -153,9 +153,8 @@ class Gbasf2Process(BatchProcess):
 
         n_jobs = len(job_status_dict)
         n_done = n_jobs_by_status["Done"]
-        n_failed = (n_jobs_by_status["Failed"] +
-                    n_jobs_by_status["Killed"] +
-                    n_jobs_by_status["Deleted"])
+        # note: "Killed" jobs also get moved to "Failed" after a while
+        n_failed = n_jobs_by_status["Failed"]
         n_in_final_state = n_done + n_failed
 
         # at the moment we have a hard criteria that if one job in project failed, the task is considered failed
