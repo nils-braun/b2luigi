@@ -182,15 +182,12 @@ class Gbasf2Process(BatchProcess):
 
     def start_job(self):
         """Submit new gbasf2 project to grid"""
-        if self._check_project_exists() and self.get_job_status() in {JobStatus.successful, JobStatus.running}:
-            # If project already has been submitted to grid and is running,
-            # don't start new project, but wait for current one to finish and
-            # download that. Just issue warning. If the job exists on the grid
-            # but is Failed, continue to submit new job, because then the user
-            # will have to deal with an interactive prompt by gbasf2 that
-            # appears when submittinto an existing project.
-            warnings.warn(f"Project {self.gbasf2_project_name} is already submitted to grid."
-                          "Project is therefore not restarted, instead waiting for existing project to finish.")
+        if self._check_project_exists():
+            warnings.warn(
+                f"\nProject with name {self.gbasf2_project_name} already exists on grid, "
+                "therefore not submitting new project. If you want to submit a new project, "
+                "change the project name."
+            )
             return
 
         self._write_path_to_file()
@@ -240,7 +237,7 @@ class Gbasf2Process(BatchProcess):
         # now add some additional optional options to the gbasf2 job submission string
 
         # whether to ask user for confirmation before submitting job
-        force_submission = get_setting("gbasf2_force_submission", default=False, task=self.task)
+        force_submission = get_setting("gbasf2_force_submission", default=True, task=self.task)
         if force_submission:
             gbasf2_command_str += " --force "
 
