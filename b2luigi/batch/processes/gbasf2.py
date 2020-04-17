@@ -350,7 +350,7 @@ class Gbasf2Process(BatchProcess):
         assert self._check_project_exists(), f"Project {self.gbasf2_project_name} doest not exist yet"
 
         job_status_script_path = os.path.join(self._file_dir, "gbasf2_utils/gbasf2_job_status.py")
-        job_status_command = shlex.split(f"{job_status_script_path} -p {self.gbasf2_project_name}")
+        job_status_command = shlex.split(f"python2 {job_status_script_path} -p {self.gbasf2_project_name}")
         job_status_json_string = subprocess.run(
             job_status_command, check=True, stdout=PIPE, encoding="utf-8", env=self.gbasf2_env
         ).stdout

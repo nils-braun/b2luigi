@@ -1,9 +1,10 @@
 #!/usr/bin/env python2
 
 """
-Script that uses gbasf2 code to produce job status dictionary.  Can only be
-executed in a gbasf2 environment with python2.  It is therefore called by the
-gbasf2 batch process in a subprocess.
+Script that calls gbasf/Dirac API dictionary with status and other information
+on all jobs in a project.  If executed, outputs the information as json.  Can
+only be executed in a gbasf2 environment with python2.  It is therefore called
+by the gbasf2 batch process in a subprocess with the correct environment.
 
 Adapted from some example code by Michel Villanueva in
 https://questions.belle2.org/question/7463/best-way-to-programatically-check-if-gbasf2-job-is-done/
@@ -20,6 +21,25 @@ from BelleDIRAC.Client.helpers.auth import userCreds
 
 @userCreds
 def get_job_status_dict(project_name, user_name):
+    """
+    If successful, returns a dictionary for all jobs in the project with a structure like the following,
+    which I have taken and adapted from an example output::
+
+        {
+            "<JobID>": {
+                "SubmissionTime": "2020-03-27 13:08:49",
+                "Owner": "<dirac username>",
+                "JobGroup": "<ProjectName>",
+                "ApplicationStatus": "Done",
+                "HeartBeatTime": "2020-03-27 16:01:39",
+                "Site": "LCG.KEK.jp",
+                "MinorStatus": "Execution Complete",
+                "LastUpdateTime": "2020-03-27 16:01:40",
+                "Status": "<Job Status>"
+            }
+        ...
+        }
+    """
     if user_name is None:
         user_name = os.getenv("BELLE2_USER")
     login = [user_name, 'belle']

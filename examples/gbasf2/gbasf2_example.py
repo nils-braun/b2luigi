@@ -51,7 +51,7 @@ class MasterTask(b2luigi.WrapperTask):
         for mbc_lower_cut in [5.15]:
             mbc_range = (mbc_lower_cut, 5.3)
             task_id_hash = self.task_id.split("_")[-1]
-            unique_project_name = f"luigiExampleZ{task_id_hash}"
+            unique_project_name = f"luigiExample{task_id_hash}"
             yield MyAnalysisTask(
                 mbc_range=mbc_range,
                 gbasf2_project_name=unique_project_name,
@@ -61,4 +61,4 @@ class MasterTask(b2luigi.WrapperTask):
 
 
 if __name__ == '__main__':
-    b2luigi.process(MasterTask())
+    b2luigi.process(MasterTask(), batch=True, workers=2)
