@@ -371,7 +371,7 @@ class Gbasf2Process(BatchProcess):
         command = shlex.split(f"gb2_ds_get --force {self.gbasf2_project_name}")
         print("Downloading dataset with command ", " ".join(command))
         output = subprocess.run(command, check=True, env=self.gbasf2_env,
-                            ``stdout=PIPE, encoding="utf-8", cwd=gbasf2_download_dir).stdout
+                                stdout=PIPE, encoding="utf-8", cwd=gbasf2_download_dir).stdout
         print(output)
         if "No file found" in output:
             raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
