@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 from collections import Counter
 import json
@@ -147,7 +148,8 @@ class Gbasf2Process(BatchProcess):
         # print summary of jobs in project if setting is set and job status changed
         if (get_setting("gbasf2_print_project_status", default=True, task=self.task) and
                 n_jobs_by_status != self._n_jobs_by_status):
-            print(f"Status of jobs in project {self.gbasf2_project_name}: {dict(n_jobs_by_status)}")
+            time_string = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f"Job summary of project \"{self.gbasf2_project_name}\" at {time_string} :\n  {dict(n_jobs_by_status)}")
         self._n_jobs_by_status = n_jobs_by_status
 
         n_jobs = len(job_status_dict)
@@ -158,7 +160,7 @@ class Gbasf2Process(BatchProcess):
 
         # at the moment we have a hard criteria that if one job in project failed, the task is considered failed
         if n_failed > 0:
-            self._download_logs()
+            self._job_on_failure_action()
             return JobStatus.aborted
 
         if n_in_final_state < n_jobs:
@@ -174,9 +176,21 @@ class Gbasf2Process(BatchProcess):
 
     def _job_on_success_action(self):
         """
-        Things to do after the job had been successful, e.g. downloading the dataset and logs
+        Things to do after all jobs in the project had been successful, e.g. downloading the dataset and logs
         """
         self._download_dataset()
+        self._download_logs()
+
+    def _job_on_failure_action(self):
+        """
+        Things to do after the project failed
+        """
+        job_status_dict = self._get_job_status_dict()
+        failed_job_dict = {job_id: job_info for job_id, job_info in job_status_dict.items()
+                           if job_info["Status"] == "Failed"}
+        n_failed = len(failed_job_dict)
+        print(f"{n_failed} failed jobs:\n{failed_job_dict}")
+
         self._download_logs()
 
     def start_job(self):
