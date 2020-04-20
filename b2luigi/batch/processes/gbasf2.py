@@ -4,8 +4,10 @@ import os
 from collections import Counter
 import json
 import shlex
+import shutil
 import subprocess
 from subprocess import PIPE
+import tempfile
 import warnings
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
@@ -391,19 +393,36 @@ class Gbasf2Process(BatchProcess):
         return job_status_dict
 
     def _download_dataset(self):
-        """Download the results from a gbasf2 project, stored as a dataset on the grid."""
+        """
+        Download the results from a gbasf2 project, stored as a dataset on the grid.
+        """
+        # Get list of files that we want to download from the grid via ``gb2_ds_list`` so that we can
+        # then compare this list with the results of the download to see if it was successful
+        ds_list_command = shlex.split(f"gb2_ds_list --user {self.dirac_user} {self.gbasf2_project_name}")
+        output_dataset_str = subprocess.run(ds_list_command, check=True, env=self.gbasf2_env, stdout=PIPE, encoding="utf-8").stdout
+        if "No datasets" in output_dataset_str:
+            raise RuntimeError(f"Not dataset to download under project name {self.gbasf2_project_name}")
+        output_dataset_basenames = {os.path.basename(grid_path) for grid_path in output_dataset_str.splitlines()}
+
         # Define setting for directory, into which the output dataset should be
         # downloaded. The ``gb2_ds_get`` command will create in that a directory
         # with the name of the project, which will contain the root files.
         gbasf2_download_dir = get_setting("gbasf2_download_directory", default=".", task=self.task)
         os.makedirs(gbasf2_download_dir, exist_ok=True)
-        command = shlex.split(f"gb2_ds_get --force --user {self.gbasf2_user} {self.gbasf2_project_name}")
-        print("Downloading dataset with command ", " ".join(command))
-        output = subprocess.run(command, check=True, env=self.gbasf2_env,
-                                stdout=PIPE, encoding="utf-8", cwd=gbasf2_download_dir).stdout
-        print(output)
-        if "No file found" in output:
-            raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
+        with tempfile.TemporaryDirectory(dir=gbasf2_download_dir) as tmpdirname:
+            ds_get_command = shlex.split(f"gb2_ds_get --force --user {self.dirac_user} {self.gbasf2_project_name}")
+            print("Downloading dataset with command ", " ".join(ds_get_command))
+            output = subprocess.run(ds_get_command, check=True, env=self.gbasf2_env,
+                                    stdout=PIPE, encoding="utf-8", cwd=tmpdirname).stdout
+            print(output)
+            if "No file found" in output:
+                raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
+
+            temporary_dataset_dir = os.path.join(tmpdirname, self.gbasf2_project_name)
+            downloaded_dataset_basenames = set(os.listdir(temporary_dataset_dir))
+            if output_dataset_basenames == downloaded_dataset_basenames:
+                shutil.move(src=temporary_dataset_dir, dst=os.path.join(gbasf2_download_dir, self.gbasf2_project_name))
+
         # TODO: in the output dataset there is a root file created for each
         # file in the input dataset.The output files are have numbers added to
         # the filenames specified by the file names e.g. in the ``RootOutput``
