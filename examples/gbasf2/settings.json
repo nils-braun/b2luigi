@@ -1,4 +1,6 @@
 {
     "gbasf2_install_directory": "~/gbasf2KEK",
-    "gbasf2_print_status_updates": true
+    "gbasf2_print_status_updates": true,
+    "gbasf2_download_dir": ".",
+    "gbasf2_cputime": 5
 }

@@ -14,11 +14,6 @@ class MyAnalysisTask(Basf2PathTask):
     gbasf2_project_name_prefix = b2luigi.Parameter(significant=False)
     gbasf2_input_dataset = b2luigi.Parameter(hashed=True)
 
-    # Define some more optional gbasf2 settings as class properties. Alternatively, they could
-    # also be defined in the settings.json
-    gbasf2_download_dir = "."
-    gbasf2_cputime = 5  # expected time per job in minutes, we use a low one b/c we set max_event to a low value
-
     # As an example we define a cut range as a b2luigi ListParameter, so that we
     # can automatically create multiple tasks and thus multiple independent
     # gbasf2 projects for differents sets of cuts
