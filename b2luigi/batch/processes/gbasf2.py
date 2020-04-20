@@ -168,7 +168,7 @@ class Gbasf2Process(BatchProcess):
             n_jobs_by_status[job_info["Status"]] += 1
 
         # print summary of jobs in project if setting is set and job status changed
-        if (get_setting("gbasf2_print_project_status", default=True, task=self.task) and
+        if (get_setting("gbasf2_print_status_updates", default=True, task=self.task) and
                 n_jobs_by_status != self._n_jobs_by_status):
             time_string = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             print(f"Job summary of project \"{self.gbasf2_project_name}\" at {time_string} :\n  {dict(n_jobs_by_status)}")

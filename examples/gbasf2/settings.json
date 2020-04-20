@@ -1,4 +1,4 @@
 {
     "gbasf2_install_directory": "~/gbasf2KEK",
-    "gbasf2_print_project_status": true
+    "gbasf2_print_status_updates": true
 }
