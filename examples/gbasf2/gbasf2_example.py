@@ -13,7 +13,8 @@ class MyAnalysisTask(Basf2PathTask):
     # b2luigi will then add a hash derived from the luigi parameters to create a unique project name.
     gbasf2_project_name_prefix = b2luigi.Parameter(significant=False)
     gbasf2_input_dataset = b2luigi.Parameter(hashed=True)
-    # Define some more settings as class properties. Alternatively, they could
+
+    # Define some more optional gbasf2 settings as class properties. Alternatively, they could
     # also be defined in the settings.json
     gbasf2_download_dir = "."
     gbasf2_cputime = 5  # expected time per job in minutes, we use a low one b/c we set max_event to a low value
