@@ -75,7 +75,12 @@ class Gbasf2Process(BatchProcess):
         # useful for printing job status on change only
         self._n_jobs_by_status = ""
 
-        self.init_dirac_proxy()
+        proxy_info_str = self.setup_dirac_proxy()
+        # get dirac user name
+        self.dirac_user = None
+        for line in proxy_info_str.splitlines():
+            if line.startswith("username"):
+                self.dirac_user = line.split(":", 1)[1].strip()
 
     @property
     @lru_cache(maxsize=None)
@@ -106,27 +111,32 @@ class Gbasf2Process(BatchProcess):
         gbasf2_env = dict(line.split("=", 1) for line in gbasf2_env_string.splitlines())
         return gbasf2_env
 
-    def init_dirac_proxy(self):
+    def setup_dirac_proxy(self):
         """
-        Wrapper for the ``gb2_proxy_init -g belle`` shell command.
+        Runs ``gb2_proxy_init -g belle`` if necessary and returns
+        ``gb2_proxy_info`` output
 
-        It has to be run only once every 24 hours for a terminal.  So we first
-        check with ``gb2_proxy_info`` and if an old proxy is still valid, don't
-        re-run the command to prevent unnecessary certificate password prompts
+        ``gb2_proxy_init`` has to be run only once every 24 hours for a
+        terminal.  So we first check with ``gb2_proxy_info`` and if an old proxy
+        is still valid, don't re-run the command to prevent unnecessary
+        certificate password prompts
         """
         # Get time that the proxy is still valid from the gb2_proxy_info output line "timeleft".
         # If no proxy had been initialized, the output will not contain the "timeleft" string.
         # Alternatively, if the proxy time ran out, the timeleft value will be 00:00:00
         proxy_info_str = subprocess.run(["gb2_proxy_info"], check=True, env=self.gbasf2_env, stdout=PIPE, encoding="utf-8").stdout
         for line in proxy_info_str.splitlines():
-            if "timeleft" in line:
+            if line.startswith("timeleft"):
                 timeleft_str = line.split(":", 1)[1].strip()
                 timeleft = datetime.strptime(timeleft_str, '%H:%M:%S')
                 timeleft_delta = timedelta(hours=timeleft.hour, minutes=timeleft.minute, seconds=timeleft.second)
                 if timeleft_delta.total_seconds() > 0:
-                    return
+                    return proxy_info_str
         # initiallize proxy
         subprocess.run(shlex.split("gb2_proxy_init -g belle"), check=True, env=self.gbasf2_env)
+        new_proxy_info_str = subprocess.run(
+            ["gb2_proxy_info"], check=True, env=self.gbasf2_env, stdout=PIPE, encoding="utf-8").stdout
+        return new_proxy_info_str
 
     def get_job_status(self):
 
@@ -228,7 +238,7 @@ class Gbasf2Process(BatchProcess):
         # Note: The two commands ``gb2_job_delete`` and ``gb2_job_kill`` differ
         # in that deleted jobs are killed and removed from the job database,
         # while only killed jobs can be restarted.
-        command = shlex.split(f"gb2_job_delete --force -p {self.gbasf2_project_name}")
+        command = shlex.split(f"gb2_job_delete --force --user {self.dirac_user} -p {self.gbasf2_project_name}")
         subprocess.run(command, check=True, env=self.gbasf2_env)
 
     def _build_gbasf2_submit_command(self):
@@ -246,7 +256,6 @@ class Gbasf2Process(BatchProcess):
         else:
             additional_files_str = ""
 
-        # TODO: support tasks which don't need input dataset
         gbasf2_command_str = (f"gbasf2 {self.wrapper_file_path} -f {self.pickle_file_path} {additional_files_str} " +
                               f"-p {self.gbasf2_project_name} -s {gbasf2_release} ")
 
@@ -337,7 +346,7 @@ class Gbasf2Process(BatchProcess):
         """
         Check if we can find the project on the grid with gb2_job_status.
         """
-        command = shlex.split(f"gb2_job_status -p {self.gbasf2_project_name}")
+        command = shlex.split(f"gb2_job_status --user {self.dirac_user} -p {self.gbasf2_project_name}")
         output = subprocess.run(command, check=True, stdout=PIPE, encoding="utf-8", env=self.gbasf2_env).stdout
         if output.strip() == "0 jobs are selected.":
             return False
@@ -374,7 +383,7 @@ class Gbasf2Process(BatchProcess):
         assert self._check_project_exists(), f"Project {self.gbasf2_project_name} doest not exist yet"
 
         job_status_script_path = os.path.join(self._file_dir, "gbasf2_utils/gbasf2_job_status.py")
-        job_status_command = shlex.split(f"python2 {job_status_script_path} -p {self.gbasf2_project_name}")
+        job_status_command = shlex.split(f"python2 {job_status_script_path} -p {self.gbasf2_project_name} -u {self.dirac_user}")
         job_status_json_string = subprocess.run(
             job_status_command, check=True, stdout=PIPE, encoding="utf-8", env=self.gbasf2_env
         ).stdout
@@ -388,7 +397,7 @@ class Gbasf2Process(BatchProcess):
         # with the name of the project, which will contain the root files.
         gbasf2_download_dir = get_setting("gbasf2_download_directory", default=".", task=self.task)
         os.makedirs(gbasf2_download_dir, exist_ok=True)
-        command = shlex.split(f"gb2_ds_get --force {self.gbasf2_project_name}")
+        command = shlex.split(f"gb2_ds_get --force --user {self.gbasf2_user} {self.gbasf2_project_name}")
         print("Downloading dataset with command ", " ".join(command))
         output = subprocess.run(command, check=True, env=self.gbasf2_env,
                                 stdout=PIPE, encoding="utf-8", cwd=gbasf2_download_dir).stdout
@@ -423,7 +432,7 @@ class Gbasf2Process(BatchProcess):
 
         These are stored in the task log dir.
         """
-        download_logs_command = shlex.split(f"gb2_job_output -p {self.gbasf2_project_name}")
+        download_logs_command = shlex.split(f"gb2_job_output --user {self.dirac_user} -p {self.gbasf2_project_name}")
         subprocess.run(download_logs_command, check=True, cwd=self.log_file_dir, env=self.gbasf2_env)
 
 
