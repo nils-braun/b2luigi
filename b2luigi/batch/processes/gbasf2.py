@@ -1,4 +1,5 @@
 from datetime import datetime
+from functools import lru_cache
 import os
 from collections import Counter
 import json
@@ -75,39 +76,34 @@ class Gbasf2Process(BatchProcess):
         self._n_jobs_by_status = ""
 
     @property
+    @lru_cache(maxsize=None)
     def gbasf2_env(self):
         """
         Return the gbasf2 environment dict.
 
         When first called, it executes the setup script from the
-        ``gbasf2_install_directory`` setting and ``gb2_proxy_init -g belle``
-        command.  Then, it stores the result in the ``self._cached_gbasf2_env``
-        property and just returns that on subsequent calls, so that the user
-        does not have provide his password each time this function is called.
+        ``gbasf2_install_directory`` setting and calls the ``gb2_proxy_init -g belle``
+        command and then stores the resulting environment dict in a cache.
         This property can be used as the ``env`` parameter in subprocess calls,
         to execute gbasf2 commands in this environment
         """
 
-        if self._cached_gbasf2_env is None:
-            gbasf2_install_dir = get_setting("gbasf2_install_directory", default="~/gbasf2KEK", task=self.task)
-            gbasf2_setup_path = os.path.join(gbasf2_install_dir, "BelleDIRAC/gbasf2/tools/setup")
-            if not os.path.isfile(os.path.expanduser(gbasf2_setup_path)):
-                raise FileNotFoundError(
-                    f"Could not find gbasf2 setup files in ``{gbasf2_install_dir}``.\n" +
-                    "Make sure to that gbasf2 is installed at the location specified by the " +
-                    "``gbasf2_install_dir`` setting."
-                )
-            # complete bash command to set up the gbasf2 environment
-            # piping output to /dev/null, because we want that our final script only prints the ``env`` output
-            gbasf2_setup_command_str = f"source {gbasf2_setup_path} > /dev/null && gb2_proxy_init -g belle > /dev/null"
-            # command to execute the gbasf2 setup command in a fresh shell and output the produced environment
-            echo_gbasf2_env_command = shlex.split(f"env -i bash -c '{gbasf2_setup_command_str} > /dev/null && env'")
-            gbasf2_env_string = subprocess.run(echo_gbasf2_env_command, check=True, stdout=PIPE, encoding="utf-8").stdout
-            self._cached_gbasf2_env = dict(line.split("=", 1) for line in gbasf2_env_string.splitlines())
-        return self._cached_gbasf2_env
-
-    #: cached gbasf2 enviromnent, initiallized and accessed via ``self.gbasf2_env``
-    _cached_gbasf2_env = None
+        gbasf2_install_dir = get_setting("gbasf2_install_directory", default="~/gbasf2KEK", task=self.task)
+        gbasf2_setup_path = os.path.join(gbasf2_install_dir, "BelleDIRAC/gbasf2/tools/setup")
+        if not os.path.isfile(os.path.expanduser(gbasf2_setup_path)):
+            raise FileNotFoundError(
+                f"Could not find gbasf2 setup files in ``{gbasf2_install_dir}``.\n" +
+                "Make sure to that gbasf2 is installed at the location specified by the " +
+                "``gbasf2_install_dir`` setting."
+            )
+        # complete bash command to set up the gbasf2 environment
+        # piping output to /dev/null, because we want that our final script only prints the ``env`` output
+        gbasf2_setup_command_str = f"source {gbasf2_setup_path} > /dev/null && gb2_proxy_init -g belle > /dev/null"
+        # command to execute the gbasf2 setup command in a fresh shell and output the produced environment
+        echo_gbasf2_env_command = shlex.split(f"env -i bash -c '{gbasf2_setup_command_str} > /dev/null && env'")
+        gbasf2_env_string = subprocess.run(echo_gbasf2_env_command, check=True, stdout=PIPE, encoding="utf-8").stdout
+        gbasf2_env = dict(line.split("=", 1) for line in gbasf2_env_string.splitlines())
+        return gbasf2_env
 
     def get_job_status(self):
         """
