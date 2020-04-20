@@ -324,8 +324,6 @@ class Gbasf2Process(BatchProcess):
 
         path.add_module("Progress")
         b2pp.write_path_to_file(path, self.pickle_file_path)
-        print(f"\nSaved serialized path in {self.pickle_file_path}\nwith content:\n")
-        basf2.print_path(path)
 
     def _create_wrapper_steering_file(self):
         """
