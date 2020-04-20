@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import lru_cache
 import os
 from collections import Counter
@@ -75,6 +75,8 @@ class Gbasf2Process(BatchProcess):
         # useful for printing job status on change only
         self._n_jobs_by_status = ""
 
+        self.init_dirac_proxy()
+
     @property
     @lru_cache(maxsize=None)
     def gbasf2_env(self):
@@ -82,10 +84,9 @@ class Gbasf2Process(BatchProcess):
         Return the gbasf2 environment dict.
 
         When first called, it executes the setup script from the
-        ``gbasf2_install_directory`` setting and calls the ``gb2_proxy_init -g belle``
-        command and then stores the resulting environment dict in a cache.
-        This property can be used as the ``env`` parameter in subprocess calls,
-        to execute gbasf2 commands in this environment
+        ``gbasf2_install_directory`` then caches and returns the resulting
+        environment.  This property can be used as the ``env`` parameter in
+        subprocess calls, to execute gbasf2 commands in this environment
         """
 
         gbasf2_install_dir = get_setting("gbasf2_install_directory", default="~/gbasf2KEK", task=self.task)
@@ -98,14 +99,37 @@ class Gbasf2Process(BatchProcess):
             )
         # complete bash command to set up the gbasf2 environment
         # piping output to /dev/null, because we want that our final script only prints the ``env`` output
-        gbasf2_setup_command_str = f"source {gbasf2_setup_path} > /dev/null && gb2_proxy_init -g belle > /dev/null"
+        gbasf2_setup_command_str = f"source {gbasf2_setup_path} > /dev/null"
         # command to execute the gbasf2 setup command in a fresh shell and output the produced environment
         echo_gbasf2_env_command = shlex.split(f"env -i bash -c '{gbasf2_setup_command_str} > /dev/null && env'")
         gbasf2_env_string = subprocess.run(echo_gbasf2_env_command, check=True, stdout=PIPE, encoding="utf-8").stdout
         gbasf2_env = dict(line.split("=", 1) for line in gbasf2_env_string.splitlines())
         return gbasf2_env
 
+    def init_dirac_proxy(self):
+        """
+        Wrapper for the ``gb2_proxy_init -g belle`` shell command.
+
+        It has to be run only once every 24 hours for a terminal.  So we first
+        check with ``gb2_proxy_info`` and if an old proxy is still valid, don't
+        re-run the command to prevent unnecessary certificate password prompts
+        """
+        # Get time that the proxy is still valid from the gb2_proxy_info output line "timeleft".
+        # If no proxy had been initialized, the output will not contain the "timeleft" string.
+        # Alternatively, if the proxy time ran out, the timeleft value will be 00:00:00
+        proxy_info_str = subprocess.run(["gb2_proxy_info"], check=True, env=self.gbasf2_env, stdout=PIPE, encoding="utf-8").stdout
+        for line in proxy_info_str.splitlines():
+            if "timeleft" in line:
+                timeleft_str = line.split(":", 1)[1].strip()
+                timeleft = datetime.strptime(timeleft_str, '%H:%M:%S')
+                timeleft_delta = timedelta(hours=timeleft.hour, minutes=timeleft.minute, seconds=timeleft.second)
+                if timeleft_delta.total_seconds() > 0:
+                    return
+        # initiallize proxy
+        subprocess.run(shlex.split("gb2_proxy_init -g belle"), check=True, env=self.gbasf2_env)
+
     def get_job_status(self):
+
         """
         Get overall status of the gbasf2 project.
 
