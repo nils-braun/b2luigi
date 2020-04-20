@@ -52,20 +52,10 @@ class Gbasf2Process(BatchProcess):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        try:
-            #: gbasf2 project name, must be property/attribute, e.g. a luigi parameter
-            #  Setting it via a setting.json file is not supported to make sure users set unique project names
-            self.gbasf2_project_name = self.task.gbasf2_project_name
-        except AttributeError as err:
-            raise Exception(
-                "Task can only be used with the gbasf2 batch process if it has ``gbasf2_project_name`` " +
-                "as a luigi parameter or attribute. Make sure that the project name is unique for different " +
-                f"instances of ``{type(self.task).__name__}()`` with different parameters."
-            ) from err
 
-        assert len(self.gbasf2_project_name) <= 32,\
-            f"Maximum lenght of project name should be 32 characters, has {len(self.gbasf2_project_name)} chars"
-        assert self.gbasf2_project_name.isalnum(), "Only alphanumeric project names are officially supported by gbasf2"
+        # gbasf2 project name, must be property/attribute, e.g. a luigi parameter
+        # Setting it via a setting.json file is not supported to make sure users set unique project names
+        self.gbasf2_project_name = get_unique_gbasf2_project_name(self.task)
 
         # Output file directory of the task to wrap with gbasf2, where we will
         # store the pickled basf2 path and the created steerinfile to execute
@@ -247,6 +237,7 @@ class Gbasf2Process(BatchProcess):
         gbasf2_n_repition_jobs = get_setting("gbasf2_n_repition_job", default=False, task=self.task)
         if gbasf2_n_repition_jobs is not False:
             gbasf2_command_str += f" --repetition {gbasf2_n_repition_jobs} "
+
         # now add some additional optional options to the gbasf2 job submission string
 
         # whether to ask user for confirmation before submitting job
@@ -414,3 +405,33 @@ class Gbasf2Process(BatchProcess):
         """
         download_logs_command = shlex.split(f"gb2_job_output -p {self.gbasf2_project_name}")
         subprocess.run(download_logs_command, check=True, cwd=self.log_file_dir, env=self.gbasf2_env)
+
+
+def get_unique_gbasf2_project_name(task):
+    """
+    Combine the ``gbasf2_project_name_prefix`` setting and the ``task_id`` hash
+    to a unique project name.
+
+    This is done to make sure that different instances of a task with different
+    luigi parameters result in different gbasf2 project names.  When trying to
+    redoing a task on the grid with identical parameters, rename the project
+    name prefix, to ensure that you get a new project.
+    """
+    try:
+        gbasf2_project_name_prefix = get_setting("gbasf2_project_name_prefix", task=task)
+    except AttributeError as err:
+        raise Exception(
+            "Task can only be used with the gbasf2 batch process if it has ``gbasf2_project_name_prefix`` " +
+            "as a luigi parameter, attribute or setting."
+        ) from err
+
+    task_id_hash = task.task_id.split("_")[-1]
+    gbasf2_project_name = gbasf2_project_name_prefix + task_id_hash
+    max_project_name_length = 32
+    assert len(gbasf2_project_name) <= max_project_name_length,\
+        f"Maximum length of project name should be {max_project_name_length}, " + \
+        f"but has {len(gbasf2_project_name)} chars." + \
+        f"Please choose a gbasf2_project_name_prefix of less than {max_project_name_length - len(task_id_hash)} characters," + \
+        f" since the unique task id hash takes {len(task_id_hash)} characters."
+    assert gbasf2_project_name.isalnum(), "Only alphanumeric project names are officially supported by gbasf2"
+    return gbasf2_project_name

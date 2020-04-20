@@ -2,7 +2,7 @@ import os
 
 import b2luigi
 from b2luigi.basf2_helper.tasks import Basf2PathTask
-
+from b2luigi.batch.processes.gbasf2 import get_unique_gbasf2_project_name
 import example_mdst_analysis
 
 
@@ -11,15 +11,11 @@ class MyAnalysisTask(Basf2PathTask):
 
     mbc_range = b2luigi.ListParameter(hashed=True)
 
-    # common name for all tasks from this class
+    # Common gbasf2 project name prefix instances of this task b2luigi will
+    # create a gbasf2 project name by appending a unique hash derived from the
+    # luigi paramater to make sure that each task has a unique project name as
+    # long as you don't restart a task without changing parameters
     gbasf2_project_name_prefix = b2luigi.Parameter(significant=False)
-    # calculate specific unique project name for this instance of this task, so
-    # that each change in b2luigi parameters results in a different gbasf2
-    # project
-    @property
-    def gbasf2_project_name(self):
-        task_id_hash = self.task_id.split("_")[-1]
-        return self.gbasf2_project_name_prefix + task_id_hash
 
     gbasf2_input_dataset = b2luigi.Parameter(hashed=True)
     # Define some more settings as class properties. Alternatively, they could
@@ -43,7 +39,9 @@ class MyAnalysisTask(Basf2PathTask):
         the download not to fail.  If the target exists but you want to re-run
         the task, just delete it by hand.
         """
-        return b2luigi.LocalTarget(os.path.join(self.gbasf2_download_dir, self.gbasf2_project_name))
+        gbasf2_project_name = get_unique_gbasf2_project_name(self)
+        gbasf2_dataset_dir = os.path.join(self.gbasf2_download_dir, gbasf2_project_name)
+        return b2luigi.LocalTarget(gbasf2_dataset_dir)
 
 
 class MasterTask(b2luigi.WrapperTask):
