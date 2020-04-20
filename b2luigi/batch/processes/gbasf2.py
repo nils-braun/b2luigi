@@ -171,7 +171,8 @@ class Gbasf2Process(BatchProcess):
         if (get_setting("gbasf2_print_status_updates", default=True, task=self.task) and
                 n_jobs_by_status != self._n_jobs_by_status):
             time_string = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            print(f"Job summary of project \"{self.gbasf2_project_name}\" at {time_string} :\n  {dict(n_jobs_by_status)}")
+            job_status_string = str(dict(sorted(n_jobs_by_status.items()))).strip("{}")
+            print(f"Jobs in gbasf2 project \"{self.gbasf2_project_name}\" at {time_string}: {job_status_string}")
         self._n_jobs_by_status = n_jobs_by_status
 
         n_jobs = len(job_status_dict)
