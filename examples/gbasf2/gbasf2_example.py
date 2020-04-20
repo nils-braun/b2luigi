@@ -11,12 +11,16 @@ class MyAnalysisTask(Basf2PathTask):
 
     mbc_range = b2luigi.ListParameter(hashed=True)
 
-    # In this example we define the project name and input dataset as luigi
-    # parameters. Thus, they have to be defined when instantiating the task.
-    # They can also be defined as normal class properties/attributes or static
-    # property functions. But we have to make sure that the project name is
-    # always unique for each new task instance with different parameters.
-    gbasf2_project_name = b2luigi.Parameter(significant=False)
+    # common name for all tasks from this class
+    gbasf2_project_name_prefix = b2luigi.Parameter(significant=False)
+    # calculate specific unique project name for this instance of this task, so
+    # that each change in b2luigi parameters results in a different gbasf2
+    # project
+    @property
+    def gbasf2_project_name(self):
+        task_id_hash = self.task_id.split("_")[-1]
+        return self.gbasf2_project_name_prefix + task_id_hash
+
     gbasf2_input_dataset = b2luigi.Parameter(hashed=True)
     # Define some more settings as class properties. Alternatively, they could
     # also be defined in the settings.json
@@ -45,20 +49,17 @@ class MyAnalysisTask(Basf2PathTask):
 class MasterTask(b2luigi.WrapperTask):
     def requires(self):
         gbasf2_input_dataset = os.path.join("/belle/MC/release-04-00-03/DB00000757/MC13a/prod00009434/s00/e1003/4S/",
+
                                             "r00000/mixed/mdst/sub00/mdst_000255_prod00009434_task10020000255.root")
-        max_event = 100
         # create two analysis task for two different MBC cuts. Each will be its own gbasf2 project
-        for mbc_lower_cut in [5.15]:
-            mbc_range = (mbc_lower_cut, 5.3)
-            task_id_hash = self.task_id.split("_")[-1]
-            unique_project_name = f"luigiExample{task_id_hash}"
+        for mbc_lower_cut in [5.15, 5.2]:
             yield MyAnalysisTask(
-                mbc_range=mbc_range,
-                gbasf2_project_name=unique_project_name,
+                mbc_range=(mbc_lower_cut, 5.3),
+                gbasf2_project_name_prefix="luigiExample",
                 gbasf2_input_dataset=gbasf2_input_dataset,
-                max_event=max_event,
+                max_event=100,
             )
 
 
 if __name__ == '__main__':
-    b2luigi.process(MasterTask(), batch=True, workers=2)
+    b2luigi.process(MasterTask(), workers=2)
