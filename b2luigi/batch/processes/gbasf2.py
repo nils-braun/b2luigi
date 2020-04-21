@@ -24,67 +24,74 @@ class Gbasf2Process(BatchProcess):
     """
     Batch process for working with gbasf2 projects on grid.
 
-    A BatchProcess job corresponds to a whole project in gbasf2. The task of
-    creating and managing jobs in a project is left to gbasf2.
-
-    What it does
-    ~~~~~~~~~~~~
+    **What it does**
 
     gbasf2 project submission
         The gbasf2 batch process takes the basf2 path returned by the ``create_path()``
-        method of the task, saves it to the disk creates a wrapper steering file that
+        method of the task, saves it to the disk and creates a wrapper steering file that
         executes the saved path. It then sends both to the LHC Computing Grid (LCG) via
         the BelleII-specific Dirac-wrapper gbasf2.
 
     Project status monitoring
         After the project submission, the gbasf batch process regularly checks the status
-        of all the jobs belonging to a gbasf2 process on the grid and returns a success if
+        of all the jobs belonging to a gbasf2 project returns a success if
         all jobs had been successful, while a single failed job results in a failed project.
 
-    Download of datasets and log
+    Download of datasets and logs
         If all jobs had been successful, it automatically downloads the output dataset and
         the log files from the job sandboxes.
 
-    Limitations
-    ~~~~~~~~~~~
 
-    - The gbasf2 batch process for luigi can only be used for tasks
-      inhereting from ``Basf2PathTask`` or other tasks with a
-      ``create_path()`` method that returns a basf2 path.
-    - It can only be used for pickable/serializable basf2 paths, as it stores
-      the path created by ``create_path`` in a python pickle file and runs that on the grid.
-    - That means that aliases are, at least of now, not supported
+    .. note::
+        **Limitations**
+
+        - The gbasf2 batch process for luigi can only be used for tasks
+          inhereting from ``Basf2PathTask`` or other tasks with a
+          ``create_path()`` method that returns a basf2 path.
+        - It can only be used for pickable/serializable basf2 paths, as it stores
+          the path created by ``create_path`` in a python pickle file and runs that on the grid.
+        - basf2 variable aliases are at the moment not supported, as they are not included in the pickled path
+
+    **Usage**
 
     Example
-    ~~~~~~~~
+        Here is an example file to submit an analysis path created by the script in
+        ``examples/gbasf2/example_mdst_analysis`` to grid via gbasf2:
 
-    Here is an example file to submit an analysis path created by the script in
-    ``examples/gbasf2/example_mdst_analysis`` to grid via gbasf2:
+        .. literalinclude:: ../../examples/gbasf2/gbasf2_example.py
+           :caption: File: ``examples/gbasf2/gbasf2_example.py``
+           :linenos:
 
-    ..  literalinclude:: ../../examples/gbasf2/gbasf2_example.py :caption: File:
-    ``examples/gbasf2/gbasf2_example.py`` :linenos:
+        Some settings are done as task-specific class attributes, others are defined
+        in the ``settings.json``:
 
-    Some settings are done as task-specific class attributes, others are defined
-    in the ``settings.json``:
-
-    ..  literalinclude:: ../../examples/gbasf2/settings.json :caption: File:
-    ``examples/gbasf2/settings.json`` :linenos:
+        .. literalinclude:: ../../examples/gbasf2/settings.json
+           :caption: File: ``examples/gbasf2/settings.json``
+           :linenos:
 
     Handling failed jobs
-    ~~~~~~~~~~~~~~~~~~~~
+        The gbasf2 input wrapper considers the gbasf2 project as failed if any of
+        the jobs in the project failed.  It the automatically downloads the logs, so
+        please look into them to see what the reason was. You then need to resubmit them
+        manually with the ``gb2_job_reschedule`` or delete them with
+        ``gb2_job_delete`` so that the gbasf2 batch process doesn't know they ever
+        existed. Then run just run your luigi task/script again.
 
-    The gbasf2 input wrapper considers the gbasf2 project as failed if any of
-    the jobs in the project failed.  It the automatically downloads the logs, so
-    please look into them to see what the reason was. You then need to resubmit them
-    manually with the ``gb2_job_reschedule`` or delete them with
-    ``gb2_job_delete`` so that the gbasf2 batch process doesn't know they ever
-    existed. Then run just run your luigi task/script again..
+    .. note::
+        **Note on nomenclature:**
+        The ``BatchProcess`` is intended to work with jobs, thus is has method names such as
+        ``get_job_status``. The gbasf2 implementation of that class is special in that it wraps
+        gbasf2 projects, of which each contains multiple grid jobs, one for each file in the input 
+        dataset. The actual (sub-) job handling is left to gbasf2. So the job status of the batch process
+        refers to the status of the whole project.
+    
 
-    ToDo's
-    ~~~~~~
+    **Planned features**
+
     - automatically reschedule failed jobs until a maximum number of retries is reached
     - add some helper functionality to deal with output, to avoid having to redefine
-      task output when switching between local batch process and gbasf2 batch process """
+      task output when switching between local batch process and gbasf2 batch process.
+    """
 
     # directory of the file in which this class is defined
     _file_dir = os.path.dirname(os.path.realpath(__file__))
