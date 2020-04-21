@@ -22,14 +22,14 @@ import basf2.pickle_path as b2pp
 
 class Gbasf2Process(BatchProcess):
     """
-    Batch process for working with gbasf2 projects on grid.
+    Batch process for working with gbasf2 projects on *LHC Computing Grid* (LCG).
 
     **What it does**
 
     gbasf2 project submission
         The gbasf2 batch process takes the basf2 path returned by the ``create_path()``
         method of the task, saves it to the disk and creates a wrapper steering file that
-        executes the saved path. It then sends both to the LHC Computing Grid (LCG) via
+        executes the saved path. It then sends both to the LCG via
         the BelleII-specific Dirac-wrapper gbasf2.
 
     Project status monitoring
@@ -53,6 +53,63 @@ class Gbasf2Process(BatchProcess):
         - basf2 variable aliases are at the moment not supported, as they are not included in the pickled path
 
     **Usage**
+
+    Settings for gbasf2 tasks
+        To submit a task with the gbasf2 wrapper, you first you have to add the property
+        ``batch_system = "gbasf2"``, which sets the ``batch_system`` setting.
+        It is not recommended to set that setting globally, as not all tasks can be submitted to the grid,
+        but only tasks with a ``create_path`` method.
+
+        For gbasf2 tasks it is further required to set the settings
+
+        - ``gbasf2_input_dataset``: The input dataset on the grid to use.
+        - ``gbasf2_project_name_prefix``: A string with which your gbasf2 project names will start.
+          To ensure the project associate with each unique task (i.e. for each of luigi parameters)
+          is unique, a hash generated from the luigi parameters of the task will be appended to the prefix
+          to create the actual gbasf2 project name.
+
+        For example:
+
+        .. code-block:: python
+
+            class MyTask(Basf2PathTask):
+                batch_system = "gbasf2"
+                gbasf2_project_name_prefix = b2luigi.Parameter(significant=False)
+                gbasf2_input_dataset = b2luigi.Parameter(hashed=True)
+
+        The following settings are not required as they have default values, but those might not work for you:
+
+        - ``gbasf2_install_directory``: If your gbasf2 install location is not ``~/gbasf2KEK``, you have set this,
+          so that the gbasf2 batch process can set up the gbasf2 environment for its gbasf2 commands.
+        - ``gbasf2_download_directory``: Defines in which directory the ``gb2_ds_get`` download will called
+          to download the result dataset.
+          The output will then be in the in a subdirectory of that directory with the name of the project.
+          It defaults to the current directory.
+        - ``gbasf2_release``: Set this if you want the jobs to use another release on the grid than your
+          currently set up release, which is the default.
+
+        By setting ``gbasf2_print_status_updates`` to ``False`` you can turn off the printing of of the job summaries,
+        that is the number of jobs in different states in a gbasf2 project.
+
+        The following optional settings correspond to the equally named ``gbasf`` command line options
+        (without the ``gbasf_`` prefix) that you can set to customize your gbasf2 project:
+
+        ``gbasf2_additional_files``,
+        ``gbasf2_n_repition_job``,
+        ``gbasf2_force_submission``,
+        ``gbasf2_cputime``,
+        ``gbasf2_evtpersec``,
+        ``gbasf2_priority``,
+        ``gbasf2_jobtype``,
+        ``gbasf2_basf2opt``
+
+       It is further possible to append arbitrary command line arguments to the ``gbasf2`` submission command
+       with the ``gbasf2_additional_params`` setting.
+       If you want to blacklist a grid site, you can e.g. add
+
+       .. code-block::
+          b2luigi.set_setting("gbasf2_additional_params",  "--banned_site LCG.KEK.jp")
+
 
     Example
         Here is an example file to submit an analysis path created by the script in
@@ -81,10 +138,10 @@ class Gbasf2Process(BatchProcess):
         **Note on nomenclature:**
         The ``BatchProcess`` is intended to work with jobs, thus is has method names such as
         ``get_job_status``. The gbasf2 implementation of that class is special in that it wraps
-        gbasf2 projects, of which each contains multiple grid jobs, one for each file in the input 
+        gbasf2 projects, of which each contains multiple grid jobs, one for each file in the input
         dataset. The actual (sub-) job handling is left to gbasf2. So the job status of the batch process
         refers to the status of the whole project.
-    
+
 
     **Planned features**
 
