@@ -407,6 +407,14 @@ class Gbasf2Process(BatchProcess):
         # downloaded. The ``gb2_ds_get`` command will create in that a directory
         # with the name of the project, which will contain the root files.
         gbasf2_download_dir = get_setting("gbasf2_download_directory", default=".", task=self.task)
+        dataset_dir = os.path.join(gbasf2_download_dir, self.gbasf2_project_name)
+
+        # check if dataset had been already downloaded and if so, skip downloading
+        if os.path.isdir(dataset_dir) and os.path.listdir(dataset_dir) == output_dataset_basenames:
+            print("Dataset already exists, skipping download.")
+            return
+
+        # Go into temporary directory to download dataset. On success move it to the final destination
         os.makedirs(gbasf2_download_dir, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=gbasf2_download_dir) as tmpdirname:
             ds_get_command = shlex.split(f"gb2_ds_get --force --user {self.dirac_user} {self.gbasf2_project_name}")
