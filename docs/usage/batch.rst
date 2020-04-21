@@ -121,8 +121,8 @@ HTCondor
 .. autoclass:: b2luigi.batch.processes.htcondor.HTCondorProcess
     :show-inheritance:
 
-Gbasf2 Wrapper for LCG jobs
-................................
+GBasf2 Wrapper for LCG
+......................
 
 .. autoclass:: b2luigi.batch.processes.gbasf2.Gbasf2Process
     :show-inheritance:

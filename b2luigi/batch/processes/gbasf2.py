@@ -22,7 +22,7 @@ import basf2.pickle_path as b2pp
 
 class Gbasf2Process(BatchProcess):
     """
-    Batch process for working with gbasf2 projects on *LHC Computing Grid* (LCG).
+    Batch process for working with gbasf2 projects on the *LHC Computing Grid* (LCG).
 
     **What it does**
 
