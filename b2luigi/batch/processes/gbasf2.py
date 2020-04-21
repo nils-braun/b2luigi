@@ -77,8 +77,13 @@ class Gbasf2Process(BatchProcess):
         # useful for printing job status on change only
         self._n_jobs_by_status = ""
 
-        proxy_info_str = self.setup_dirac_proxy()
+        # Store whether the job had already been successful in a variable b/c
+        # there's actions we want to do only the first time that
+        # ``get_job_status`` returns a success.
+        self._project_had_been_successful = False
+
         # get dirac user name
+        proxy_info_str = self.setup_dirac_proxy()
         self.dirac_user = None
         for line in proxy_info_str.splitlines():
             if line.startswith("username"):
@@ -183,7 +188,7 @@ class Gbasf2Process(BatchProcess):
 
         # at the moment we have a hard criteria that if one job in project failed, the task is considered failed
         if n_failed > 0:
-            self._job_on_failure_action()
+            self._on_failure_action()
             return JobStatus.aborted
 
         if n_in_final_state < n_jobs:
@@ -191,20 +196,22 @@ class Gbasf2Process(BatchProcess):
 
         # Require all jobs to be done for project success, any job failure results in a failed project
         if n_done == n_jobs:
-            # download dataset on job success
-            self._job_on_success_action()
+            # download dataset only the first time that we return JobStatus.successful
+            if not self._project_had_been_successful:
+                self._on_first_success_action()
+                self._project_had_been_successful = True
             return JobStatus.successful
 
         raise RuntimeError("Could not determine JobStatus")
 
-    def _job_on_success_action(self):
+    def _on_first_success_action(self):
         """
         Things to do after all jobs in the project had been successful, e.g. downloading the dataset and logs
         """
         self._download_dataset()
         self._download_logs()
 
-    def _job_on_failure_action(self):
+    def _on_failure_action(self):
         """
         Things to do after the project failed
         """
