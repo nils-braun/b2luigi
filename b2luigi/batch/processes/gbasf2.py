@@ -119,13 +119,6 @@ class Gbasf2Process(BatchProcess):
            :caption: File: ``examples/gbasf2/gbasf2_example.py``
            :linenos:
 
-        Some settings are done as task-specific class attributes, others are defined
-        in the ``settings.json``:
-
-        .. literalinclude:: ../../examples/gbasf2/settings.json
-           :caption: File: ``examples/gbasf2/settings.json``
-           :linenos:
-
     Handling failed jobs
         The gbasf2 input wrapper considers the gbasf2 project as failed if any of
         the jobs in the project failed.  It the automatically downloads the logs, so
