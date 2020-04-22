@@ -36,6 +36,9 @@ class Gbasf2Process(BatchProcess):
         After the project submission, the gbasf batch process regularly checks the status
         of all the jobs belonging to a gbasf2 project returns a success if
         all jobs had been successful, while a single failed job results in a failed project.
+        You can close a running b2luigi process and then start your script again and if a
+        task with the same project name is running, this b2luigi gbasf2 wrapper will recognize that
+        and instead of resubmitting a new project, continue monitoring the running project.
 
     Download of datasets and logs
         If all jobs had been successful, it automatically downloads the output dataset and
@@ -85,18 +88,18 @@ class Gbasf2Process(BatchProcess):
                 gbasf2_project_name_prefix = b2luigi.Parameter(significant=False)
                 gbasf2_input_dataset = b2luigi.Parameter(hashed=True)
 
-        The following settings are not required as they have default values, but those might not work for you:
+        The following settings are not required as they have default values, but they are still important enough
+        to be explained here:
 
         - ``gbasf2_install_directory``: Defaults to ``~/gbasf2KEK``. If you installed gbasf2 into another
           location, you have to change that setting accordingly.
         - ``gbasf2_output_directory``: Directory into which the outputs of the gbasf2 grid project will be moved
           if the the dataset download via ``gb2_ds_get`` had been successful. It defaults to the value that you
           get from running ``task.get_output_file_name()`` on the ``gbasf2_project_name_prefix``.
-        - ``gbasf2_release``: Set this if you want the jobs to use another release on the grid than your
-          currently set up release, which is the default.
-
-        By setting ``gbasf2_print_status_updates`` to ``False`` you can turn off the printing of of the job summaries,
-        that is the number of jobs in different states in a gbasf2 project.
+        - ``gbasf2_release``: Defaults to the release of your currently set up basf2 release.
+          Set this if you want the jobs to use another release on the grid.
+        - ``gbasf2_print_status_updates``: Defaults to ``True``. By setting it to ``False`` you can turn off the
+          printing of of the job summaries, that is the number of jobs in different states in a gbasf2 project.
 
         The following optional settings correspond to the equally named ``gbasf`` command line options
         (without the ``gbasf_`` prefix) that you can set to customize your gbasf2 project:
