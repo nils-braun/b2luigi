@@ -39,7 +39,8 @@ class Gbasf2Process(BatchProcess):
 
     Download of datasets and logs
         If all jobs had been successful, it automatically downloads the output dataset and
-        the log files from the job sandboxes.
+        the log files from the job sandboxes and automatically checks if the download was successful
+        before moving the data to the final location.
 
 
     .. note::
@@ -51,6 +52,13 @@ class Gbasf2Process(BatchProcess):
         - It can only be used for pickable/serializable basf2 paths, as it stores
           the path created by ``create_path`` in a python pickle file and runs that on the grid.
         - basf2 variable aliases are at the moment not supported, as they are not included in the pickled path
+        - Changing the batch to gbasf2 means you also have to adapt the output function of your task, because the
+          output will not be a single root file anymore, but a collection of root files,
+          one for each file in the input data set, in the directory given by the setting ``gbasf2_output_directory``.
+          You should use this directory as the required output, as it is difficult to predict what the output
+          files will be named. The luigi gbasf2 wrapperdoesn't merge the files and lets the user decide how he wants to
+          handle them.
+
 
     **Usage**
 
@@ -79,12 +87,11 @@ class Gbasf2Process(BatchProcess):
 
         The following settings are not required as they have default values, but those might not work for you:
 
-        - ``gbasf2_install_directory``: If your gbasf2 install location is not ``~/gbasf2KEK``, you have set this,
-          so that the gbasf2 batch process can set up the gbasf2 environment for its gbasf2 commands.
-        - ``gbasf2_download_directory``: Defines in which directory the ``gb2_ds_get`` download will called
-          to download the result dataset.
-          The output will then be in the in a subdirectory of that directory with the name of the project.
-          It defaults to the current directory.
+        - ``gbasf2_install_directory``: Defaults to ``~/gbasf2KEK``. If you installed gbasf2 into another
+          location, you have to change that setting accordingly.
+        - ``gbasf2_output_directory``: Directory into which the outputs of the gbasf2 grid project will be moved
+          if the the dataset download via ``gb2_ds_get`` had been successful. It defaults to the value that you
+          get from running ``task.get_output_file_name()`` on the ``gbasf2_project_name_prefix``.
         - ``gbasf2_release``: Set this if you want the jobs to use another release on the grid than your
           currently set up release, which is the default.
 
@@ -139,8 +146,6 @@ class Gbasf2Process(BatchProcess):
     **Planned features**
 
     - automatically reschedule failed jobs until a maximum number of retries is reached
-    - add some helper functionality to deal with output, to avoid having to redefine
-      task output when switching between local batch process and gbasf2 batch process.
     """
 
     # directory of the file in which this class is defined
@@ -506,37 +511,39 @@ class Gbasf2Process(BatchProcess):
         # Define setting for directory, into which the output dataset should be
         # downloaded. The ``gb2_ds_get`` command will create in that a directory
         # with the name of the project, which will contain the root files.
-        gbasf2_download_dir = get_setting("gbasf2_download_directory", default=".", task=self.task)
-        dataset_dir = os.path.join(gbasf2_download_dir, self.gbasf2_project_name)
+        default_output_dir = self.task.get_output_file_name(get_setting("gbasf2_project_name_prefix", task=self.task))
+        gbasf2_output_dir = get_setting("gbasf2_output_directory", default=default_output_dir, task=self.task)
 
         # check if dataset had been already downloaded and if so, skip downloading
-        if os.path.isdir(dataset_dir) and os.path.listdir(dataset_dir) == output_dataset_basenames:
-            print("Dataset already exists, skipping download.")
+        if os.path.isdir(gbasf2_output_dir) and os.path.listdir(gbasf2_output_dir) == output_dataset_basenames:
+            print(f"Dataset already exists in {gbasf2_output_dir}, skipping download.")
             return
 
-        # Go into temporary directory to download dataset. On success move it to the final destination
-        os.makedirs(gbasf2_download_dir, exist_ok=True)
-        with tempfile.TemporaryDirectory(dir=gbasf2_download_dir) as tmpdirname:
+        # To prevent from task being accidentally marked as complete when the gbasf2 dataset download failed,
+        # we create a temporary directory in the parent of ``gbasf2_output_dir`` and first download the dataset there.
+        # The download command will download it into a subdirectory with the same name as the project.
+        # If the download had been successful and the local files are identical to the list of files on the grid,
+        # we move the downloaded dataset to the location specified by ``gbasf2_output_dir``
+        parent_of_gbasf2_output_dir = os.path.dirname(gbasf2_output_dir)
+        os.makedirs(parent_of_gbasf2_output_dir, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=parent_of_gbasf2_output_dir) as tmpdir_path:
             ds_get_command = shlex.split(f"gb2_ds_get --force --user {self.dirac_user} {self.gbasf2_project_name}")
             print("Downloading dataset with command ", " ".join(ds_get_command))
-            output = subprocess.run(ds_get_command, check=True, env=self.gbasf2_env,
-                                    stdout=PIPE, encoding="utf-8", cwd=tmpdirname).stdout
+            output = subprocess.run(
+                ds_get_command, check=True, env=self.gbasf2_env, stdout=PIPE, encoding="utf-8", cwd=tmpdir_path).stdout
             print(output)
             if "No file found" in output:
                 raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
 
-            temporary_dataset_dir = os.path.join(tmpdirname, self.gbasf2_project_name)
-            downloaded_dataset_basenames = set(os.listdir(temporary_dataset_dir))
+            tmp_output_dir = os.path.join(tmpdir_path, self.gbasf2_project_name)
+            downloaded_dataset_basenames = set(os.listdir(tmp_output_dir))
             if output_dataset_basenames == downloaded_dataset_basenames:
-                shutil.move(src=temporary_dataset_dir, dst=os.path.join(gbasf2_download_dir, self.gbasf2_project_name))
-
-        # TODO: in the output dataset there is a root file created for each
-        # file in the input dataset.The output files are have numbers added to
-        # the filenames specified by the file names e.g. in the ``RootOutput``
-        # and ``VariablesToNtuple`` modules. That makes it hard for the user to
-        # define the output requirements in the ``output`` method of his task.
-        # So maybe merge the output files or do something else to facilitate
-        # defining outputs and checking that job is complete.
+                print(f"Download of {self.gbasf2_project_name} files successful.\n"
+                      f"Moving output files to {gbasf2_output_dir}")
+                shutil.move(src=tmp_output_dir, dst=gbasf2_output_dir)
+            else:
+                raise RuntimeError(f"The downloaded of files in {tmp_output_dir} is not equal to the "
+                                   f"dataset files for the grid project {self.gbasf2_project_name}")
 
     def _download_logs(self):
         """

@@ -1,8 +1,5 @@
-import os
-
 import b2luigi
 from b2luigi.basf2_helper.tasks import Basf2PathTask
-from b2luigi.batch.processes.gbasf2 import get_unique_gbasf2_project_name
 import example_mdst_analysis
 
 
@@ -14,31 +11,21 @@ class MyAnalysisTask(Basf2PathTask):
     gbasf2_project_name_prefix = b2luigi.Parameter(significant=False)
     gbasf2_input_dataset = b2luigi.Parameter(hashed=True)
 
-    # As an example we define a cut range as a b2luigi ListParameter, so that we
-    # can automatically create multiple tasks and thus multiple independent
-    # gbasf2 projects for differents sets of cuts
+    # Example luigi cut parameter to facilitate starting multiple projects for different cut values
     mbc_range = b2luigi.ListParameter(hashed=True)
 
     def create_path(self):
         return example_mdst_analysis.create_analysis_path(mbc_range=self.mbc_range)
 
     def output(self):
-        """
-        Define the output to be the directory into which the ``gb2_ds_get``
-        command, which is wrapped by the gbasf2 batch system, downloads the
-        dataset.  It is defined by the contatenation of the
-        ``gbasf2_download_dir`` and ``gbasf2_project_name`` settings.
-        """
-        gbasf2_project_name = get_unique_gbasf2_project_name(self)
-        gbasf2_dataset_dir = os.path.join(self.gbasf2_download_dir, gbasf2_project_name)
-        return b2luigi.LocalTarget(gbasf2_dataset_dir)
+        yield self.add_to_output(self.gbasf2_project_name_prefix)
 
 
 class MasterTask(b2luigi.WrapperTask):
     """
-    We use the MasterTask to require multiple analyse tasks with different input
-    datasets and cut values.  For each parameter combination, a different gbasf2
-    project will be submitted.
+    We use the MasterTask to be able to require multiple analyse tasks with
+    different input datasets and cut values. For each parameter combination, a
+    different gbasf2 project will be submitted.
     """
     def requires(self):
         gbasf2_input_datasets = [
