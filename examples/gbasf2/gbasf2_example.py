@@ -33,7 +33,7 @@ class MasterTask(b2luigi.WrapperTask):
             "/belle/MC/release-04-00-03/DB00000757/MC13a/prod00009435/s00/e1003/4S/r00000/charged/mdst/sub00",
         ]
         # if you want to iterate over different cuts, just add more values to this list
-        mbc_lower_cuts = [5.15]
+        mbc_lower_cuts = [5.15, 5.2]
         for mbc_lower_cut in mbc_lower_cuts:
             for input_ds in gbasf2_input_datasets:
                 yield MyAnalysisTask(
@@ -45,4 +45,6 @@ class MasterTask(b2luigi.WrapperTask):
 
 
 if __name__ == '__main__':
-    b2luigi.process(MasterTask(), workers=2)
+    master_task_instance = MasterTask()
+    n_gbasf2_tasks = len(list(master_task_instance.requires()))
+    b2luigi.process(master_task_instance, workers=n_gbasf2_tasks)
