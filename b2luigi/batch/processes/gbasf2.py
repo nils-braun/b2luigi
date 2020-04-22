@@ -171,6 +171,16 @@ class Gbasf2Process(BatchProcess):
         self.log_file_dir = get_log_file_dir(self.task)
         os.makedirs(self.log_file_dir, exist_ok=True)
 
+        # get dirac user name
+        proxy_info_str = self.setup_dirac_proxy()
+        self.dirac_user = None
+        for line in proxy_info_str.splitlines():
+            if line.startswith("username"):
+                self.dirac_user = line.split(":", 1)[1].strip()
+
+        self.max_retries = get_setting("gbasf2_max_retries", )
+        self.n_retries_by_job = Counter()
+
         # Store dictionary with n_jobs_by_status in attribute to check if it changed,
         # useful for printing job status on change only
         self._n_jobs_by_status = ""
@@ -180,12 +190,6 @@ class Gbasf2Process(BatchProcess):
         # ``get_job_status`` returns a success.
         self._project_had_been_successful = False
 
-        # get dirac user name
-        proxy_info_str = self.setup_dirac_proxy()
-        self.dirac_user = None
-        for line in proxy_info_str.splitlines():
-            if line.startswith("username"):
-                self.dirac_user = line.split(":", 1)[1].strip()
 
     @property
     @lru_cache(maxsize=None)
@@ -320,6 +324,16 @@ class Gbasf2Process(BatchProcess):
         print(f"{n_failed} failed jobs:\n{failed_job_dict}")
 
         self._download_logs()
+
+        # reschedule failed jobs
+        for job_id, _ in failed_job_dict.items():
+            if self.n_retries_by_job < self.max_retries:
+                self._reschedule_job(job_id)
+                self.n_retries_by_job[job_id] += 1
+
+    def _reschedule_job(self, job_id):
+        reschedule_command = shlex.split(f"gb2_job_reschedule --jobid {job_id} --force", )
+        subprocess.run(reschedule_command, check=True, env=self.gbasf2_env)
 
     def start_job(self):
         """Submit new gbasf2 project to grid"""
