@@ -45,6 +45,12 @@ class Gbasf2Process(BatchProcess):
         the log files from the job sandboxes and automatically checks if the download was successful
         before moving the data to the final location.
 
+    Automatic rescheduling of failed jobs (experimental)
+        Whenever a job fails, gbasf2 reschedules it as long as the number of retries is below the
+        value of the setting ``gbasf2_max_retries``. It keeps track of the number of retries in a
+        local file, so that it does not change if you close b2luigi and start it again. Of course it
+        does not persist if you remove that file or move to a different machine.
+
 
     .. note::
         **Limitations**
@@ -100,6 +106,8 @@ class Gbasf2Process(BatchProcess):
           Set this if you want the jobs to use another release on the grid.
         - ``gbasf2_print_status_updates``: Defaults to ``True``. By setting it to ``False`` you can turn off the
           printing of of the job summaries, that is the number of jobs in different states in a gbasf2 project.
+        - ``gbasf2_max_retries``: Default to 0. Maximum number of times that each job in the project can be automatically
+          rescheduled until the project is declared as failed.
 
         The following optional settings correspond to the equally named ``gbasf`` command line options
         (without the ``gbasf_`` prefix) that you can set to customize your gbasf2 project:
@@ -144,11 +152,6 @@ class Gbasf2Process(BatchProcess):
         gbasf2 projects, of which each contains multiple grid jobs, one for each file in the input
         dataset. The actual (sub-) job handling is left to gbasf2. So the job status of the batch process
         refers to the status of the whole project.
-
-
-    **Planned features**
-
-    - automatically reschedule failed jobs until a maximum number of retries is reached
     """
 
     # directory of the file in which this class is defined
@@ -181,8 +184,12 @@ class Gbasf2Process(BatchProcess):
             if line.startswith("username"):
                 self.dirac_user = line.split(":", 1)[1].strip()
 
-        self.max_retries = get_setting("gbasf2_max_retries", )
-        self.n_retries_by_job = Counter()
+        #: Maximum number of times that each job in the project can be rescheduled until the project is declared as failed.
+        self.max_retries = get_setting("gbasf2_max_retries", default=0, task=self.task)
+
+        self.retries_file_path = os.path.join(self.log_file_dir, "n_retries_by_job.json")
+        with open(self.retries_file_path, "r") as retries_file:
+            self.n_retries_by_job = Counter(json.loads(retries_file.read()))
 
         # Store dictionary with n_jobs_by_status in attribute to check if it changed,
         # useful for printing job status on change only
@@ -251,7 +258,6 @@ class Gbasf2Process(BatchProcess):
         return new_proxy_info_str
 
     def get_job_status(self):
-
         """
         Get overall status of the gbasf2 project.
 
@@ -324,22 +330,34 @@ class Gbasf2Process(BatchProcess):
         failed_job_dict = {job_id: job_info for job_id, job_info in job_status_dict.items()
                            if job_info["Status"] == "Failed"}
         n_failed = len(failed_job_dict)
-        print(f"{n_failed} failed jobs:\n{failed_job_dict}")
+        print(f"{n_failed} failed jobs:\n{failed_job_dict.keys()}")
 
         self._download_logs()
 
         # reschedule failed jobs
         for job_id, _ in failed_job_dict.items():
-            if self.n_retries_by_job < self.max_retries:
-                self._reschedule_job(job_id)
-                self.n_retries_by_job[job_id] += 1
+            self._reschedule_job(job_id)
 
     def _reschedule_job(self, job_id):
-        reschedule_command = shlex.split(f"gb2_job_reschedule --jobid {job_id} --force", )
-        subprocess.run(reschedule_command, check=True, env=self.gbasf2_env)
+        """
+        Reschedule job if the number of retries for it is below ``self.max_retries``
+        """
+        if self.n_retries_by_job[job_id] < self.max_retries:
+            print(f"Rescheduling job {job_id} (try {self.n_retries_by_job + 1}).")
+            reschedule_command = shlex.split(f"gb2_job_reschedule --jobid {job_id} --force", )
+            subprocess.run(reschedule_command, check=True, env=self.gbasf2_env)
+            self.n_retries_by_job[job_id] += 1
+            with open(self.retries_file_path, "w") as retries_file:
+                retries_file.write(json.dumps(self.n_retries_by_job))
+        elif self.n_retries_by_job[job_id] > 0:
+            # If job failed enough times that the maximum number of retries is reached, issue warning,
+            # except if max_retries is 0 and thus the number of retries is just 0
+            warnings.warn(f"Reached maximum number of rescheduling tries ({self.max_retries}) for job {job_id}.")
 
     def start_job(self):
-        """Submit new gbasf2 project to grid"""
+        """
+        Submit new gbasf2 project to grid
+        """
         if self._check_project_exists():
             warnings.warn(
                 f"\nProject with name {self.gbasf2_project_name} already exists on grid, "
@@ -357,7 +375,9 @@ class Gbasf2Process(BatchProcess):
         subprocess.run(gbasf2_command, check=True, env=self.gbasf2_env)
 
     def kill_job(self):
-        """Kill gbasf2 project"""
+        """
+        Kill gbasf2 project
+        """
         if not self._check_project_exists():
             return
         # Note: The two commands ``gb2_job_delete`` and ``gb2_job_kill`` differ
