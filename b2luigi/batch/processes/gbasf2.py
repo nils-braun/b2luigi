@@ -16,7 +16,6 @@ from b2luigi.core.settings import get_setting
 from b2luigi.core.utils import get_log_file_dir, get_task_file_dir
 from jinja2 import Template
 
-import basf2
 import basf2.pickle_path as b2pp
 
 
@@ -139,11 +138,15 @@ class Gbasf2Process(BatchProcess):
 
     Handling failed jobs
         The gbasf2 input wrapper considers the gbasf2 project as failed if any of
-        the jobs in the project failed.  It the automatically downloads the logs, so
-        please look into them to see what the reason was. You then need to resubmit them
-        manually with the ``gb2_job_reschedule`` or delete them with
+        the jobs in the project failed and reached the maximum number of retries.
+        It the automatically downloads the logs, so please look into them to see what the reason was.
+        For example, it can be that only certain grid sites were affected, so you might want to exclude them
+        by adding the ``"--banned_site ...`` to ``gbasf2_additional_params``.
+
+        You also always reschedule jobs manually with the ``gb2_job_reschedule`` command or delete them with
         ``gb2_job_delete`` so that the gbasf2 batch process doesn't know they ever
-        existed. Then run just run your luigi task/script again.
+        existed. Then run just run your luigi task/script again and it will start monitoring the running project
+        again.
 
     .. note::
         **Note on nomenclature:**
@@ -297,8 +300,12 @@ class Gbasf2Process(BatchProcess):
         n_failed = n_jobs_by_status["Failed"]
         n_in_final_state = n_done + n_failed
 
-        # at the moment we have a hard criteria that if one job in project failed, the task is considered failed
+        # The gbasf2 project is considered as failed if any of the jobs in it failed.
+        # However, we first try to reschedule thos jobs and only declare it as failed if the maximum number of retries
+        # for reschedulinhas been reached
         if n_failed > 0:
+            if self._reschedule_failed_jobs():
+                return JobStatus.running
             self._on_failure_action()
             return JobStatus.aborted
 
@@ -330,29 +337,34 @@ class Gbasf2Process(BatchProcess):
         failed_job_dict = {job_id: job_info for job_id, job_info in job_status_dict.items()
                            if job_info["Status"] == "Failed"}
         n_failed = len(failed_job_dict)
-        print(f"{n_failed} failed jobs:\n{failed_job_dict.keys()}")
-
+        print(f"{n_failed} failed jobs:\n{failed_job_dict}")
         self._download_logs()
 
-        # reschedule failed jobs
-        for job_id, _ in failed_job_dict.items():
-            self._reschedule_job(job_id)
+    def _reschedule_failed_jobs(self):
+        """
+        Tries to reschedule failed jobs in the project if ``self.max_retries`` has not been reached
+        and returns ``True`` if rescheduling has been successful.
+        """
+        for job_id, job_info in self._get_job_status_dict().items():
+            if job_info["Status"] == "Failed":
+                if self.n_retries_by_job[job_id] >= self.max_retries:
+                    if self.max_retries > 0:
+                        warnings.warn(f"Reached maximum number of rescheduling tries ({self.max_retries}) for job {job_id}.")
+                    return False
+                self._reschedule_job(job_id)
+                self.n_retries_by_job[job_id] += 1
+                with open(self.retries_file_path, "w") as retries_file:
+                    retries_file.write(json.dumps(self.n_retries_by_job))
+        return True
 
     def _reschedule_job(self, job_id):
         """
         Reschedule job if the number of retries for it is below ``self.max_retries``
         """
+        print(f"Rescheduling job {job_id} (try {self.n_retries_by_job + 1}).")
         if self.n_retries_by_job[job_id] < self.max_retries:
-            print(f"Rescheduling job {job_id} (try {self.n_retries_by_job + 1}).")
             reschedule_command = shlex.split(f"gb2_job_reschedule --jobid {job_id} --force", )
             subprocess.run(reschedule_command, check=True, env=self.gbasf2_env)
-            self.n_retries_by_job[job_id] += 1
-            with open(self.retries_file_path, "w") as retries_file:
-                retries_file.write(json.dumps(self.n_retries_by_job))
-        elif self.n_retries_by_job[job_id] > 0:
-            # If job failed enough times that the maximum number of retries is reached, issue warning,
-            # except if max_retries is 0 and thus the number of retries is just 0
-            warnings.warn(f"Reached maximum number of rescheduling tries ({self.max_retries}) for job {job_id}.")
 
     def start_job(self):
         """
