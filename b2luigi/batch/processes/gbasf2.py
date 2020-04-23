@@ -600,7 +600,9 @@ class Gbasf2Process(BatchProcess):
             if output_dataset_basenames == downloaded_dataset_basenames:
                 print(f"Download of {self.gbasf2_project_name} files successful.\n"
                       f"Moving output files to {gbasf2_output_dir}")
-                shutil.move(src=tmp_output_dir, dst=gbasf2_output_dir)
+                if os.path.exists(gbasf2_output_dir):
+                    shutil.rmtree(gbasf2_output_dir)
+                os.rename(src=tmp_output_dir, dst=gbasf2_output_dir)
             else:
                 raise RuntimeError(f"The downloaded of files in {tmp_output_dir} is not equal to the "
                                    f"dataset files for the grid project {self.gbasf2_project_name}")
@@ -625,8 +627,19 @@ class Gbasf2Process(BatchProcess):
 
         These are stored in the task log dir.
         """
-        download_logs_command = shlex.split(f"gb2_job_output --user {self.dirac_user} -p {self.gbasf2_project_name}")
-        subprocess.run(download_logs_command, check=True, cwd=self.log_file_dir, env=self.gbasf2_env)
+        # We want to overwrite existing logs when retrieving the logs multiple
+        # times. To avoid a situation where we delete the existing logs before a
+        # new log download, but then the download fails and the user might be
+        # left with no logs, first the log download is performed to a temporary
+        # directory and then moved to the final location
+        with tempfile.TemporaryDirectory(dir=self.log_file_dir) as tmpdir_path:
+            download_logs_command = shlex.split(f"gb2_job_output --user {self.dirac_user} -p {self.gbasf2_project_name}")
+            subprocess.run(download_logs_command, check=True, cwd=tmpdir_path, env=self.gbasf2_env)
+            tmp_gbasf2_log_path = os.path.join(tmpdir_path, "log", self.gbasf2_project_name)
+            gbasf2_project_log_dir = os.path.join(self.log_file_dir, "gbasf2_logs", self.gbasf2_project_name)
+            if os.path.exists(gbasf2_project_log_dir):
+                shutil.rmtree(gbasf2_project_log_dir)
+            os.rename(tmp_gbasf2_log_path, gbasf2_project_log_dir)
 
 
 def get_unique_gbasf2_project_name(task):
