@@ -48,8 +48,8 @@ class Gbasf2Process(BatchProcess):
     Automatic rescheduling of failed jobs (experimental)
         Whenever a job fails, gbasf2 reschedules it as long as the number of retries is below the
         value of the setting ``gbasf2_max_retries``. It keeps track of the number of retries in a
-        local file, so that it does not change if you close b2luigi and start it again. Of course it
-        does not persist if you remove that file or move to a different machine.
+        local file in the ``log_file_dir``, so that it does not change if you close b2luigi and start it again.
+        Of course it does not persist if you remove that file or move to a different machine.
 
 
     .. note::
@@ -193,9 +193,17 @@ class Gbasf2Process(BatchProcess):
         #: Maximum number of times that each job in the project can be rescheduled until the project is declared as failed.
         self.max_retries = get_setting("gbasf2_max_retries", default=0, task=self.task)
 
-        self.retries_file_path = os.path.join(self.log_file_dir, "n_retries_by_job.json")
-        with open(self.retries_file_path, "r") as retries_file:
-            self.n_retries_by_job = Counter(json.loads(retries_file.read()))
+        #: Store number of times each job had been rescheduled
+        self.n_retries_by_job = Counter()
+
+        #: Local storage for ``n_retries_by_job`` counter
+        # so that it persists even if luigi process is killed and restarted.
+        # TODO: Maybe a small database (e.g. tindydb/pickledb) would be more appropriate
+        self.retries_file_path = os.path.join(self.log_file_dir, "n_retries_by_grid_job.json")
+        if os.path.isfile(self.retries_file_path):
+            with open(self.retries_file_path, "r") as retries_file:
+                retries_from_file = json.load(retries_file)
+                self.n_retries_by_job.update(retries_from_file)
 
         # Store dictionary with n_jobs_by_status in attribute to check if it changed,
         # useful for printing job status on change only
@@ -356,16 +364,17 @@ class Gbasf2Process(BatchProcess):
                 self._reschedule_job(job_id)
                 self.n_retries_by_job[job_id] += 1
                 with open(self.retries_file_path, "w") as retries_file:
-                    retries_file.write(json.dumps(self.n_retries_by_job))
+                    json.dump(self.n_retries_by_job, retries_file)
         return True
 
     def _reschedule_job(self, job_id):
         """
         Reschedule job if the number of retries for it is below ``self.max_retries``
         """
-        print(f"Rescheduling job {job_id} (try {self.n_retries_by_job + 1}).")
+        n_retries = self.n_retries_by_job[job_id]
+        print(f"Rescheduling job {job_id} (retry no. {n_retries + 1}).")
         if self.n_retries_by_job[job_id] < self.max_retries:
-            reschedule_command = shlex.split(f"gb2_job_reschedule --jobid {job_id} --force", )
+            reschedule_command = shlex.split(f"gb2_job_reschedule --jobid {job_id} --force")
             subprocess.run(reschedule_command, check=True, env=self.gbasf2_env)
 
     def start_job(self):
