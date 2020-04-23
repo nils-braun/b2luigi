@@ -314,9 +314,9 @@ class Gbasf2Process(BatchProcess):
         # However, we first try to reschedule thos jobs and only declare it as failed if the maximum number of retries
         # for reschedulinhas been reached
         if n_failed > 0:
+            self._on_failure_action()
             if self._reschedule_failed_jobs():
                 return JobStatus.running
-            self._on_failure_action()
             return JobStatus.aborted
 
         if n_in_final_state < n_jobs:
