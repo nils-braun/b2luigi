@@ -38,7 +38,7 @@ class MasterTask(b2luigi.WrapperTask):
         mbc_lower_cuts = [5.15, 5.2]
         for mbc_lower_cut in mbc_lower_cuts:
             yield MyAnalysisTask(
-                mbc_range=(mbc_lower_cut, 5.3),
+                mbc_lower_cut=mbc_lower_cut,
                 gbasf2_project_name_prefix="luigiExample",
                 gbasf2_input_dataset=input_dataset,
                 max_event=100,
