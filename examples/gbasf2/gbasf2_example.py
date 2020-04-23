@@ -1,5 +1,8 @@
+from os.path import join
+
 import b2luigi
 from b2luigi.basf2_helper.tasks import Basf2PathTask
+
 import example_mdst_analysis
 
 
@@ -28,20 +31,17 @@ class MasterTask(b2luigi.WrapperTask):
     different gbasf2 project will be submitted.
     """
     def requires(self):
-        gbasf2_input_datasets = [
-            "/belle/MC/release-04-00-03/DB00000757/MC13a/prod00009434/s00/e1003/4S/r00000/mixed/mdst/sub00",
-            "/belle/MC/release-04-00-03/DB00000757/MC13a/prod00009435/s00/e1003/4S/r00000/charged/mdst/sub00",
-        ]
+        input_dataset = join("/belle/MC/release-04-00-03/DB00000757/MC13a/prod00009434/s00/e1003/",
+                             "4S/r00000/mixed/mdst/sub00/mdst_000255_prod00009434_task10020000255.root")
         # if you want to iterate over different cuts, just add more values to this list
         mbc_lower_cuts = [5.15, 5.2]
         for mbc_lower_cut in mbc_lower_cuts:
-            for input_ds in gbasf2_input_datasets:
-                yield MyAnalysisTask(
-                    mbc_range=(mbc_lower_cut, 5.3),
-                    gbasf2_project_name_prefix="luigiExampleMultiDS",
-                    gbasf2_input_dataset=input_ds,
-                    max_event=100,
-                )
+            yield MyAnalysisTask(
+                mbc_range=(mbc_lower_cut, 5.3),
+                gbasf2_project_name_prefix="luigiExample",
+                gbasf2_input_dataset=input_dataset,
+                max_event=100,
+            )
 
 
 if __name__ == '__main__':
