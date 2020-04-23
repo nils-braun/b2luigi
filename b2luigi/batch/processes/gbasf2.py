@@ -45,7 +45,7 @@ class Gbasf2Process(BatchProcess):
         the log files from the job sandboxes and automatically checks if the download was successful
         before moving the data to the final location.
 
-    Automatic rescheduling of failed jobs (experimental)
+    Automatic rescheduling of failed jobs
         Whenever a job fails, gbasf2 reschedules it as long as the number of retries is below the
         value of the setting ``gbasf2_max_retries``. It keeps track of the number of retries in a
         local file in the ``log_file_dir``, so that it does not change if you close b2luigi and start it again.
@@ -336,8 +336,8 @@ class Gbasf2Process(BatchProcess):
         """
         Things to do after all jobs in the project had been successful, e.g. downloading the dataset and logs
         """
-        self._download_dataset()
         self._download_logs()
+        self._download_dataset()
 
     def _on_failure_action(self):
         """
@@ -575,7 +575,7 @@ class Gbasf2Process(BatchProcess):
         gbasf2_output_dir = get_setting("gbasf2_output_directory", default=default_output_dir, task=self.task)
 
         # check if dataset had been already downloaded and if so, skip downloading
-        if os.path.isdir(gbasf2_output_dir) and os.path.listdir(gbasf2_output_dir) == output_dataset_basenames:
+        if os.path.isdir(gbasf2_output_dir) and os.listdir(gbasf2_output_dir) == output_dataset_basenames:
             print(f"Dataset already exists in {gbasf2_output_dir}, skipping download.")
             return
 
@@ -602,7 +602,7 @@ class Gbasf2Process(BatchProcess):
                       f"Moving output files to {gbasf2_output_dir}")
                 if os.path.exists(gbasf2_output_dir):
                     shutil.rmtree(gbasf2_output_dir)
-                os.rename(src=tmp_output_dir, dst=gbasf2_output_dir)
+                shutil.move(src=tmp_output_dir, dst=gbasf2_output_dir)
             else:
                 raise RuntimeError(f"The downloaded of files in {tmp_output_dir} is not equal to the "
                                    f"dataset files for the grid project {self.gbasf2_project_name}")
@@ -637,9 +637,11 @@ class Gbasf2Process(BatchProcess):
             subprocess.run(download_logs_command, check=True, cwd=tmpdir_path, env=self.gbasf2_env)
             tmp_gbasf2_log_path = os.path.join(tmpdir_path, "log", self.gbasf2_project_name)
             gbasf2_project_log_dir = os.path.join(self.log_file_dir, "gbasf2_logs", self.gbasf2_project_name)
+            print(f"Download of logs for gbasf2 project {self.gbasf2_project_name} successful.\n"
+                  f" Moving logs to {gbasf2_project_log_dir}")
             if os.path.exists(gbasf2_project_log_dir):
                 shutil.rmtree(gbasf2_project_log_dir)
-            os.rename(tmp_gbasf2_log_path, gbasf2_project_log_dir)
+            shutil.move(tmp_gbasf2_log_path, gbasf2_project_log_dir)
 
 
 def get_unique_gbasf2_project_name(task):
