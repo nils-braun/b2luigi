@@ -24,43 +24,50 @@ class Gbasf2Process(BatchProcess):
     """
     Batch process for working with gbasf2 projects on the *LHC Computing Grid* (LCG).
 
-    **What it does**
+    Features
+        - **gbasf2 project submission**
 
-    gbasf2 project submission
-        The gbasf2 batch process takes the basf2 path returned by the ``create_path()``
-        method of the task, saves it to the disk and creates a wrapper steering file that
-        executes the saved path. It then sends both to the LCG via
-        the BelleII-specific Dirac-wrapper gbasf2.
+          The gbasf2 batch process takes the basf2 path returned by the ``create_path()``
+          method of the task, saves it to the disk and creates a wrapper steering file that
+          executes the saved path. It then sends both to the LCG via
+          the BelleII-specific Dirac-wrapper gbasf2.
 
-    Project status monitoring
-        After the project submission, the gbasf batch process regularly checks the status
-        of all the jobs belonging to a gbasf2 project returns a success if
-        all jobs had been successful, while a single failed job results in a failed project.
-        You can close a running b2luigi process and then start your script again and if a
-        task with the same project name is running, this b2luigi gbasf2 wrapper will recognize that
-        and instead of resubmitting a new project, continue monitoring the running project.
+        - **Project status monitoring**
 
-    Download of datasets and logs
-        If all jobs had been successful, it automatically downloads the output dataset and
-        the log files from the job sandboxes and automatically checks if the download was successful
-        before moving the data to the final location.
+          After the project submission, the gbasf batch process regularly checks the status
+          of all the jobs belonging to a gbasf2 project returns a success if
+          all jobs had been successful, while a single failed job results in a failed project.
+          You can close a running b2luigi process and then start your script again and if a
+          task with the same project name is running, this b2luigi gbasf2 wrapper will recognize that
+          and instead of resubmitting a new project, continue monitoring the running project.
 
-    Automatic rescheduling of failed jobs
-        Whenever a job fails, gbasf2 reschedules it as long as the number of retries is below the
-        value of the setting ``gbasf2_max_retries``. It keeps track of the number of retries in a
-        local file in the ``log_file_dir``, so that it does not change if you close b2luigi and start it again.
-        Of course it does not persist if you remove that file or move to a different machine.
+        - **Automatic download of datasets and logs**
 
+          If all jobs had been successful, it automatically downloads the output dataset and
+          the log files from the job sandboxes and automatically checks if the download was successful
+          before moving the data to the final location. On failure, it only downloads the logs. 
+
+        - **Automatic rescheduling of failed jobs**
+
+          Whenever a job fails, gbasf2 reschedules it as long as the number of retries is below the
+          value of the setting ``gbasf2_max_retries``. It keeps track of the number of retries in a
+          local file in the ``log_file_dir``, so that it does not change if you close b2luigi and start it again.
+          Of course it does not persist if you remove that file or move to a different machine.
 
     .. note::
-        **Limitations**
+       Despite all the automatization that this gbasf2 wrapper provides, the user is expected to
+       have a basic understanding of how the grid works and know the basics of working 
+       with gbasf2 commands manually.
 
+    Limitations
         - The gbasf2 batch process for luigi can only be used for tasks
           inhereting from ``Basf2PathTask`` or other tasks with a
           ``create_path()`` method that returns a basf2 path.
+
         - It can only be used for pickable/serializable basf2 paths, as it stores
           the path created by ``create_path`` in a python pickle file and runs that on the grid.
-        - basf2 variable aliases are at the moment not supported, as they are not included in the pickled path
+          Therefore, **basf2 variable aliases are not yet supported**.
+
         - Changing the batch to gbasf2 means you also have to adapt the output function of your task, because the
           output will not be a single root file anymore, but a collection of root files,
           one for each file in the input data set, in the directory given by the setting ``gbasf2_output_directory``.
@@ -68,8 +75,6 @@ class Gbasf2Process(BatchProcess):
           files will be named. The luigi gbasf2 wrapperdoesn't merge the files and lets the user decide how he wants to
           handle them.
 
-
-    **Usage**
 
     Settings for gbasf2 tasks
         To submit a task with the gbasf2 wrapper, you first you have to add the property
@@ -91,10 +96,10 @@ class Gbasf2Process(BatchProcess):
 
         .. code-block:: python
 
-            class MyTask(Basf2PathTask):
-                batch_system = "gbasf2"
-                gbasf2_project_name_prefix = b2luigi.Parameter(significant=False)
-                gbasf2_input_dataset = b2luigi.Parameter(hashed=True)
+           class MyTask(Basf2PathTask):
+               batch_system = "gbasf2"
+               gbasf2_project_name_prefix = b2luigi.Parameter(significant=False)
+               gbasf2_input_dataset = b2luigi.Parameter(hashed=True)
 
         The following settings are not required as they have default values, but they are still important enough
         to be explained here:
@@ -127,7 +132,8 @@ class Gbasf2Process(BatchProcess):
        with the ``gbasf2_additional_params`` setting.
        If you want to blacklist a grid site, you can e.g. add
 
-       .. code-block::
+       .. code-block:: python
+
           b2luigi.set_setting("gbasf2_additional_params",  "--banned_site LCG.KEK.jp")
 
 
@@ -142,7 +148,7 @@ class Gbasf2Process(BatchProcess):
     Handling failed jobs
         The gbasf2 input wrapper considers the gbasf2 project as failed if any of
         the jobs in the project failed and reached the maximum number of retries.
-        It the automatically downloads the logs, so please look into them to see what the reason was.
+        It then automatically downloads the logs, so please look into them to see what the reason was.
         For example, it can be that only certain grid sites were affected, so you might want to exclude them
         by adding the ``"--banned_site ...`` to ``gbasf2_additional_params``.
 
@@ -150,14 +156,6 @@ class Gbasf2Process(BatchProcess):
         ``gb2_job_delete`` so that the gbasf2 batch process doesn't know they ever
         existed. Then run just run your luigi task/script again and it will start monitoring the running project
         again.
-
-    .. note::
-        **Note on nomenclature:**
-        The ``BatchProcess`` is intended to work with jobs, thus is has method names such as
-        ``get_job_status``. The gbasf2 implementation of that class is special in that it wraps
-        gbasf2 projects, of which each contains multiple grid jobs, one for each file in the input
-        dataset. The actual (sub-) job handling is left to gbasf2. So the job status of the batch process
-        refers to the status of the whole project.
     """
 
     # directory of the file in which this class is defined
