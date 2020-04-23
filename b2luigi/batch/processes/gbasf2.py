@@ -315,7 +315,7 @@ class Gbasf2Process(BatchProcess):
         # for reschedulinhas been reached
         if n_failed > 0:
             self._on_failure_action()
-            if self._reschedule_failed_jobs():
+            if self.max_retries > 0 and self._reschedule_failed_jobs():
                 return JobStatus.running
             return JobStatus.aborted
 
@@ -358,8 +358,7 @@ class Gbasf2Process(BatchProcess):
         for job_id, job_info in self._get_job_status_dict().items():
             if job_info["Status"] == "Failed":
                 if self.n_retries_by_job[job_id] >= self.max_retries:
-                    if self.max_retries > 0:
-                        warnings.warn(f"Reached maximum number of rescheduling tries ({self.max_retries}) for job {job_id}.")
+                    warnings.warn(f"Reached maximum number of rescheduling tries ({self.max_retries}) for job {job_id}.")
                     return False
                 self._reschedule_job(job_id)
                 self.n_retries_by_job[job_id] += 1
