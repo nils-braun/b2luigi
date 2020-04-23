@@ -1,14 +1,15 @@
-from datetime import datetime, timedelta
-from functools import lru_cache
-import os
-from collections import Counter
+import hashlib
 import json
+import os
 import shlex
 import shutil
 import subprocess
-from subprocess import PIPE
 import tempfile
 import warnings
+from collections import Counter
+from datetime import datetime, timedelta
+from functools import lru_cache
+from subprocess import PIPE
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
@@ -81,8 +82,10 @@ class Gbasf2Process(BatchProcess):
         - ``gbasf2_input_dataset``: The input dataset on the grid to use.
         - ``gbasf2_project_name_prefix``: A string with which your gbasf2 project names will start.
           To ensure the project associate with each unique task (i.e. for each of luigi parameters)
-          is unique, a hash generated from the luigi parameters of the task will be appended to the prefix
+          is unique, the unique ``task.task_id`` is hashed and appended to the prefix
           to create the actual gbasf2 project name.
+          Should be below 22 characters so that the project name with the hash can remain
+          under 32 characters.
 
         For example:
 
@@ -202,7 +205,6 @@ class Gbasf2Process(BatchProcess):
         # there's actions we want to do only the first time that
         # ``get_job_status`` returns a success.
         self._project_had_been_successful = False
-
 
     @property
     @lru_cache(maxsize=None)
@@ -624,7 +626,7 @@ def get_unique_gbasf2_project_name(task):
     to a unique project name.
 
     This is done to make sure that different instances of a task with different
-    luigi parameters result in different gbasf2 project names.  When trying to
+    luigi parameters result in different gbasf2 project names. When trying to
     redoing a task on the grid with identical parameters, rename the project
     name prefix, to ensure that you get a new project.
     """
@@ -635,8 +637,10 @@ def get_unique_gbasf2_project_name(task):
             "Task can only be used with the gbasf2 batch process if it has ``gbasf2_project_name_prefix`` " +
             "as a luigi parameter, attribute or setting."
         ) from err
-
-    task_id_hash = task.task_id.split("_")[-1]
+    # luigi interally assings a hash to a task by calling the builtin ``hash(task.task_id)``,
+    # but that returns a signed integer. I prefer a hex string to get more information per character,
+    # which is why I decided to use ``hashlib.md5``.
+    task_id_hash = hashlib.md5(task.task_id.encode()).hexdigest()[0:10]
     gbasf2_project_name = gbasf2_project_name_prefix + task_id_hash
     max_project_name_length = 32
     assert len(gbasf2_project_name) <= max_project_name_length,\
