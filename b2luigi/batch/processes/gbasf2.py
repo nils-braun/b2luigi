@@ -287,7 +287,12 @@ class Gbasf2Process(BatchProcess):
         """
         # If project is does not exist on grid yet, so can't query for gbasf2 project status
         if not self._check_project_exists():
-            return JobStatus.idle
+            raise RuntimeError(
+                f"Could not find any jobs for project {self.gbasf2_project_name} on the grid.\n" +
+                "Probably there was an error during the project submission when running the gbasf2 command.\n" +
+                "Try if you can run the gbasf2 command used manually in a terminal with gbasf2 set up:\n" +
+                " ".join(self._build_gbasf2_submit_command())
+            )
 
         job_status_dict = self._get_job_status_dict()
         n_jobs_by_status = Counter()
