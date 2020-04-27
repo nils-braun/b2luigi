@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from functools import lru_cache
 from subprocess import PIPE
 
+from luigi.target import Target
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.core.settings import get_setting
@@ -46,6 +47,7 @@ class Gbasf2Process(BatchProcess):
           If all jobs had been successful, it automatically downloads the output dataset and
           the log files from the job sandboxes and automatically checks if the download was successful
           before moving the data to the final location. On failure, it only downloads the logs.
+          The dataset download can be optionally disabled.
 
         - **Automatic rescheduling of failed jobs**
 
@@ -92,7 +94,7 @@ class Gbasf2Process(BatchProcess):
           Should be below 22 characters so that the project name with the hash can remain
           under 32 characters.
 
-        For example:
+        The following example shows a minimal class with all required options to run on the gbasf2/grid batch:
 
         .. code-block:: python
 
@@ -115,7 +117,20 @@ class Gbasf2Process(BatchProcess):
         - ``gbasf2_max_retries``: Default to 0. Maximum number of times that each job in the project can be automatically
           rescheduled until the project is declared as failed.
         - ``gbasf2_download_dataset``: Defaults to ``True``. Disable this setting if you don't want to download the
-          output dataset from the grid on job success. This is useful when chaining gbasf2 tasks together,
+          output dataset from the grid on job success. As you can't use the downloaded dataset as an output target for luigi,
+          you should then use the provided ``Gbasf2GridProjectTarget``, as shown in the following example:
+
+          .. code-block:: python
+
+            from b2luigi.batch.processes.gbasf2 import get_unique_project_name, Gbasf2GridProjectTarget
+
+            class MyTask(Basf2PathTask):
+                # [...]
+                def output(self):
+                    project_name = get_unique_project_name(self)
+                    return Gbasf2GridProjectTarget(project_name, task=self)
+
+          This is useful when chaining gbasf2 tasks together,
           as they don't need the output locally but take the grid datasets as input. Also useful when you just want
           to produce data on the grid for other people to use.
 
@@ -546,7 +561,35 @@ class Gbasf2Process(BatchProcess):
             shutil.move(tmp_gbasf2_log_path, gbasf2_project_log_dir)
 
 
-def get_unique_gbasf2_project_name(task):
+class Gbasf2GridProjectTarget(Target):
+    """
+    Target exists if an output dataset for the project exists on the grid and if
+    all jobs in the project that produced it are done
+    """
+    def __init__(self, project_name, dirac_user=None, task=None):
+        """
+        :param project_name: Name of the gbasf2 grid project that produced the
+            dataset and under which the dataset is stored
+        :param dirac_user: Dirac user, who produced the output dataset.  When
+            ``None``, the current user is used.
+        :param task: Optionally provide a task which will also be checked for
+            the existence of the ``gbasf2_install_directory`` setting.
+        """
+        self.project_name = project_name
+        self.dirac_user = dirac_user
+        self.task = task
+
+    def exists(self):
+        gbasf2_dir = get_setting("gbasf2_install_directory", default="~/gbasf2KEK", task=self.task)
+        gbasf2_env = get_gbasf2_env(gbasf2_dir)
+        if not check_dataset_exists_on_grid(self.project_name, gbasf2_env, dirac_user=self.dirac_user):
+            return False
+        project_status_dict = get_gbasf2_project_job_status_dict(self.project_name, gbasf2_env, self.dirac_user)
+        all_jobs_done = all(job_info["Status"] == "Done" for job_info in project_status_dict.values())
+        if not all_jobs_done:
+            return False
+        return True
+
 
 def check_dataset_exists_on_grid(gbasf2_project_name, gbasf2_env, dirac_user=None):
     """
@@ -684,6 +727,9 @@ def setup_dirac_proxy(gbasf2_env):
     new_proxy_info_str = subprocess.run(
         ["gb2_proxy_info"], check=True, env=gbasf2_env, stdout=PIPE, encoding="utf-8").stdout
     return new_proxy_info_str
+
+
+def get_unique_project_name(task):
     """
     Combine the ``gbasf2_project_name_prefix`` setting and the ``task_id`` hash
     to a unique project name.
