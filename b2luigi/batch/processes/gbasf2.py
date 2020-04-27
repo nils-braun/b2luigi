@@ -563,8 +563,8 @@ class Gbasf2Process(BatchProcess):
 
 class Gbasf2GridProjectTarget(Target):
     """
-    Target exists if an output dataset for the project exists on the grid and if
-    all jobs in the project that produced it are done
+    Target exists if an output dataset for the project exists on the grid and is
+    not being written to, i.e. all jobs that produced the dataset are done.
     """
     def __init__(self, project_name, dirac_user=None, task=None):
         """
@@ -583,11 +583,14 @@ class Gbasf2GridProjectTarget(Target):
         gbasf2_dir = get_setting("gbasf2_install_directory", default="~/gbasf2KEK", task=self.task)
         gbasf2_env = get_gbasf2_env(gbasf2_dir)
         if not check_dataset_exists_on_grid(self.project_name, gbasf2_env, dirac_user=self.dirac_user):
+            # there's no dataset associated with that name on the grid
             return False
-        project_status_dict = get_gbasf2_project_job_status_dict(self.project_name, gbasf2_env, self.dirac_user)
-        all_jobs_done = all(job_info["Status"] == "Done" for job_info in project_status_dict.values())
-        if not all_jobs_done:
-            return False
+        if check_project_exists(self.project_name, gbasf2_env, dirac_user=self.dirac_user):
+            # if there's data named after that project on the grid, ensure there are no jobs writig to it
+            project_status_dict = get_gbasf2_project_job_status_dict(self.project_name, gbasf2_env, self.dirac_user)
+            all_jobs_done = all(job_info["Status"] == "Done" for job_info in project_status_dict.values())
+            if not all_jobs_done:
+                return False
         return True
 
 
