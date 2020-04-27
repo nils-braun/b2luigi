@@ -36,9 +36,6 @@ def create_analysis_path(mbc_range=[5.2, 5.3]):
         vx.vertexTree('B+', 0.1, path=path)
     mA.setAnalysisConfigParams({"mcMatchingVersion": "BelleII"}, path)
     mA.matchMCTruth('B-', path=path)
-    mA.variablesToNtuple('D0:Kpi', ['M', 'p', 'E', 'useCMSFrame(p)', 'useCMSFrame(E)', 'daughter(0, kaonID)',
-                                    'daughter(1, pionID)', 'isSignal', 'mcErrors'],
-                         filename='ntuple.root', treename="D", path=path)
     mA.variablesToNtuple('B-', ['Mbc', 'deltaE', 'isSignal', 'mcErrors', 'M'],
                          filename="ntuple.root", treename="B", path=path)
     return path
