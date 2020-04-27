@@ -101,8 +101,7 @@ class Gbasf2Process(BatchProcess):
                gbasf2_project_name_prefix = b2luigi.Parameter(significant=False)
                gbasf2_input_dataset = b2luigi.Parameter(hashed=True)
 
-        The following settings are not required as they have default values, but they are still important enough
-        to be explained here:
+        Other not required, but noteworthy settings are:
 
         - ``gbasf2_install_directory``: Defaults to ``~/gbasf2KEK``. If you installed gbasf2 into another
           location, you have to change that setting accordingly.
@@ -115,6 +114,10 @@ class Gbasf2Process(BatchProcess):
           printing of of the job summaries, that is the number of jobs in different states in a gbasf2 project.
         - ``gbasf2_max_retries``: Default to 0. Maximum number of times that each job in the project can be automatically
           rescheduled until the project is declared as failed.
+        - ``gbasf2_download_dataset``: Defaults to ``True``. Disable this setting if you don't want to download the
+          output dataset from the grid on job success. This is useful when chaining gbasf2 tasks together,
+          as they don't need the output locally but take the grid datasets as input. Also useful when you just want
+          to produce data on the grid for other people to use.
 
         The following optional settings correspond to the equally named ``gbasf`` command line options
         (without the ``gbasf_`` prefix) that you can set to customize your gbasf2 project:
@@ -340,7 +343,8 @@ class Gbasf2Process(BatchProcess):
         Things to do after all jobs in the project had been successful, e.g. downloading the dataset and logs
         """
         self._download_logs()
-        self._download_dataset()
+        if get_setting("gbasf2_download_dataset", default=True, task=self.task):
+            self._download_dataset()
 
     def _on_failure_action(self):
         """
