@@ -452,8 +452,6 @@ class Gbasf2Process(BatchProcess):
                 "Gbasf2 batch process can only used with tasks that generate basf2 paths with "
                 "a ``create_path()`` method, e.g. are an instance of ``Basf2PathTask``."
             ) from err
-
-        path.add_module("Progress")
         b2pp.write_path_to_file(path, self.pickle_file_path)
 
     def _create_wrapper_steering_file(self):
