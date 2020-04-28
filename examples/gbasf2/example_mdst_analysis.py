@@ -42,9 +42,9 @@ def create_analysis_path(mbc_range=[5.2, 5.3]):
 
 
 if __name__ == '__main__':
-    # Use this to execute the analysis path if this file is called as a mine
+    # Use this to execute the analysis path if this file is called as a main
     # file. It can be used to test the analysis path independently of the gbasf2
-    # luigi task. But if this module is only imported, the followinis not executed.
+    # luigi task. But if this module is only imported, the following is not executed.
     path = create_analysis_path()
     basf2.print_path(path)
     basf2.process(path)
