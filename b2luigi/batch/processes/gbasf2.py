@@ -9,7 +9,6 @@ import warnings
 from collections import Counter
 from datetime import datetime, timedelta
 from functools import lru_cache
-from subprocess import PIPE
 
 from luigi.target import Target
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
@@ -186,10 +185,6 @@ class Gbasf2Process(BatchProcess):
         # Setting it via a setting.json file is not supported to make sure users set unique project names
         self.gbasf2_project_name = get_unique_project_name(self.task)
 
-        #: Dictionary with gbasf2 environment with which gbasf2 commands have to be called
-        gbasf2_dir = get_setting("gbasf2_install_directory", default="~/gbasf2KEK", task=self.task)
-        self.gbasf2_env = get_gbasf2_env(gbasf2_dir)
-
         #: Output file directory of the task to wrap with gbasf2, where we will
         # store the pickled basf2 path and the created steerinfile to execute
         # that path.
@@ -203,7 +198,7 @@ class Gbasf2Process(BatchProcess):
         self.log_file_dir = get_log_file_dir(self.task)
         os.makedirs(self.log_file_dir, exist_ok=True)
 
-        self.dirac_user = get_dirac_user(self.gbasf2_env)
+        self.dirac_user = get_dirac_user()
         #: Maximum number of times that each job in the project can be rescheduled until the project is declared as failed.
         self.max_retries = get_setting("gbasf2_max_retries", default=0, task=self.task)
 
@@ -246,7 +241,7 @@ class Gbasf2Process(BatchProcess):
 
         """
         # If project is does not exist on grid yet, so can't query for gbasf2 project status
-        if not check_project_exists(self.gbasf2_project_name, self.gbasf2_env, dirac_user=self.dirac_user):
+        if not check_project_exists(self.gbasf2_project_name, dirac_user=self.dirac_user):
             raise RuntimeError(
                 f"Could not find any jobs for project {self.gbasf2_project_name} on the grid.\n" +
                 "Probably there was an error during the project submission when running the gbasf2 command.\n" +
@@ -254,7 +249,7 @@ class Gbasf2Process(BatchProcess):
                 " ".join(self._build_gbasf2_submit_command())
             )
 
-        job_status_dict = get_gbasf2_project_job_status_dict(self.gbasf2_project_name, self.gbasf2_env, dirac_user=self.dirac_user)
+        job_status_dict = get_gbasf2_project_job_status_dict(self.gbasf2_project_name, dirac_user=self.dirac_user)
         n_jobs_by_status = Counter()
         for _, job_info in job_status_dict.items():
             n_jobs_by_status[job_info["Status"]] += 1
@@ -307,7 +302,7 @@ class Gbasf2Process(BatchProcess):
         """
         Things to do after the project failed
         """
-        job_status_dict = get_gbasf2_project_job_status_dict(self.gbasf2_project_name, self.gbasf2_env, dirac_user=self.dirac_user)
+        job_status_dict = get_gbasf2_project_job_status_dict(self.gbasf2_project_name, dirac_user=self.dirac_user)
         failed_job_dict = {job_id: job_info for job_id, job_info in job_status_dict.items()
                            if job_info["Status"] == "Failed"}
         n_failed = len(failed_job_dict)
@@ -320,7 +315,7 @@ class Gbasf2Process(BatchProcess):
         and returns ``True`` if rescheduling has been successful.
         """
         job_status_dict = get_gbasf2_project_job_status_dict(
-            self.gbasf2_project_name, gbasf2_env=self.gbasf2_env, dirac_user=self.dirac_user)
+            self.gbasf2_project_name, dirac_user=self.dirac_user)
         for job_id, job_info in job_status_dict.items():
             if job_info["Status"] == "Failed":
                 if self.n_retries_by_job[job_id] >= self.max_retries:
@@ -340,13 +335,13 @@ class Gbasf2Process(BatchProcess):
         print(f"Rescheduling job {job_id} (retry no. {n_retries + 1}).")
         if self.n_retries_by_job[job_id] < self.max_retries:
             reschedule_command = shlex.split(f"gb2_job_reschedule --jobid {job_id} --force")
-            subprocess.run(reschedule_command, check=True, env=self.gbasf2_env)
+            run_with_gbasf2(reschedule_command)
 
     def start_job(self):
         """
         Submit new gbasf2 project to grid
         """
-        if check_project_exists(self.gbasf2_project_name, self.gbasf2_env, self.dirac_user):
+        if check_project_exists(self.gbasf2_project_name, self.dirac_user):
             warnings.warn(
                 f"\nProject with name {self.gbasf2_project_name} already exists on grid, "
                 "therefore not submitting new project. If you want to submit a new project, "
@@ -360,23 +355,23 @@ class Gbasf2Process(BatchProcess):
         # submit gbasf2 project
         gbasf2_command = self._build_gbasf2_submit_command()
         print("\nSending jobs to grid via command:\n", " ".join(gbasf2_command))
-        subprocess.run(gbasf2_command, check=True, env=self.gbasf2_env)
+        run_with_gbasf2(gbasf2_command)
 
     def kill_job(self):
         """
         Kill gbasf2 project
         """
-        if not check_project_exists(self.gbasf2_project_name, self.gbasf2_env, dirac_user=self.dirac_user):
+        if not check_project_exists(self.gbasf2_project_name, dirac_user=self.dirac_user):
             return
         # Note: The two commands ``gb2_job_delete`` and ``gb2_job_kill`` differ
         # in that deleted jobs are killed and removed from the job database,
         # while only killed jobs can be restarted.
         command = shlex.split(f"gb2_job_kill --force --user {self.dirac_user} -p {self.gbasf2_project_name}")
-        subprocess.run(command, check=True, env=self.gbasf2_env)
+        run_with_gbasf2(command)
 
     def _build_gbasf2_submit_command(self):
         """
-        Function to create the gbasf2 submit command to pass to subprocess.run
+        Function to create the gbasf2 submit command to pass to run_with_gbasf2
         from the task options and attributes.
         """
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
@@ -478,8 +473,8 @@ class Gbasf2Process(BatchProcess):
         # Get list of files that we want to download from the grid via ``gb2_ds_list`` so that we can
         # then compare this list with the results of the download to see if it was successful
         ds_list_command = shlex.split(f"gb2_ds_list --user {self.dirac_user} {self.gbasf2_project_name}")
-        output_dataset_str = subprocess.run(ds_list_command, check=True, env=self.gbasf2_env, stdout=PIPE, encoding="utf-8").stdout
-        if not check_dataset_exists_on_grid(self.gbasf2_project_name, gbasf2_env=self.gbasf2_env, dirac_user=self.dirac_user):
+        output_dataset_str = run_with_gbasf2(ds_list_command, capture_output=True).stdout
+        if not check_dataset_exists_on_grid(self.gbasf2_project_name, dirac_user=self.dirac_user):
             raise RuntimeError(f"Not dataset to download under project name {self.gbasf2_project_name}")
         output_dataset_basenames = {os.path.basename(grid_path) for grid_path in output_dataset_str.splitlines()}
 
@@ -504,8 +499,7 @@ class Gbasf2Process(BatchProcess):
         with tempfile.TemporaryDirectory(dir=parent_of_gbasf2_output_dir) as tmpdir_path:
             ds_get_command = shlex.split(f"gb2_ds_get --force --user {self.dirac_user} {self.gbasf2_project_name}")
             print("Downloading dataset with command ", " ".join(ds_get_command))
-            output = subprocess.run(
-                ds_get_command, check=True, env=self.gbasf2_env, stdout=PIPE, encoding="utf-8", cwd=tmpdir_path).stdout
+            output = run_with_gbasf2(ds_get_command, cwd=tmpdir_path, capture_output=True).stdout
             print(output)
             if "No file found" in output:
                 raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
@@ -549,7 +543,7 @@ class Gbasf2Process(BatchProcess):
         # directory and then moved to the final location
         with tempfile.TemporaryDirectory(dir=self.log_file_dir) as tmpdir_path:
             download_logs_command = shlex.split(f"gb2_job_output --user {self.dirac_user} -p {self.gbasf2_project_name}")
-            subprocess.run(download_logs_command, check=True, cwd=tmpdir_path, env=self.gbasf2_env)
+            run_with_gbasf2(download_logs_command, cwd=tmpdir_path)
             tmp_gbasf2_log_path = os.path.join(tmpdir_path, "log", self.gbasf2_project_name)
             gbasf2_project_log_dir = os.path.join(self.log_file_dir, "gbasf2_logs", self.gbasf2_project_name)
             print(f"Download of logs for gbasf2 project {self.gbasf2_project_name} successful.\n"
@@ -564,42 +558,37 @@ class Gbasf2GridProjectTarget(Target):
     Target exists if an output dataset for the project exists on the grid and is
     not being written to, i.e. all jobs that produced the dataset are done.
     """
-    def __init__(self, project_name, dirac_user=None, task=None):
+    def __init__(self, project_name, dirac_user=None):
         """
         :param project_name: Name of the gbasf2 grid project that produced the
             dataset and under which the dataset is stored
         :param dirac_user: Dirac user, who produced the output dataset.  When
             ``None``, the current user is used.
-        :param task: Optionally provide a task which will also be checked for
-            the existence of the ``gbasf2_install_directory`` setting.
         """
         self.project_name = project_name
         self.dirac_user = dirac_user
-        self.task = task
 
     def exists(self):
-        gbasf2_dir = get_setting("gbasf2_install_directory", default="~/gbasf2KEK", task=self.task)
-        gbasf2_env = get_gbasf2_env(gbasf2_dir)
-        if not check_dataset_exists_on_grid(self.project_name, gbasf2_env, dirac_user=self.dirac_user):
+        if not check_dataset_exists_on_grid(self.project_name, dirac_user=self.dirac_user):
             # there's no dataset associated with that name on the grid
             return False
-        if check_project_exists(self.project_name, gbasf2_env, dirac_user=self.dirac_user):
+        if check_project_exists(self.project_name, dirac_user=self.dirac_user):
             # if there's data named after that project on the grid, ensure there are no jobs writig to it
-            project_status_dict = get_gbasf2_project_job_status_dict(self.project_name, gbasf2_env, self.dirac_user)
+            project_status_dict = get_gbasf2_project_job_status_dict(self.project_name, self.dirac_user)
             all_jobs_done = all(job_info["Status"] == "Done" for job_info in project_status_dict.values())
             if not all_jobs_done:
                 return False
         return True
 
 
-def check_dataset_exists_on_grid(gbasf2_project_name, gbasf2_env, dirac_user=None):
+def check_dataset_exists_on_grid(gbasf2_project_name, dirac_user=None):
     """
     Use ``gb2_ds_list`` command to see if an output dataset exists for the gbasf2 project
     """
     if dirac_user is None:
-        dirac_user = get_dirac_user(gbasf2_env=gbasf2_env)
+        dirac_user = get_dirac_user()
     ds_list_command = shlex.split(f"gb2_ds_list --user {dirac_user} {gbasf2_project_name}")
-    output_dataset_str = subprocess.run(ds_list_command, check=True, env=gbasf2_env, stdout=PIPE, encoding="utf-8").stdout
+    output_dataset_str = run_with_gbasf2(ds_list_command, capture_output=True).stdout
     if "No datasets" in output_dataset_str:
         return False
     output_lines_are_paths = all(os.path.abspath(line) for line in output_dataset_str.strip().splitlines())
@@ -610,7 +599,7 @@ def check_dataset_exists_on_grid(gbasf2_project_name, gbasf2_env, dirac_user=Non
     return True
 
 
-def get_gbasf2_project_job_status_dict(gbasf2_project_name, gbasf2_env, dirac_user=None):
+def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
     """
     Returns a dictionary for all jobs in the project with a structure like the following,
     which I have taken and adapted from an example output::
@@ -636,28 +625,25 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, gbasf2_env, dirac_us
     The job status dictionary is passed to this function via json.
     """
     if dirac_user is None:
-        dirac_user = get_dirac_user(gbasf2_env=gbasf2_env)
-    assert check_project_exists(gbasf2_project_name, gbasf2_env, dirac_user), \
+        dirac_user = get_dirac_user()
+    assert check_project_exists(gbasf2_project_name, dirac_user), \
         f"Project {gbasf2_project_name} doest not exist yet"
     job_status_script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                           "gbasf2_utils/gbasf2_job_status.py")
     job_status_command = shlex.split(f"python2 {job_status_script_path} -p {gbasf2_project_name} --user {dirac_user}")
-
-    job_status_json_string = subprocess.run(
-        job_status_command, check=True, stdout=PIPE, encoding="utf-8", env=gbasf2_env
-    ).stdout
+    job_status_json_string = run_with_gbasf2(job_status_command, capture_output=True).stdout
     job_status_dict = json.loads(job_status_json_string)
     return job_status_dict
 
 
-def check_project_exists(gbasf2_project_name, gbasf2_env, dirac_user=None):
+def check_project_exists(gbasf2_project_name, dirac_user=None):
     """
     Check if we can find the gbasf2 project on the grid with ``gb2_job_status``.
     """
     if dirac_user is None:
-        dirac_user = get_dirac_user(gbasf2_env=gbasf2_env)
+        dirac_user = get_dirac_user()
     command = shlex.split(f"gb2_job_status -p {gbasf2_project_name} --user {dirac_user}")
-    output = subprocess.run(command, check=True, stdout=PIPE, encoding="utf-8", env=gbasf2_env).stdout
+    output = run_with_gbasf2(command, capture_output=True).stdout
     if output.strip() == "0 jobs are selected.":
         return False
     if "--- Summary of Selected Jobs ---" in output:
@@ -666,35 +652,68 @@ def check_project_exists(gbasf2_project_name, gbasf2_env, dirac_user=None):
                        " could not determine if project exists")
 
 
-def get_gbasf2_env(gbasf2_install_directory="~/gbasf2KEK"):
+def run_with_gbasf2(cmd, *args, check=True, encoding="utf-8", capture_output=False, **kwargs):
     """
-    Return the gbasf2 environment dict.
+    Call ``cmd`` in a subprocess with the gbasf2 environment.
 
-    When first called, it executes the setup script from the
-    ``gbasf2_install_directory`` and returns the resulting
-    environment.  This dictionary can be used as the ``env`` parameter in
-    subprocess calls, to execute gbasf2 commands in this environment
+    :param check: Whether to raise a ``CalledProcessError`` when the command returns with an error code.
+                  The default value ``True`` is the same as in ``subprocess.check_call()`` and different as in the
+                  normal ``run_with_gbasf2()`` command.
+    :param capture_output: Whether to capture the ``stdout`` and ``stdin``.
+                           Same as setting them to in ``subprocess.PIPE``.
+                           The implementation of this argument was taken from the ``subprocess.run()`` in python3.8.
+    :param encoding: Encoding to use for the interpretation of the command output.
+                     Different from normal subprocess commands, it by default assumes "utf-8". In that case, the returned
+                     ``stdout`` and ``stderr`` are strings and not byte-strings and the user doesn't have to decode them
+                     manually.
+    :return: ``CompletedProcess`` instance
     """
+    if capture_output:
+        if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+            raise ValueError('stdout and stderr arguments may not be used '
+                             'with capture_output.')
+        kwargs['stdout'] = subprocess.PIPE
+        kwargs['stderr'] = subprocess.PIPE
+    gbasf2_env = get_gbasf2_env()
+    proc = subprocess.run(cmd, *args, check=check, encoding=encoding, env=gbasf2_env, **kwargs)
+    return proc
+
+
+@lru_cache(maxsize=None)
+def get_gbasf2_env(gbasf2_install_directory=None):
+    """
+    Return the gbasf2 environment dict which can be used to run gbasf2 commands.
+
+    :param gbasf2_install_directory: Directory into which gbasf2 has been
+        installed.  When set to the default value ``None``, it looks for the
+        value of the ``gbasf2_install_directory`` setting and when that is not
+        set, it uses the default of most installation instructions, which is
+        ``~/gbasf2KEK``.
+    :return: Dictionary containing the  environment that you get from sourcing the gbasf2 setup script.
+    """
+    if gbasf2_install_directory is None:
+        gbasf2_install_directory = get_setting("gbasf2_install_directory", default="~/gbasf2KEK")
     gbasf2_setup_path = os.path.join(gbasf2_install_directory, "BelleDIRAC/gbasf2/tools/setup")
     if not os.path.isfile(os.path.expanduser(gbasf2_setup_path)):
         raise FileNotFoundError(
             f"Could not find gbasf2 setup files in ``{gbasf2_install_directory}``.\n" +
-            "Make sure to that gbasf2 is installed at the location specified by the " +
-            "``gbasf2_install_dir`` setting."
+            "Make sure to that gbasf2 is installed at that location."
         )
     # complete bash command to set up the gbasf2 environment
     # piping output to /dev/null, because we want that our final script only prints the ``env`` output
     gbasf2_setup_command_str = f"source {gbasf2_setup_path} > /dev/null"
     # command to execute the gbasf2 setup command in a fresh shell and output the produced environment
     echo_gbasf2_env_command = shlex.split(f"env -i bash -c '{gbasf2_setup_command_str} > /dev/null && env'")
-    gbasf2_env_string = subprocess.run(echo_gbasf2_env_command, check=True, stdout=PIPE, encoding="utf-8").stdout
+    gbasf2_env_string = subprocess.run(
+        echo_gbasf2_env_command, check=True, stdout=subprocess.PIPE, encoding="utf-8"
+    ).stdout
     gbasf2_env = dict(line.split("=", 1) for line in gbasf2_env_string.splitlines())
     return gbasf2_env
 
 
-def get_dirac_user(gbasf2_env):
+def get_dirac_user():
     """Get dirac user name"""
-    proxy_info_str = setup_dirac_proxy(gbasf2_env=gbasf2_env)
+    proxy_info_str = setup_dirac_proxy()
     for line in proxy_info_str.splitlines():
         if line.startswith("username"):
             dirac_user = line.split(":", 1)[1].strip()
@@ -702,7 +721,7 @@ def get_dirac_user(gbasf2_env):
     raise RuntimeError("Could not obtain dirac user name from `gb2_proxy_init` output.")
 
 
-def setup_dirac_proxy(gbasf2_env):
+def setup_dirac_proxy():
     """
     Runs ``gb2_proxy_init -g belle`` if necessary and returns
     ``gb2_proxy_info`` output
@@ -715,7 +734,8 @@ def setup_dirac_proxy(gbasf2_env):
     # Get time that the proxy is still valid from the gb2_proxy_info output line "timeleft".
     # If no proxy had been initialized, the output will not contain the "timeleft" string.
     # Alternatively, if the proxy time ran out, the timeleft value will be 00:00:00
-    proxy_info_str = subprocess.run(["gb2_proxy_info"], check=True, env=gbasf2_env, stdout=PIPE, encoding="utf-8").stdout
+    gbasf2_env = get_gbasf2_env()
+    proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
     for line in proxy_info_str.splitlines():
         if line.startswith("timeleft"):
             timeleft_str = line.split(":", 1)[1].strip()
@@ -724,9 +744,9 @@ def setup_dirac_proxy(gbasf2_env):
             if timeleft_delta.total_seconds() > 0:
                 return proxy_info_str
     # initiallize proxy
-    subprocess.run(shlex.split("gb2_proxy_init -g belle"), check=True, env=gbasf2_env)
-    new_proxy_info_str = subprocess.run(
-        ["gb2_proxy_info"], check=True, env=gbasf2_env, stdout=PIPE, encoding="utf-8").stdout
+    run_with_gbasf2(shlex.split("gb2_proxy_init -g belle"))
+    new_proxy_info_str = run_with_gbasf2(
+        ["gb2_proxy_info"], env=gbasf2_env, encoding="utf-8").stdout
     return new_proxy_info_str
 
 
