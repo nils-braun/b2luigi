@@ -17,8 +17,6 @@ from b2luigi.core.settings import get_setting
 from b2luigi.core.utils import get_log_file_dir, get_task_file_dir
 from jinja2 import Template
 
-import basf2.pickle_path as b2pp
-
 
 class Gbasf2Process(BatchProcess):
     """
@@ -447,7 +445,8 @@ class Gbasf2Process(BatchProcess):
                 "Gbasf2 batch process can only used with tasks that generate basf2 paths with "
                 "a ``create_path()`` method, e.g. are an instance of ``Basf2PathTask``."
             ) from err
-        b2pp.write_path_to_file(path, self.pickle_file_path)
+        from basf2.pickle_path import write_path_to_file
+        write_path_to_file(path, self.pickle_file_path)
 
     def _create_wrapper_steering_file(self):
         """
