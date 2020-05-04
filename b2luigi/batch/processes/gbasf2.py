@@ -83,7 +83,10 @@ class Gbasf2Process(BatchProcess):
 
         For gbasf2 tasks it is further required to set the settings
 
-        - ``gbasf2_input_dataset``: The input dataset on the grid to use.
+        - ``gbasf2_input_dataset``: String with the logical path of a dataset on the grid to use as an input to the task.
+          You can provide multiple inputs by having multiple paths contained in this string, separated by commas without spaces.
+          An alternative is to just instantiate multiple tasks with different input datasets, if you want to know in retrospect
+          which input dataset had been used for the production of a specific output.
         - ``gbasf2_project_name_prefix``: A string with which your gbasf2 project names will start.
           To ensure the project associate with each unique task (i.e. for each of luigi parameters)
           is unique, the unique ``task.task_id`` is hashed and appended to the prefix
