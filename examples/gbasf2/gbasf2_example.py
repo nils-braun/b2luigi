@@ -13,16 +13,20 @@ class MyAnalysisTask(Basf2PathTask):
     # b2luigi will then add a hash derived from the luigi parameters to create a unique project name.
     gbasf2_project_name_prefix = b2luigi.Parameter()
     gbasf2_input_dataset = b2luigi.Parameter(hashed=True)
-
     # Example luigi cut parameter to facilitate starting multiple projects for different cut values
     mbc_lower_cut = b2luigi.IntParameter()
 
     def create_path(self):
         mbc_range = (self.mbc_lower_cut, 5.3)
-        return example_mdst_analysis.create_analysis_path(mbc_range=mbc_range)
+        return example_mdst_analysis.create_analysis_path(
+            d_ntuple_filename="D_ntuple.root",
+            b_ntuple_filename="B_ntuple.root",
+            mbc_range=mbc_range
+        )
 
     def output(self):
-        yield self.add_to_output(self.gbasf2_project_name_prefix)
+        yield self.add_to_output("D_ntuple.root")
+        yield self.add_to_output("B_ntuple.root")
 
 
 class MasterTask(b2luigi.WrapperTask):
