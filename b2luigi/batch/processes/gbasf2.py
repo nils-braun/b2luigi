@@ -352,7 +352,8 @@ class Gbasf2Process(BatchProcess):
 
         # submit gbasf2 project
         gbasf2_command = self._build_gbasf2_submit_command()
-        print("\nSending jobs to grid via command:\n", " ".join(gbasf2_command))
+        print(f"\nSubmitting gbasf2 project: {self.gbasf2_project_name}\n")
+        print("\nUsing command:\n" + " ".join(gbasf2_command) + "\n")
         run_with_gbasf2(gbasf2_command)
 
     def kill_job(self):
