@@ -374,16 +374,10 @@ class Gbasf2Process(BatchProcess):
         from the task options and attributes.
         """
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
-
-        gbasf2_additional_files = get_setting("gbasf2_additional_files", default=False, task=self.task)
-        if gbasf2_additional_files is not False:
-            # make sure that gbasf2_additional_files is not a string, for which " ".join will yield unexpected results
-            assert not isinstance(gbasf2_additional_files, str), "gbasf2_additional_files should be a list or tuple, not a string."
-            additional_files_str = " ".join(gbasf2_additional_files)
-        else:
-            additional_files_str = ""
-
-        gbasf2_command_str = (f"gbasf2 {self.wrapper_file_path} -f {self.pickle_file_path} {additional_files_str} " +
+        gbasf2_additional_files = get_setting("gbasf2_additional_files", default=[], task=self.task)
+        assert not isinstance(gbasf2_additional_files, str), "gbasf2_additional_files should be a list or tuple, not a string."
+        gbasf2_input_sandbox_files = [self.pickle_file_path] + gbasf2_additional_files
+        gbasf2_command_str = (f"gbasf2 {self.wrapper_file_path} -f {' '.join(gbasf2_input_sandbox_files)} " +
                               f"-p {self.gbasf2_project_name} -s {gbasf2_release} ")
 
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset", default=False, task=self.task)
