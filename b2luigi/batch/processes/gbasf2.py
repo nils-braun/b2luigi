@@ -205,7 +205,6 @@ class Gbasf2Process(BatchProcess):
 
         #: Local storage for ``n_retries_by_job`` counter
         # so that it persists even if luigi process is killed and restarted.
-        # TODO: Maybe a small database (e.g. tindydb/pickledb) would be more appropriate
         self.retries_file_path = os.path.join(self.log_file_dir, "n_retries_by_grid_job.json")
         if os.path.isfile(self.retries_file_path):
             with open(self.retries_file_path, "r") as retries_file:
