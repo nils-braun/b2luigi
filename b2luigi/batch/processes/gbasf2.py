@@ -744,8 +744,7 @@ def setup_dirac_proxy():
                 return proxy_info_str
     # initiallize proxy
     run_with_gbasf2(shlex.split("gb2_proxy_init -g belle"))
-    new_proxy_info_str = run_with_gbasf2(
-        ["gb2_proxy_info"], env=gbasf2_env, encoding="utf-8").stdout
+    new_proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
     return new_proxy_info_str
 
 
