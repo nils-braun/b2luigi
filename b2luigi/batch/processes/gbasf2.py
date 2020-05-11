@@ -433,14 +433,14 @@ class Gbasf2Process(BatchProcess):
         Serialize and save the ``basf2.Path`` returned by ``self.task.create_path()`` to a python pickle file.
         """
         try:
-            path = self.task.create_path()
+            basf2_path = self.task.create_path()
         except AttributeError as err:
             raise Exception(
                 "Gbasf2 batch process can only used with tasks that generate basf2 paths with "
                 "a ``create_path()`` method, e.g. are an instance of ``Basf2PathTask``."
             ) from err
         from basf2.pickle_path import write_path_to_file
-        write_path_to_file(path, self.pickle_file_path)
+        write_path_to_file(basf2_path, os.path.join(self.task_file_dir, self.pickle_file_name))
 
     def _create_wrapper_steering_file(self):
         """
