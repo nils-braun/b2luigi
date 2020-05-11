@@ -733,7 +733,6 @@ def setup_dirac_proxy():
     # Get time that the proxy is still valid from the gb2_proxy_info output line "timeleft".
     # If no proxy had been initialized, the output will not contain the "timeleft" string.
     # Alternatively, if the proxy time ran out, the timeleft value will be 00:00:00
-    gbasf2_env = get_gbasf2_env()
     proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
     for line in proxy_info_str.splitlines():
         if line.startswith("timeleft"):
