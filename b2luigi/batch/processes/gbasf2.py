@@ -353,7 +353,17 @@ class Gbasf2Process(BatchProcess):
         gbasf2_command = self._build_gbasf2_submit_command()
         print(f"\nSubmitting gbasf2 project: {self.gbasf2_project_name}")
         print("\nUsing command:\n" + " ".join(gbasf2_command) + "\n")
-        run_with_gbasf2(gbasf2_command)
+
+        # Symlink the pickle_file from the ``task_file_dir`` (where it is store
+        # for reproducibility) to the current working directory, so that gbasf2
+        # copies it into the same directory in the grid input sandbox as the
+        # steering file.
+        pickle_file_symlink_destination = os.path.basename(self.pickle_file_path)
+        try:
+            os.symlink(self.pickle_file_path, pickle_file_symlink_destination, target_is_directory=False)
+            run_with_gbasf2(gbasf2_command)
+        finally:
+            os.unlink(pickle_file_symlink_destination)
 
     def kill_job(self):
         """
@@ -375,7 +385,7 @@ class Gbasf2Process(BatchProcess):
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
         gbasf2_additional_files = get_setting("gbasf2_additional_files", default=[], task=self.task)
         assert not isinstance(gbasf2_additional_files, str), "gbasf2_additional_files should be a list or tuple, not a string."
-        gbasf2_input_sandbox_files = [self.pickle_file_path] + gbasf2_additional_files
+        gbasf2_input_sandbox_files = [os.path.basename(self.pickle_file_path)] + gbasf2_additional_files
         gbasf2_command_str = (f"gbasf2 {self.wrapper_file_path} -f {' '.join(gbasf2_input_sandbox_files)} " +
                               f"-p {self.gbasf2_project_name} -s {gbasf2_release} ")
 
@@ -440,7 +450,7 @@ class Gbasf2Process(BatchProcess):
                 "a ``create_path()`` method, e.g. are an instance of ``Basf2PathTask``."
             ) from err
         from basf2.pickle_path import write_path_to_file
-        write_path_to_file(basf2_path, os.path.join(self.task_file_dir, self.pickle_file_name))
+        write_path_to_file(basf2_path, self.pickle_file_path)
 
     def _create_wrapper_steering_file(self):
         """
@@ -453,7 +463,7 @@ class Gbasf2Process(BatchProcess):
             template = Template(template_file.read())
             # replace some variable values in the templates
             steering_file_stream = template.stream(
-                pickle_file_path=self.pickle_file_path,
+                pickle_file_path=os.path.basename(self.pickle_file_path),
                 max_event=get_setting("max_event", default=0, task=self.task),
             )
             # write the template with the replacements to a new file which should be sent to the grid
