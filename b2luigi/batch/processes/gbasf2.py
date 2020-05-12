@@ -58,21 +58,32 @@ class Gbasf2Process(BatchProcess):
        have a basic understanding of how the grid works and know the basics of working
        with gbasf2 commands manually.
 
-    Limitations
+    Caveats
         - The gbasf2 batch process for luigi can only be used for tasks
           inhereting from ``Basf2PathTask`` or other tasks with a
           ``create_path()`` method that returns a basf2 path.
 
-        - It can only be used for pickable/serializable basf2 paths, as it stores
+        - It can be used **only for pickable basf2 paths**, as it stores
           the path created by ``create_path`` in a python pickle file and runs that on the grid.
-          Therefore, **basf2 variable aliases are not yet supported**.
+          Therefore, **basf2 variable aliases and python basf2 modules are not yet supported**. 
+          To see if the path produced by a steering file is pickable, you can try to dump it with
+          ``basf2 --dump-path`` and execute it again with ``basf2 --execute-path``.
 
-        - Changing the batch to gbasf2 means you also have to adapt the output function of your task, because the
-          output will not be a single root file anymore, but a collection of root files,
-          one for each file in the input data set, in the directory given by the setting ``outputectory``.
-          You should use this directory as the required output, as it is difficult to predict what the output
-          files will be named. The luigi gbasf2 wrapperdoesn't merge the files and lets the user decide how he wants to
-          handle them.
+        - Output format: Changing the batch to gbasf2 means you also have to
+          adapt how you handle the output of your gbasf2 task in tasks depending
+          on it, because the output will not be a single root file anymore (e.g.
+          ``B_ntuple.root``), but a collection of root files, one for each file in
+          the input data set, in a directory with the base name of the root
+          files, e.g.::
+            <task output directory>
+                        ├── B_ntuple.root
+                        │   └── B_ntuple_0.root
+                        │   └── B_ntuple_1.root
+                        │   └── ...
+                        ├── D_ntuple.root
+                        │   └── D_ntuple_0.root
+                        │   └── ... 
+
 
 
     Settings for gbasf2 tasks
