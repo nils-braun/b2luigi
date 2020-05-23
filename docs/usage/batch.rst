@@ -3,16 +3,19 @@
 Batch Processing
 ================
 
-As shown in :ref:`quick-start-label`, using the batch instead of local processing is really just a ``--batch`` 
+As shown in :ref:`quick-start-label`, using the batch instead of local processing is really just a ``--batch``
 on the command line or calling ``process`` with ``batch=True``.
 However, there is more to discover!
 
 Choosing the batch system
 -------------------------
 
-Using ``b2luigi``'s settings mechanism (described here :meth:`b2luigi.get_setting`) you can choose which 
-batch system should be used. 
-Currently, ``htcondor`` and ``lsf`` are supported, more will come soon (PR welcome!).
+Using ``b2luigi``'s settings mechanism (described here :meth:`b2luigi.get_setting`) you can choose which
+batch system should be used.
+Currently, ``htcondor`` and ``lsf`` are supported.
+There is also an experimental wrapper for ``gbasf2``, the Belle II
+submission tool for the LHC Worlwide Computing Grid, which works for ``Basf2PathTask`` tasks.
+More will come soon (PR welcome!).
 
 
 Choosing the Environment
@@ -22,22 +25,22 @@ If you are doing a local calculation, all calculated tasks will use the same env
 as you have currently set up when calling your script(s).
 This makes it predictable and simple.
 
-Things get a bit more complicated when using a batch farm, as the workers might not have the same environment set up, the batch 
-submission does not copy the environment (or the local site administrators have forbidden that) or the system on the workers 
+Things get a bit more complicated when using a batch farm, as the workers might not have the same environment set up, the batch
+submission does not copy the environment (or the local site administrators have forbidden that) or the system on the workers
 is so different that copying the environment from the scheduling machine does not make sense.
 
 Therefore ``b2luigi`` provides you with three mechanism to set the environment for each task:
 
-* You can give a bash script in the ``env_script`` setting (via ``set_setting()``, ``settings.json`` or for each task as usual, 
+* You can give a bash script in the ``env_script`` setting (via ``set_setting()``, ``settings.json`` or for each task as usual,
   see :meth:`b2luigi.get_setting`), which will be called even before anything else on the worker.
-  Use it to set up things like the path variables or the libraries (e.g. when you are using a virtual environment) and your 
+  Use it to set up things like the path variables or the libraries (e.g. when you are using a virtual environment) and your
   batch system does not support environment copy from the scheduler to the workers.
   For example a useful script might look like this:
 
-  .. code-block:: bash 
+  .. code-block:: bash
 
-    # Source my virtual environment 
-    source venv/bin/activate 
+    # Source my virtual environment
+    source venv/bin/activate
     # Set some specific settings
     export MY_IMPORTANT_SETTING 10
 
@@ -57,7 +60,7 @@ Therefore ``b2luigi`` provides you with three mechanism to set the environment f
     b2luigi.set_setting("executable", ["python3"])
 
 
-File System 
+File System
 -----------
 
 Depending on your batch system, the filesystem on the worker processing the task and the scheduler machine can be different or even unrelated.
@@ -65,15 +68,15 @@ Different batch systems and batch systems implementations treat this fact differ
 In the following, the basic procedure and assumption is explained.
 Any deviation from this is described in the next section.
 
-By default, ``b2luigi`` needs at least two folders to be accessible from the scheduling as well as worker machine: 
+By default, ``b2luigi`` needs at least two folders to be accessible from the scheduling as well as worker machine:
 the result folder and the folder of your script(s).
 If possible, use absolute paths for the result and log directory to prevent any problems.
 Some batch systems (e.g. htcondor) support file copy mechanisms from the scheduler to the worker systems.
 Please checkout the specifics below.
 
-.. hint:: 
+.. hint::
 
-    All relative paths given to e.g. the ``result_dir`` or the ``log_dir`` are always evaluated 
+    All relative paths given to e.g. the ``result_dir`` or the ``log_dir`` are always evaluated
     relative to the folder where your script lives.
     To prevent any disambiguities, try to use absolute paths whenever possible.
 
@@ -89,11 +92,11 @@ Drawbacks of the batch mode
 
 Although the batch mode has many benefits, it would be unfair to not mention its downsides:
 
-*   You have to choose the queue/batch settings/etc. depending in your requirements (e.g. wall clock time) by yourself. 
+*   You have to choose the queue/batch settings/etc. depending in your requirements (e.g. wall clock time) by yourself.
     So you need to make sure that the tasks will actually finish before the batch system kills them because of timeout.
     There is just no way for ``b2luigi`` to know this beforehand.
-*   There is currently no resubmission implemented. 
-    This means dying jobs because of batch system failures are just dead. 
+*   There is currently no resubmission implemented.
+    This means dying jobs because of batch system failures are just dead.
     But because of the dependency checking mechanism of ``luigi`` it is simple to just redo the calculation
     and re-calculate what is missing.
 *   The ``luigi`` feature to request new dependencies while task running (via ``yield``) is not implemented for
@@ -118,11 +121,16 @@ HTCondor
 .. autoclass:: b2luigi.batch.processes.htcondor.HTCondorProcess
     :show-inheritance:
 
+GBasf2 Wrapper for LCG
+......................
+
+.. autoclass:: b2luigi.batch.processes.gbasf2.Gbasf2Process
+    :show-inheritance:
 
 Add your own batch system
 -------------------------
 
-If you want to add a new batch system, all you need to do is to implement the 
+If you want to add a new batch system, all you need to do is to implement the
 abstract functions of ``BatchProcess`` for your system:
 
 .. autoclass:: b2luigi.batch.processes.BatchProcess
