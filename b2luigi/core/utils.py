@@ -267,13 +267,23 @@ def get_task_file_dir(task):
 
 def get_filename():
     import __main__
-    filename = __main__.__file__
-
-    return filename
+    return __main__.__file__
 
 
 def map_folder(input_folder):
-    filename = get_filename()
+    if os.path.isabs(input_folder):
+      return input_folder
+
+    try:
+      filename = get_filename()
+    except AttributeError as ex:
+      raise type(ex)(
+        "Could not determine the current script location. "
+        "If you are running in an interactive shell (such as jupyter notebook) "
+        "make sure to only provide absolute paths in your settings.\nMore Info:\n"
+        + ex.message
+      ).with_traceback(sys.exc_info()[2])
+
     filepath = os.path.dirname(filename)
 
     return os.path.join(filepath, input_folder)
