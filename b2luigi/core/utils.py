@@ -266,8 +266,11 @@ def get_task_file_dir(task):
 
 
 def get_filename():
-    import __main__
-    filename = __main__.__file__
+    try:
+      import __main__
+      filename = __main__.__file__
+    except AttributeError as err:
+      filename = sys.argv[0]
 
     return filename
 
