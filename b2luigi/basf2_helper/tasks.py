@@ -1,5 +1,6 @@
 import collections
 import os
+import shutil
 
 import b2luigi
 from b2luigi.basf2_helper.targets import ROOTLocalTarget
@@ -114,4 +115,9 @@ class Basf2FileMergeTask(MergerTask):
 
 
 class Basf2nTupleMergeTask(MergerTask):
-    cmd = ["fei_merge_files"]
+    # Define the command to use to merge basf2 output files. Because
+    # ``fei_merge_files`` has been renamed to ``analysis-fei-mergefiles``, use
+    # the newer command if it exists in the release.
+    _new_cmd = ["analysis-fei-mergefiles"]
+    _old_cmd = ["fei_merge_files"]
+    cmd = _new_cmd if shutil.which(_new_cmd) else _old_cmd
