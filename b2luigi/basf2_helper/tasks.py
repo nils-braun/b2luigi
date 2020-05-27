@@ -118,6 +118,6 @@ class Basf2nTupleMergeTask(MergerTask):
     # Define the command to use to merge basf2 output files. Because
     # ``fei_merge_files`` has been renamed to ``analysis-fei-mergefiles``, use
     # the newer command if it exists in the release.
-    _new_cmd = ["analysis-fei-mergefiles"]
-    _old_cmd = ["fei_merge_files"]
-    cmd = _new_cmd if shutil.which(_new_cmd) else _old_cmd
+    _new_cmd_name = "analysis-fei-mergefiles"
+    _old_cmd_name = "fei_merge_files"
+    cmd = [_new_cmd_name] if shutil.which(_new_cmd_name) else [_old_cmd_name]
