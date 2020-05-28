@@ -27,7 +27,12 @@ class SimulationTask(Basf2PathTask):
         modularAnalysis.setupEventInfo(self.n_events, path)
 
         if self.event_type == SimulationType.y4s:
-            dec_file = Belle2.FileSystem.findFile('analysis/examples/tutorials/B2A101-Y4SEventGeneration.dec')
+            # in current master and release 5 the Y(4S)decay file is moved, so try old and new locations
+            find_file_ignore_error = True
+            dec_file = Belle2.FileSystem.findFile('analysis/examples/tutorials/B2A101-Y4SEventGeneration.dec',
+                                                  find_file_ignore_error)
+            if not dec_file:
+                dec_file = Belle2.FileSystem.findFile('analysis/examples/simulations/B2A101-Y4SEventGeneration.dec')
         elif self.event_type == SimulationType.continuum:
             dec_file = Belle2.FileSystem.findFile('analysis/examples/simulations/B2A102-ccbarEventGeneration.dec')
         else:
