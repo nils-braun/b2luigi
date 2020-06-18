@@ -50,6 +50,6 @@ class MasterTask(b2luigi.WrapperTask):
 
 
 if __name__ == '__main__':
-    master_task_instance = MasterTask()
-    n_gbasf2_tasks = len(list(master_task_instance.requires()))
-    b2luigi.process(master_task_instance, workers=n_gbasf2_tasks)
+    main_task_instance = MasterTask()
+    n_gbasf2_tasks = len(list(main_task_instance.requires()))
+    b2luigi.process(main_task_instance, workers=n_gbasf2_tasks)

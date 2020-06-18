@@ -36,7 +36,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
         flit install -s
 
-4.  The documentation is hosted on read the docs and build automatically on every commit to master.
+4.  The documentation is hosted on read the docs and build automatically on every commit to main.
     You can (and should) also build the documentation locally by installing ``sphinx``
 
     .. code-block:: bash
@@ -55,7 +55,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
 5.  If you are a core developer and want to release a new version:
 
-    a.  Make sure all changes are committed and merged on master
+    a.  Make sure all changes are committed and merged on main
     b.  Use the ``bumpversion`` package to update the version in the python file ``b2luigi/__init__.py`` as well
         as the git tag. ``flit`` will automatically use this.
 
