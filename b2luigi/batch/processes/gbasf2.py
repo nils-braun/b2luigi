@@ -538,8 +538,12 @@ class Gbasf2Process(BatchProcess):
                         shutil.rmtree(output_dir_path)
                     shutil.move(src=tmp_output_dir, dst=output_dir_path)
                 else:
-                    raise RuntimeError(f"The downloaded of files in {tmp_output_dir} is not equal to the "
-                                       f"dataset files for the grid project {self.gbasf2_project_name}")
+                    raise RuntimeError(
+                        f"The downloaded set of files in {tmp_output_dir} is not equal to the " +
+                        f"list of dataset files on the grid for project {self.gbasf2_project_name}." +
+                        "\nDownloaded files:\n{}".format("\n".join(downloaded_dataset_basenames)) +
+                        "\nFiles on the grid:\n{}".format("\n".join(output_dataset_basenames))
+                    )
 
     def _download_logs(self):
         """
