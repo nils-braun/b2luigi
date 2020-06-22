@@ -501,7 +501,8 @@ class Gbasf2Process(BatchProcess):
 
             # Get list of files that we want to download from the grid via ``gb2_ds_list`` so that we can
             # then compare this list with the results of the download to see if it was successful
-            dataset_query_string = f"--user {self.dirac_user} {self.gbasf2_project_name}/{output_file_stem}_*{output_file_ext}"
+            dataset_query_string = \
+                f"/belle/user/{self.dirac_user}/{self.gbasf2_project_name}/{output_file_stem}_*{output_file_ext}"
             ds_list_command = shlex.split(f"gb2_ds_list {dataset_query_string}")
             output_dataset_grid_filepaths = run_with_gbasf2(ds_list_command, capture_output=True).stdout.splitlines()
             output_dataset_basenames = {os.path.basename(grid_path) for grid_path in output_dataset_grid_filepaths}
