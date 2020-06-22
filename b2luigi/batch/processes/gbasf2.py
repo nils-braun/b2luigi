@@ -10,12 +10,12 @@ from collections import Counter
 from datetime import datetime, timedelta
 from functools import lru_cache
 
-from luigi.target import Target
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.core.settings import get_setting
 from b2luigi.core.utils import flatten_to_dict, get_log_file_dir, get_task_file_dir
 from jinja2 import Template
+from luigi.target import Target
 
 
 class Gbasf2Process(BatchProcess):
@@ -25,10 +25,13 @@ class Gbasf2Process(BatchProcess):
     Features
         - **gbasf2 project submission**
 
-          The gbasf2 batch process takes the basf2 path returned by the ``create_path()``
-          method of the task, saves it to the disk and creates a wrapper steering file that
-          executes the saved path. It then sends both to the LCG via
-          the BelleII-specific Dirac-wrapper gbasf2.
+          The gbasf2 batch process takes the basf2 path returned by the
+          ``create_path()`` method of the task, saves it into a pickle file to
+          the disk and creates a wrapper steering file that executes the saved
+          path. Any basf2 variable aliases added in the ``create_path()`` method
+          are also stored in the pickle file. It then sends both the pickle file
+          and the steering file wrapper to the grid via the BelleII-specific
+          Dirac-wrapper gbasf2.
 
         - **Project status monitoring**
 
@@ -65,7 +68,7 @@ class Gbasf2Process(BatchProcess):
 
         - It can be used **only for pickable basf2 paths**, as it stores
           the path created by ``create_path`` in a python pickle file and runs that on the grid.
-          Therefore, **basf2 variable aliases and python basf2 modules are not yet supported**. 
+          Therefore, **python basf2 modules are not yet supported**.
           To see if the path produced by a steering file is pickable, you can try to dump it with
           ``basf2 --dump-path`` and execute it again with ``basf2 --execute-path``.
 
@@ -452,6 +455,8 @@ class Gbasf2Process(BatchProcess):
     def _write_path_to_file(self):
         """
         Serialize and save the ``basf2.Path`` returned by ``self.task.create_path()`` to a python pickle file.
+
+        Also serializes any basf2 variable aliases from the current variable manager instance.
         """
         try:
             basf2_path = self.task.create_path()
@@ -460,8 +465,8 @@ class Gbasf2Process(BatchProcess):
                 "Gbasf2 batch process can only used with tasks that generate basf2 paths with "
                 "a ``create_path()`` method, e.g. are an instance of ``Basf2PathTask``."
             ) from err
-        from basf2.pickle_path import write_path_to_file
-        write_path_to_file(basf2_path, self.pickle_file_path)
+        from b2luigi.batch.processes.gbasf2_utils.pickle_utils import write_path_and_aliases_to_file
+        write_path_and_aliases_to_file(basf2_path, self.pickle_file_path)
 
     def _create_wrapper_steering_file(self):
         """
