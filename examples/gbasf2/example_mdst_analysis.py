@@ -8,6 +8,7 @@ import basf2
 import modularAnalysis as mA
 import vertex as vx
 from stdCharged import stdK, stdPi
+from variables import variables as vm
 
 
 def create_analysis_path(
@@ -40,7 +41,9 @@ def create_analysis_path(
         vx.vertexTree('B+', 0.1, path=path)
     mA.setAnalysisConfigParams({"mcMatchingVersion": "BelleII"}, path)
     mA.matchMCTruth('B-', path=path)
-    mA.variablesToNtuple('D0:Kpi', ['M', 'p', 'E', 'useCMSFrame(p)', 'useCMSFrame(E)', 'daughter(0, kaonID)',
+    vm.addAlias("p_cms", "useCMSFrame(p)")  # include aliases to test if they work
+    vm.addAlias("E_cms", "useCMSFrame(E)")
+    mA.variablesToNtuple('D0:Kpi', ['M', 'p', 'E', 'E_cms', 'p_cms', 'daughter(0, kaonID)',
                                     'daughter(1, pionID)', 'isSignal', 'mcErrors'],
                          filename=d_ntuple_filename, treename="D", path=path)
     mA.variablesToNtuple('B-', ['Mbc', 'deltaE', 'isSignal', 'mcErrors', 'M'],
