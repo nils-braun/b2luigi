@@ -23,7 +23,7 @@ def wrap_parameter():
 
     old_init = parameter_class.__init__
 
-    def __init__(self, hashed=False, *args,  **kwargs):
+    def __init__(self, hashed=False, *args, **kwargs):
         old_init(self, *args, **kwargs)
 
         if hashed:
