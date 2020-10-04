@@ -446,7 +446,7 @@ class Gbasf2Process(BatchProcess):
 
         # optional string of additional parameters to append to gbasf2 command
         gbasf2_additional_params = get_setting("gbasf2_additional_params", default=False, task=self.task)
-        if basf2opt is not False:
+        if gbasf2_additional_params is not False:
             gbasf2_command_str += f" {gbasf2_additional_params} "
 
         gbasf2_command = shlex.split(gbasf2_command_str)
