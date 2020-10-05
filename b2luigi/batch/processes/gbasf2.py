@@ -823,14 +823,13 @@ def get_unique_project_name(task):
     # Only alphanumeric characters (letters and numbers) are officially
     # supported by gbasf2, but we also allow for dashes and underscores, which
     # are widely used by users and increase readability of gbasf2 project names
-    # and seem to work at the moment. \w matches alphanumeric words and
-    # underscores, so [^\w-] matches characters which are neither those nor have
-    # dashes
-    if re.match(r"[^\w-]", gbasf2_project_name):
+    # and seem to work at the moment.
+    valid_project_name_regex_str = r"^[a-zA-Z0-9_-]*$"
+    if not re.match(valid_project_name_regex_str, gbasf2_project_name):
         raise ValueError("Only alphanumeric project names are officially supported by gbasf2")
     if not gbasf2_project_name.isalnum():
         warnings.warn(
-            f"Non-alphanumeric characters (e.g. \"-\" or \"_\") are used in project name \"{gbasf2_project_name}\""
+            f"Non-alphanumeric characters (e.g. \"-\" or \"_\") are used in project name \"{gbasf2_project_name}\". "
             "They are not officially supported by the gbasf2 developers and those are not guaranteed to work"
         )
     return gbasf2_project_name
