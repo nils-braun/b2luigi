@@ -9,6 +9,7 @@ import warnings
 from collections import Counter
 from datetime import datetime, timedelta
 from functools import lru_cache
+import re
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
@@ -806,5 +807,17 @@ def get_unique_project_name(task):
         f"but has {len(gbasf2_project_name)} chars." + \
         f"Please choose a gbasf2_project_name_prefix of less than {max_project_name_length - len(task_id_hash)} characters," + \
         f" since the unique task id hash takes {len(task_id_hash)} characters."
-    assert gbasf2_project_name.isalnum(), "Only alphanumeric project names are officially supported by gbasf2"
+    # Only alphanumeric characters (letters and numbers) are officially
+    # supported by gbasf2, but we also allow for dashes and underscores, which
+    # are widely used by users and increase readability of gbasf2 project names
+    # and seem to work at the moment. \w matches alphanumeric words and
+    # underscores, so [^\w-] matches characters which are neither those nor have
+    # dashes
+    if re.match(r"[^\w-]", gbasf2_project_name):
+        raise ValueError("Only alphanumeric project names are officially supported by gbasf2")
+    if not gbasf2_project_name.isalnum():
+        warnings.warn(
+            f"Non-alphanumeric characters (e.g. \"-\" or \"_\") are used in project name \"{gbasf2_project_name}\""
+            "They are not officially supported by the gbasf2 developers and those are not guaranteed to work"
+        )
     return gbasf2_project_name
