@@ -826,10 +826,13 @@ def get_unique_project_name(task):
     # and seem to work at the moment.
     valid_project_name_regex_str = r"^[a-zA-Z0-9_-]*$"
     if not re.match(valid_project_name_regex_str, gbasf2_project_name):
-        raise ValueError("Only alphanumeric project names are officially supported by gbasf2")
-    if not gbasf2_project_name.isalnum():
+        raise ValueError(
+            f"Project name \"{gbasf2_project_name}\" is invalid. "
+            "Only alphanumeric project names are officially supported by gbasf2."
+        )
+    if "-" in gbasf2_project_name or "_" in gbasf2_project_name:
         warnings.warn(
-            f"Non-alphanumeric characters (e.g. \"-\" or \"_\") are used in project name \"{gbasf2_project_name}\". "
-            "They are not officially supported by the gbasf2 developers and those are not guaranteed to work"
+            f"The characters \"-\" or \"_\" are used in the project name \"{gbasf2_project_name}\". "
+            "They are not officially supported by the gbasf2 developers and those are not guaranteed to work."
         )
     return gbasf2_project_name
