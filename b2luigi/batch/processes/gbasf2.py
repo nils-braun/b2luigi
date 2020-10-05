@@ -87,7 +87,7 @@ class Gbasf2Process(BatchProcess):
                         │   └── ...
                         ├── D_ntuple.root
                         │   └── D_ntuple_0.root
-                        │   └── ... 
+                        │   └── ...
 
 
 
@@ -596,6 +596,7 @@ class Gbasf2GridProjectTarget(Target):
     Target exists if an output dataset for the project exists on the grid and is
     not being written to, i.e. all jobs that produced the dataset are done.
     """
+
     def __init__(self, project_name, dirac_user=None):
         """
         :param project_name: Name of the gbasf2 grid project that produced the
@@ -666,7 +667,7 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
         dirac_user = get_dirac_user()
     if not check_project_exists(gbasf2_project_name, dirac_user):
         raise RuntimeError(
-            f"Failed to acces job status for project \"{gbasf2_project_name}\" doest not exist on the grid."
+            f"Failed to access status for project \"{gbasf2_project_name}\", because it does not exist on the grid."
         )
     job_status_script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                           "gbasf2_utils/gbasf2_job_status.py")
