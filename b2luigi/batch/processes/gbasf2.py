@@ -820,19 +820,11 @@ def get_unique_project_name(task):
             f"{max_project_name_length - len(task_id_hash)} characters,"
             f" since the unique task id hash takes {len(task_id_hash)} characters."
         )
-    # Only alphanumeric characters (letters and numbers) are officially
-    # supported by gbasf2, but we also allow for dashes and underscores, which
-    # are widely used by users and increase readability of gbasf2 project names
-    # and seem to work at the moment.
+    # Only alphanumeric characters (letters, numbers and `_`, `-`) are supported by gbasf2
     valid_project_name_regex_str = r"^[a-zA-Z0-9_-]*$"
     if not re.match(valid_project_name_regex_str, gbasf2_project_name):
         raise ValueError(
             f"Project name \"{gbasf2_project_name}\" is invalid. "
             "Only alphanumeric project names are officially supported by gbasf2."
-        )
-    if "-" in gbasf2_project_name or "_" in gbasf2_project_name:
-        warnings.warn(
-            f"The characters \"-\" or \"_\" are used in the project name \"{gbasf2_project_name}\". "
-            "They are not officially supported by the gbasf2 developers and those are not guaranteed to work."
         )
     return gbasf2_project_name
