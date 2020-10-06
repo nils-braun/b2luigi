@@ -1,12 +1,14 @@
 import hashlib
 import json
 import os
+import re
 import shlex
 import shutil
 import subprocess
 import tempfile
 import warnings
 from collections import Counter
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 from functools import lru_cache
 
@@ -85,7 +87,7 @@ class Gbasf2Process(BatchProcess):
                         │   └── ...
                         ├── D_ntuple.root
                         │   └── D_ntuple_0.root
-                        │   └── ... 
+                        │   └── ...
 
 
 
@@ -398,8 +400,9 @@ class Gbasf2Process(BatchProcess):
         """
         gbasf2_release = get_setting("gbasf2_release", default=get_basf2_git_hash(), task=self.task)
         gbasf2_additional_files = get_setting("gbasf2_additional_files", default=[], task=self.task)
-        assert not isinstance(gbasf2_additional_files, str), "gbasf2_additional_files should be a list or tuple, not a string."
-        gbasf2_input_sandbox_files = [os.path.basename(self.pickle_file_path)] + gbasf2_additional_files
+        if not isinstance(gbasf2_additional_files, Iterable) or isinstance(gbasf2_additional_files, str):
+            raise ValueError("``gbasf2_additional_files`` is not an iterable or strings.")
+        gbasf2_input_sandbox_files = [os.path.basename(self.pickle_file_path)] + list(gbasf2_additional_files)
         gbasf2_command_str = (f"gbasf2 {self.wrapper_file_path} -f {' '.join(gbasf2_input_sandbox_files)} " +
                               f"-p {self.gbasf2_project_name} -s {gbasf2_release} ")
 
@@ -431,7 +434,8 @@ class Gbasf2Process(BatchProcess):
         # gbasf2 job priority
         priority = get_setting("gbasf2_priority", default=False, task=self.task)
         if priority is not False:
-            assert 0 <= priority <= 10, "Priority should be integer between 0 and 10."
+            if not (0 <= priority <= 10):
+                raise ValueError("Priority should be integer between 0 and 10.")
             gbasf2_command_str += f" --priority {priority} "
 
         # gbasf2 job type (e.g. User, Production, ...)
@@ -502,7 +506,11 @@ class Gbasf2Process(BatchProcess):
             output_dir_path = output_target.path
             assert output_file_name == os.path.basename(output_file_name)  # not sure I need this
             output_file_stem, output_file_ext = os.path.splitext(output_file_name)
-            assert output_file_ext == ".root", "gbasf2 batch only supports root outputs"
+            if not output_file_ext == ".root":
+                raise ValueError(
+                    f"Output file name \"{output_file_name}\" does not end with \".root\", "
+                    "but gbasf2 batch only supports root outputs"
+                )
 
             # Get list of files that we want to download from the grid via ``gb2_ds_list`` so that we can
             # then compare this list with the results of the download to see if it was successful
@@ -588,6 +596,7 @@ class Gbasf2GridProjectTarget(Target):
     Target exists if an output dataset for the project exists on the grid and is
     not being written to, i.e. all jobs that produced the dataset are done.
     """
+
     def __init__(self, project_name, dirac_user=None):
         """
         :param project_name: Name of the gbasf2 grid project that produced the
@@ -656,8 +665,10 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
     """
     if dirac_user is None:
         dirac_user = get_dirac_user()
-    assert check_project_exists(gbasf2_project_name, dirac_user), \
-        f"Project {gbasf2_project_name} doest not exist yet"
+    if not check_project_exists(gbasf2_project_name, dirac_user):
+        raise RuntimeError(
+            f"Failed to access status for project \"{gbasf2_project_name}\", because it does not exist on the grid."
+        )
     job_status_script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                           "gbasf2_utils/gbasf2_job_status.py")
     job_status_command = shlex.split(f"python2 {job_status_script_path} -p {gbasf2_project_name} --user {dirac_user}")
@@ -801,10 +812,19 @@ def get_unique_project_name(task):
     task_id_hash = hashlib.md5(task.task_id.encode()).hexdigest()[0:10]
     gbasf2_project_name = gbasf2_project_name_prefix + task_id_hash
     max_project_name_length = 32
-    assert len(gbasf2_project_name) <= max_project_name_length,\
-        f"Maximum length of project name should be {max_project_name_length}, " + \
-        f"but has {len(gbasf2_project_name)} chars." + \
-        f"Please choose a gbasf2_project_name_prefix of less than {max_project_name_length - len(task_id_hash)} characters," + \
-        f" since the unique task id hash takes {len(task_id_hash)} characters."
-    assert gbasf2_project_name.isalnum(), "Only alphanumeric project names are officially supported by gbasf2"
+    if len(gbasf2_project_name) > max_project_name_length:
+        raise ValueError(
+            f"Maximum length of project name should be {max_project_name_length}, "
+            f"but has {len(gbasf2_project_name)} chars."
+            "Please choose a gbasf2_project_name_prefix of less than "
+            f"{max_project_name_length - len(task_id_hash)} characters,"
+            f" since the unique task id hash takes {len(task_id_hash)} characters."
+        )
+    # Only alphanumeric characters (letters, numbers and `_`, `-`) are supported by gbasf2
+    valid_project_name_regex_str = r"^[a-zA-Z0-9_-]*$"
+    if not re.match(valid_project_name_regex_str, gbasf2_project_name):
+        raise ValueError(
+            f"Project name \"{gbasf2_project_name}\" is invalid. "
+            "Only alphanumeric project names are officially supported by gbasf2."
+        )
     return gbasf2_project_name
