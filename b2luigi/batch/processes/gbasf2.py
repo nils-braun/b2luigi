@@ -779,8 +779,8 @@ def setup_dirac_proxy():
     for line in proxy_info_str.splitlines():
         if line.startswith("timeleft"):
             timeleft_str = line.split(":", 1)[1].strip()
-            timeleft = datetime.strptime(timeleft_str, '%H:%M:%S')
-            timeleft_delta = timedelta(hours=timeleft.hour, minutes=timeleft.minute, seconds=timeleft.second)
+            hours, minutes, seconds = map(int, timeleft_str.split(":"))
+            timeleft_delta = timedelta(hours=hours, minutes=minutes, seconds=seconds)
             if timeleft_delta.total_seconds() > 0:
                 return proxy_info_str
     # initiallize proxy
