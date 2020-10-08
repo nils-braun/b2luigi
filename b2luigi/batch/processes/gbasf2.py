@@ -775,18 +775,19 @@ def setup_dirac_proxy():
     # Get time that the proxy is still valid from the gb2_proxy_info output line "timeleft".
     # If no proxy had been initialized, the output will not contain the "timeleft" string.
     # Alternatively, if the proxy time ran out, the timeleft value will be 00:00:00
-    proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
-    for line in proxy_info_str.splitlines():
-        if line.startswith("timeleft"):
-            timeleft_str = line.split(":", 1)[1].strip()
-            timeleft = datetime.strptime(timeleft_str, '%H:%M:%S')
-            timeleft_delta = timedelta(hours=timeleft.hour, minutes=timeleft.minute, seconds=timeleft.second)
-            if timeleft_delta.total_seconds() > 0:
-                return proxy_info_str
+    check_proxy_initizalized_script_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "gbasf2_utils/check_if_dirac_proxy_is_initialized.py"
+    )
+    proc = run_with_gbasf2([check_proxy_initizalized_script_path], check=False)
+    # if returncode of the script is 0, that means that proxy is already alive
+    if not proc.returncode:
+        proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
+        return proxy_info_str
     # initiallize proxy
     run_with_gbasf2(shlex.split("gb2_proxy_init -g belle"))
-    new_proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
-    return new_proxy_info_str
+    proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
+    return proxy_info_str
 
 
 def get_unique_project_name(task):
