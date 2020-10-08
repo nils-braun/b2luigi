@@ -770,21 +770,13 @@ def get_dirac_user():
 
 def setup_dirac_proxy():
     """
-    Runs ``gb2_proxy_init -g belle`` if necessary and returns
-    ``gb2_proxy_info`` output
-
-    ``gb2_proxy_init`` has to be run only once every 24 hours for a
-    terminal.  So we first check with ``gb2_proxy_info`` and if an old proxy
-    is still valid, don't re-run the command to prevent unnecessary
-    certificate password prompts
+    Runs ``gb2_proxy_init -g belle`` if there's no active dirac proxy. If there is, do nothing.
     """
-    # Get time that the proxy is still valid from the gb2_proxy_info output line "timeleft".
-    # If no proxy had been initialized, the output will not contain the "timeleft" string.
-    # Alternatively, if the proxy time ran out, the timeleft value will be 00:00:00
     check_proxy_initizalized_script_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         "gbasf2_utils/check_if_dirac_proxy_is_initialized.py"
     )
+    # first run script to check if proxy is already alive or needs to be initalized
     # setting ``initalize_proxy=False`` is vital here, otherwise we get an infinite loop
     proc = run_with_gbasf2([check_proxy_initizalized_script_path], ensure_proxy_initialized=False, check=False)
     # if returncode of the script is 0, that means that proxy is already alive
