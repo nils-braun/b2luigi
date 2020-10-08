@@ -693,10 +693,14 @@ def check_project_exists(gbasf2_project_name, dirac_user=None):
                        " could not determine if project exists")
 
 
-def run_with_gbasf2(cmd, *args, check=True, encoding="utf-8", capture_output=False, **kwargs):
+def run_with_gbasf2(
+        cmd, *args, ensure_proxy_initialized=True, check=True, encoding="utf-8", capture_output=False, **kwargs
+):
     """
     Call ``cmd`` in a subprocess with the gbasf2 environment.
 
+    :param ensure_proxy_initialized: If this is True, check if the dirac proxy is initalized and alive and if not,
+                                     initialize it.
     :param check: Whether to raise a ``CalledProcessError`` when the command returns with an error code.
                   The default value ``True`` is the same as in ``subprocess.check_call()`` and different as in the
                   normal ``run_with_gbasf2()`` command.
@@ -716,6 +720,8 @@ def run_with_gbasf2(cmd, *args, check=True, encoding="utf-8", capture_output=Fal
         kwargs['stdout'] = subprocess.PIPE
         kwargs['stderr'] = subprocess.PIPE
     gbasf2_env = get_gbasf2_env()
+    if ensure_proxy_initialized:
+        setup_dirac_proxy()
     proc = subprocess.run(cmd, *args, check=check, encoding=encoding, env=gbasf2_env, **kwargs)
     return proc
 
@@ -754,7 +760,7 @@ def get_gbasf2_env(gbasf2_install_directory=None):
 
 def get_dirac_user():
     """Get dirac user name"""
-    proxy_info_str = setup_dirac_proxy()
+    proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
     for line in proxy_info_str.splitlines():
         if line.startswith("username"):
             dirac_user = line.split(":", 1)[1].strip()
@@ -779,15 +785,13 @@ def setup_dirac_proxy():
         os.path.dirname(os.path.realpath(__file__)),
         "gbasf2_utils/check_if_dirac_proxy_is_initialized.py"
     )
-    proc = run_with_gbasf2([check_proxy_initizalized_script_path], check=False)
+    # setting ``initalize_proxy=False`` is vital here, otherwise we get an infinite loop
+    proc = run_with_gbasf2([check_proxy_initizalized_script_path], ensure_proxy_initialized=False, check=False)
     # if returncode of the script is 0, that means that proxy is already alive
     if not proc.returncode:
-        proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
-        return proxy_info_str
+        return
     # initiallize proxy
     run_with_gbasf2(shlex.split("gb2_proxy_init -g belle"))
-    proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
-    return proxy_info_str
 
 
 def get_unique_project_name(task):
