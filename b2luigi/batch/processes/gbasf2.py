@@ -685,7 +685,7 @@ def check_project_exists(gbasf2_project_name, dirac_user=None):
         dirac_user = get_dirac_user()
     command = shlex.split(f"gb2_job_status -p {gbasf2_project_name} --user {dirac_user}")
     output = run_with_gbasf2(command, capture_output=True).stdout
-    if output.strip() == "0 jobs are selected.":
+    if output.strip() == "0 jobs are selected." or output.strip() == "":
         return False
     if "--- Summary of Selected Jobs ---" in output:
         return True
