@@ -254,11 +254,6 @@ class Gbasf2Process(BatchProcess):
 
         """
         # If project is does not exist on grid yet, so can't query for gbasf2 project status
-        if not check_project_exists(self.gbasf2_project_name, dirac_user=self.dirac_user):
-            raise RuntimeError(
-                f"\nCould not find any jobs for project {self.gbasf2_project_name} on the grid.\n" +
-                "Probably there was an error during the project submission when running the gbasf2 command."
-            )
 
         job_status_dict = get_gbasf2_project_job_status_dict(self.gbasf2_project_name, dirac_user=self.dirac_user)
         n_jobs_by_status = Counter()
@@ -663,14 +658,17 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
     """
     if dirac_user is None:
         dirac_user = get_dirac_user()
-    if not check_project_exists(gbasf2_project_name, dirac_user):
-        raise RuntimeError(
-            f"Failed to access status for project \"{gbasf2_project_name}\", because it does not exist on the grid."
-        )
     job_status_script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                           "gbasf2_utils/gbasf2_job_status.py")
     job_status_command = shlex.split(f"{job_status_script_path} -p {gbasf2_project_name} --user {dirac_user}")
-    job_status_json_string = run_with_gbasf2(job_status_command, capture_output=True).stdout
+    proc = run_with_gbasf2(job_status_command, capture_output=True, check=False)
+    # FIXME: use enum or similar to define my own return codes
+    if proc.returncode == 3:  # return code 3 means project does not exist yet
+        raise RuntimeError(
+            f"\nCould not find any jobs for project {gbasf2_project_name} on the grid.\n" +
+            "Probably there was an error during the project submission when running the gbasf2 command.\n"
+        )
+    job_status_json_string = proc.stdout
     job_status_dict = json.loads(job_status_json_string)
     return job_status_dict
 
@@ -679,16 +677,10 @@ def check_project_exists(gbasf2_project_name, dirac_user=None):
     """
     Check if we can find the gbasf2 project on the grid with ``gb2_job_status``.
     """
-    if dirac_user is None:
-        dirac_user = get_dirac_user()
-    command = shlex.split(f"gb2_job_status -p {gbasf2_project_name} --user {dirac_user}")
-    output = run_with_gbasf2(command, capture_output=True).stdout
-    if output.strip() == "0 jobs are selected." or output.strip() == "":
+    try:
+        return bool(get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user))
+    except RuntimeError:
         return False
-    if "--- Summary of Selected Jobs ---" in output:
-        return True
-    raise RuntimeError("Output of gb2_job_status did not contain expected strings,"
-                       " could not determine if project exists")
 
 
 def run_with_gbasf2(

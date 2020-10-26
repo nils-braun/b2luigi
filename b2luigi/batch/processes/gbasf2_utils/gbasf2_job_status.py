@@ -14,6 +14,7 @@ from __future__ import print_function
 import argparse
 import os
 import json
+import sys
 
 from BelleDIRAC.gbasf2.lib.job.information_collector import InformationCollector
 from BelleDIRAC.Client.helpers.auth import userCreds
@@ -51,7 +52,8 @@ def get_job_status_dict(project_name, user_name):
     project_items = result['Value'][projects[0]]
     status = info_collector.getJobSummary(project_items)
     if not status['OK']:
-        raise Exception('info_collector returned with status', status["OK"])
+        # info_collector returned with False status, probably means project does not exist
+        raise sys.exit(3)
     return status['Value']
 
 
