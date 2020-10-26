@@ -671,7 +671,7 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
         )
     job_status_script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                           "gbasf2_utils/gbasf2_job_status.py")
-    job_status_command = shlex.split(f"python2 {job_status_script_path} -p {gbasf2_project_name} --user {dirac_user}")
+    job_status_command = shlex.split(f"{job_status_script_path} -p {gbasf2_project_name} --user {dirac_user}")
     job_status_json_string = run_with_gbasf2(job_status_command, capture_output=True).stdout
     job_status_dict = json.loads(job_status_json_string)
     return job_status_dict
