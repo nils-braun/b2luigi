@@ -783,7 +783,7 @@ def setup_dirac_proxy():
     if not proc.returncode:
         return
     # initiallize proxy
-    run_with_gbasf2(shlex.split("gb2_proxy_init -g belle"))
+    run_with_gbasf2(shlex.split("gb2_proxy_init -g belle"), ensure_proxy_initialized=False)
 
 
 def get_unique_project_name(task):
