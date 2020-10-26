@@ -9,7 +9,7 @@ import tempfile
 import warnings
 from collections import Counter
 from collections.abc import Iterable
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import lru_cache
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
