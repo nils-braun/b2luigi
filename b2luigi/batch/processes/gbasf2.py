@@ -257,9 +257,7 @@ class Gbasf2Process(BatchProcess):
         if not check_project_exists(self.gbasf2_project_name, dirac_user=self.dirac_user):
             raise RuntimeError(
                 f"\nCould not find any jobs for project {self.gbasf2_project_name} on the grid.\n" +
-                "Probably there was an error during the project submission when running the gbasf2 command.\n" +
-                "Try if you can run the gbasf2 command used manually in a terminal with gbasf2 set up:\n" +
-                " ".join(self._build_gbasf2_submit_command())
+                "Probably there was an error during the project submission when running the gbasf2 command."
             )
 
         job_status_dict = get_gbasf2_project_job_status_dict(self.gbasf2_project_name, dirac_user=self.dirac_user)
