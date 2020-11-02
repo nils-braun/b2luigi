@@ -7,6 +7,7 @@ from luigi.util import inherits, copies
 __version__ = "0.6.6"
 
 from b2luigi.core.parameter import wrap_parameter, BoolParameter
+from typing import Union, Optional, Union
 
 wrap_parameter()
 
@@ -68,3 +69,47 @@ class requires(object):
         task_that_requires.requires = requires
 
         return task_that_requires
+
+
+class inherits_without(object):
+
+
+    def __init__(self, *tasks_to_inherit, without: Optional[Union[List, str]] = None):
+        super(inherits_without, self).__init__()
+        if not tasks_to_inherit:
+            raise TypeError("tasks_to_inherit cannot be empty")
+
+        self.tasks_to_inherit = tasks_to_inherit
+        if isinstance(without, str):
+            self.without = [without]
+        elif without is None:
+            self.without = []
+        else:
+            self.without =  without
+
+    def __call__(self, task_that_inherits):
+        # Get all parameter objects from each of the underlying tasks
+        for task_to_inherit in self.tasks_to_inherit:
+            for param_name, param_obj in task_to_inherit.get_params():
+                # Check if the parameter exists in the inheriting task
+                if not hasattr(task_that_inherits, param_name) and param_name not in self.without:
+                    # If not, add it to the inheriting task
+                    setattr(task_that_inherits, param_name, param_obj)
+                elif param_name in self.without:
+                    self.without.remove(param_name)
+
+        assert len(self.without) == 0, f"You're trying to remove parameter(s) {self.without} that do(es) not exist."
+
+        # Modify task_that_inherits by adding methods
+        def clone_parent(_self, **kwargs):
+            return _self.clone(cls=self.tasks_to_inherit[0], **kwargs)
+        task_that_inherits.clone_parent = clone_parent
+
+        def clone_parents(_self, **kwargs):
+            return [
+                _self.clone(cls=task_to_inherit, **kwargs)
+                for task_to_inherit in self.tasks_to_inherit
+            ]
+        task_that_inherits.clone_parents = clone_parents
+
+        return task_that_inherits
