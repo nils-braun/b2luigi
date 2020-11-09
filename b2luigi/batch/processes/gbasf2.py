@@ -9,7 +9,7 @@ import tempfile
 import warnings
 from collections import Counter
 from collections.abc import Iterable
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import lru_cache
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
@@ -254,13 +254,6 @@ class Gbasf2Process(BatchProcess):
 
         """
         # If project is does not exist on grid yet, so can't query for gbasf2 project status
-        if not check_project_exists(self.gbasf2_project_name, dirac_user=self.dirac_user):
-            raise RuntimeError(
-                f"\nCould not find any jobs for project {self.gbasf2_project_name} on the grid.\n" +
-                "Probably there was an error during the project submission when running the gbasf2 command.\n" +
-                "Try if you can run the gbasf2 command used manually in a terminal with gbasf2 set up:\n" +
-                " ".join(self._build_gbasf2_submit_command())
-            )
 
         job_status_dict = get_gbasf2_project_job_status_dict(self.gbasf2_project_name, dirac_user=self.dirac_user)
         n_jobs_by_status = Counter()
@@ -665,14 +658,17 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
     """
     if dirac_user is None:
         dirac_user = get_dirac_user()
-    if not check_project_exists(gbasf2_project_name, dirac_user):
-        raise RuntimeError(
-            f"Failed to access status for project \"{gbasf2_project_name}\", because it does not exist on the grid."
-        )
     job_status_script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                           "gbasf2_utils/gbasf2_job_status.py")
-    job_status_command = shlex.split(f"python2 {job_status_script_path} -p {gbasf2_project_name} --user {dirac_user}")
-    job_status_json_string = run_with_gbasf2(job_status_command, capture_output=True).stdout
+    job_status_command = shlex.split(f"{job_status_script_path} -p {gbasf2_project_name} --user {dirac_user}")
+    proc = run_with_gbasf2(job_status_command, capture_output=True, check=False)
+    # FIXME: use enum or similar to define my own return codes
+    if proc.returncode == 3:  # return code 3 means project does not exist yet
+        raise RuntimeError(
+            f"\nCould not find any jobs for project {gbasf2_project_name} on the grid.\n" +
+            "Probably there was an error during the project submission when running the gbasf2 command.\n"
+        )
+    job_status_json_string = proc.stdout
     job_status_dict = json.loads(job_status_json_string)
     return job_status_dict
 
@@ -681,22 +677,20 @@ def check_project_exists(gbasf2_project_name, dirac_user=None):
     """
     Check if we can find the gbasf2 project on the grid with ``gb2_job_status``.
     """
-    if dirac_user is None:
-        dirac_user = get_dirac_user()
-    command = shlex.split(f"gb2_job_status -p {gbasf2_project_name} --user {dirac_user}")
-    output = run_with_gbasf2(command, capture_output=True).stdout
-    if output.strip() == "0 jobs are selected.":
+    try:
+        return bool(get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user))
+    except RuntimeError:
         return False
-    if "--- Summary of Selected Jobs ---" in output:
-        return True
-    raise RuntimeError("Output of gb2_job_status did not contain expected strings,"
-                       " could not determine if project exists")
 
 
-def run_with_gbasf2(cmd, *args, check=True, encoding="utf-8", capture_output=False, **kwargs):
+def run_with_gbasf2(
+        cmd, *args, ensure_proxy_initialized=True, check=True, encoding="utf-8", capture_output=False, **kwargs
+):
     """
     Call ``cmd`` in a subprocess with the gbasf2 environment.
 
+    :param ensure_proxy_initialized: If this is True, check if the dirac proxy is initalized and alive and if not,
+                                     initialize it.
     :param check: Whether to raise a ``CalledProcessError`` when the command returns with an error code.
                   The default value ``True`` is the same as in ``subprocess.check_call()`` and different as in the
                   normal ``run_with_gbasf2()`` command.
@@ -716,6 +710,8 @@ def run_with_gbasf2(cmd, *args, check=True, encoding="utf-8", capture_output=Fal
         kwargs['stdout'] = subprocess.PIPE
         kwargs['stderr'] = subprocess.PIPE
     gbasf2_env = get_gbasf2_env()
+    if ensure_proxy_initialized:
+        setup_dirac_proxy()
     proc = subprocess.run(cmd, *args, check=check, encoding=encoding, env=gbasf2_env, **kwargs)
     return proc
 
@@ -754,7 +750,7 @@ def get_gbasf2_env(gbasf2_install_directory=None):
 
 def get_dirac_user():
     """Get dirac user name"""
-    proxy_info_str = setup_dirac_proxy()
+    proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
     for line in proxy_info_str.splitlines():
         if line.startswith("username"):
             dirac_user = line.split(":", 1)[1].strip()
@@ -764,29 +760,20 @@ def get_dirac_user():
 
 def setup_dirac_proxy():
     """
-    Runs ``gb2_proxy_init -g belle`` if necessary and returns
-    ``gb2_proxy_info`` output
-
-    ``gb2_proxy_init`` has to be run only once every 24 hours for a
-    terminal.  So we first check with ``gb2_proxy_info`` and if an old proxy
-    is still valid, don't re-run the command to prevent unnecessary
-    certificate password prompts
+    Runs ``gb2_proxy_init -g belle`` if there's no active dirac proxy. If there is, do nothing.
     """
-    # Get time that the proxy is still valid from the gb2_proxy_info output line "timeleft".
-    # If no proxy had been initialized, the output will not contain the "timeleft" string.
-    # Alternatively, if the proxy time ran out, the timeleft value will be 00:00:00
-    proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
-    for line in proxy_info_str.splitlines():
-        if line.startswith("timeleft"):
-            timeleft_str = line.split(":", 1)[1].strip()
-            hours, minutes, seconds = map(int, timeleft_str.split(":"))
-            timeleft_delta = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-            if timeleft_delta.total_seconds() > 0:
-                return proxy_info_str
+    check_proxy_initizalized_script_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "gbasf2_utils/check_if_dirac_proxy_is_initialized.py"
+    )
+    # first run script to check if proxy is already alive or needs to be initalized
+    # setting ``initalize_proxy=False`` is vital here, otherwise we get an infinite loop
+    proc = run_with_gbasf2([check_proxy_initizalized_script_path], ensure_proxy_initialized=False, check=False)
+    # if returncode of the script is 0, that means that proxy is already alive
+    if not proc.returncode:
+        return
     # initiallize proxy
-    run_with_gbasf2(shlex.split("gb2_proxy_init -g belle"))
-    new_proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
-    return new_proxy_info_str
+    run_with_gbasf2(shlex.split("gb2_proxy_init -g belle"), ensure_proxy_initialized=False)
 
 
 def get_unique_project_name(task):

@@ -1,5 +1,3 @@
-from os.path import join
-
 import b2luigi
 from b2luigi.basf2_helper.tasks import Basf2PathTask
 
@@ -35,9 +33,11 @@ class MasterTask(b2luigi.WrapperTask):
     different input datasets and cut values. For each parameter combination, a
     different gbasf2 project will be submitted.
     """
+
     def requires(self):
-        input_dataset = join("/belle/MC/release-04-00-03/DB00000757/MC13a/prod00009434/s00/e1003/",
-                             "4S/r00000/mixed/mdst/sub00/mdst_000255_prod00009434_task10020000255.root")
+        input_dataset = \
+            "/belle/MC/release-04-01-04/DB00000774/SkimM13ax1/prod00011778/e1003/4S/r00000/mixed/11180100/udst/sub00/"\
+            "udst_000006_prod00011778_task10020000006.root"
         # if you want to iterate over different cuts, just add more values to this list
         mbc_lower_cuts = [5.15, 5.2]
         for mbc_lower_cut in mbc_lower_cuts:
