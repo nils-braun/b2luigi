@@ -122,7 +122,7 @@ class HTCondorProcess(BatchProcess):
         behavior. We are working on a solution to also copy results, but until this the
         results folder is still expected to be shared.
 
-      If you copy your python project using this setting to thw worker machine, do not
+      If you copy your python project using this setting to the worker machine, do not
       forget to actually set it up in your setup script.
       Additionally, you might want to copy your ``settings.json`` as well.
 
