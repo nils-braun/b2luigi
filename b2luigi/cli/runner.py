@@ -3,7 +3,6 @@ import collections
 import luigi
 import luigi.server
 import luigi.configuration
-import os
 
 from b2luigi.batch.workers import SendJobWorkerSchedulerFactory
 from b2luigi.core.settings import set_setting
