@@ -96,11 +96,11 @@ class HTCondorProcess(BatchProcess):
     """
     Reference implementation of the batch process for a HTCondor batch system.
 
-    Additional to the basic batch setup (see :ref:`batch-label`), additional 
+    Additional to the basic batch setup (see :ref:`batch-label`), additional
     HTCondor-specific things are:
 
     * Please note that most of the HTCondor batch farms do not have the same
-      environment setup on submission and worker machines, so you probably want to give an 
+      environment setup on submission and worker machines, so you probably want to give an
       ``env_script``, an ``env`` setting and/or a different ``executable``.
     * HTCondor supports copying files from submission to workers. This means if the
       folder of your script(s)/python project/etc. is not accessible on the worker, you can
@@ -110,7 +110,7 @@ class HTCondorProcess(BatchProcess):
       and files will be copied into the worker node flattened, so if you specify
       `a/b/c.txt` you will end up with a file `c.txt`.
       If you use the ``transfer_files`` mechanism, you need to set the ``working_dir`` setting to "."
-      as the files will end up in the current worker scratch folder. 
+      as the files will end up in the current worker scratch folder.
       All specified files/folders should be absolute paths.
 
       .. hint::
@@ -122,17 +122,16 @@ class HTCondorProcess(BatchProcess):
       forget to actually set it up in your setup script.
       Additionally, you might want to copy your ``settings.json`` as well.
 
-    * You can give an ``htcondor_setting`` dict setting flag for additional options, such as 
-      requested memory etc. It's value has to be a dictionary containing HTCondor settings as key/value pairs. 
+    * You can give an ``htcondor_setting`` dict setting flag for additional options, such as
+      requested memory etc. It's value has to be a dictionary containing HTCondor settings as key/value pairs.
       These options will be written into the job submission file.
-      For an overview of possible settings refer to the 
+      For an overview of possible settings refer to the
       `HTCondor documentation <https://htcondor.readthedocs.io/en/latest/users-manual/submitting-a-job.html#>`_.
 
     Example:
 
         .. literalinclude:: ../../examples/htcondor/htcondor_example.py
            :linenos:
-      
     """
 
     def __init__(self, *args, **kwargs):
@@ -171,7 +170,6 @@ class HTCondorProcess(BatchProcess):
             raise RuntimeError("Batch submission failed with output " + output)
 
         self._batch_job_id = int(match.group(0)[:-1])
-        
 
     def kill_job(self):
         if not self._batch_job_id:
@@ -207,14 +205,14 @@ class HTCondorProcess(BatchProcess):
             pass
 
         transfer_files = get_setting("transfer_files", task=self.task, default=[])
-        if transfer_files:            
+        if transfer_files:
             working_dir = get_setting("working_dir", task=self.task, default="")
             if not working_dir or working_dir != ".":
                 raise ValueError("If using transfer_files, the working_dir must be explicitely set to '.'")
 
             general_settings.setdefault("should_transfer_files", "YES")
             general_settings.setdefault("when_to_transfer_output", "ON_EXIT")
-            
+
             transfer_files = set(transfer_files)
 
             for transfer_file in transfer_files:
@@ -227,7 +225,7 @@ class HTCondorProcess(BatchProcess):
                 transfer_files.add(os.path.abspath(env_setup_script))
 
             general_settings.setdefault("transfer_input_files", ",".join(transfer_files))
-        
+
         for key, item in general_settings.items():
             submit_file_content.append(f"{key} = {item}")
 
