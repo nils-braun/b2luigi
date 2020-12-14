@@ -1,17 +1,13 @@
 import json
-import logging
 import os
 import re
-import shutil
-import stat
 import subprocess
 import enum
-import sys
 
 from b2luigi.core.settings import get_setting
 from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.batch.cache import BatchJobStatusCache
-from b2luigi.core.utils import get_log_file_dir, get_task_file_dir, map_folder
+from b2luigi.core.utils import get_log_file_dir, get_task_file_dir
 from b2luigi.core.executable import create_executable_wrapper
 
 
