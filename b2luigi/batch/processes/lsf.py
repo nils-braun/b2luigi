@@ -10,8 +10,6 @@ from b2luigi.core.executable import create_executable_wrapper
 
 
 class LSFJobStatusCache(BatchJobStatusCache):
-    def __init__(self):
-        super(LSFJobStatusCache, self).__init__()
 
     def _ask_for_job_status(self, job_id=None):
         if job_id:
