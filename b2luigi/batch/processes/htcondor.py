@@ -4,6 +4,8 @@ import re
 import subprocess
 import enum
 
+import pickledb
+
 from b2luigi.core.settings import get_setting
 from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.batch.cache import BatchJobStatusCache
@@ -158,6 +160,19 @@ class HTCondorProcess(BatchProcess):
             raise ValueError(f"Unknown HTCondor Job status: {job_status}")
 
     def start_job(self):
+        # Check if job with this task ID is already running on the batch.
+        # For that, we have to first check if there is a job ID stored in the cache.
+        task_to_job_id_db_path = os.path.expanduser("~/.cache/b2luigi/htcondor/task_to_job_id.db")
+        task_to_job_id_db = pickledb.load(task_to_job_id_db_path, False)
+        existing_batch_job_id = task_to_job_id_db.get(self.task.task_id)
+        if existing_batch_job_id:
+            self._batch_job_id = existing_batch_job_id
+            # If the existing job is running, abort submission and continue monitoring existing job
+            if self.get_job_status() == JobStatus.running:
+                print(f"\n\nFound existing running job for task {self.task.task_id} with ID {existing_batch_job_id}\n\n")
+                return
+            task_to_job_id_db.rem(self.task.task_id)
+
         submit_file = self._create_htcondor_submit_file()
 
         # HTCondor submit needs to be called in the folder of the submit file
@@ -170,6 +185,13 @@ class HTCondorProcess(BatchProcess):
             raise RuntimeError("Batch submission failed with output " + output)
 
         self._batch_job_id = int(match.group(0)[:-1])
+        # store job id in database
+        task_to_job_id_db.set(self.task.task_id, self._batch_job_id)
+        db_dir = os.path.dirname(task_to_job_id_db_path)
+        if not os.path.isdir(db_dir):
+            print(f"Directory {db_dir} does not exist, creating it.")
+            os.makedirs(db_dir)
+        task_to_job_id_db.dump()
 
     def kill_job(self):
         if not self._batch_job_id:
