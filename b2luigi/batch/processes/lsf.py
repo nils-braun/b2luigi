@@ -10,8 +10,6 @@ from b2luigi.core.executable import create_executable_wrapper
 
 
 class LSFJobStatusCache(BatchJobStatusCache):
-    def __init__(self):
-        super(LSFJobStatusCache, self).__init__()
 
     def _ask_for_job_status(self, job_id=None):
         if job_id:
@@ -32,7 +30,7 @@ class LSFProcess(BatchProcess):
     """
     Reference implementation of the batch process for a LSF batch system.
 
-    Additional to the basic batch setup (see :ref:`batch-label`), additional 
+    Additional to the basic batch setup (see :ref:`batch-label`), additional
     LSF-specific things are:
 
     * the LSF queue can be controlled via the ``queue`` parameter, e.g.
@@ -49,7 +47,6 @@ class LSFProcess(BatchProcess):
       This also applies we start in the same working directory and can reuse
       the same executable etc.
       Normally, you do not need to supply ``env_script`` or alike.
-       
     """
 
     def __init__(self, *args, **kwargs):
@@ -106,4 +103,4 @@ class LSFProcess(BatchProcess):
         if not self._batch_job_id:
             return
 
-        subprocess.run(["bkill", self._batch_job_id], stdout=subprocess.DEVNULL)
+        subprocess.run(["bkill", self._batch_job_id], stdout=subprocess.DEVNULL, check=False)

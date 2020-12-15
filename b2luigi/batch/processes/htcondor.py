@@ -13,9 +13,6 @@ from b2luigi.core.executable import create_executable_wrapper
 
 class HTCondorJobStatusCache(BatchJobStatusCache):
 
-    def __init__(self):
-        super(HTCondorJobStatusCache, self).__init__()
-
     def _ask_for_job_status(self, job_id: int = None):
         """
         With HTCondor, you can check the progress of your jobs using the `condor_q` command.
