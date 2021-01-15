@@ -89,7 +89,7 @@ def process(task_like_elements, show_output=False, dry_run=False, test=False, ba
         task_list = task_like_elements
 
     # Check the CLI arguments and run as requested
-    cli_args = get_cli_arguments()
+    cli_args = get_cli_arguments(ignore_additional_command_line_args=ignore_additional_command_line_args)
 
     if cli_args.show_output or show_output:
         runner.show_all_outputs(task_list)
