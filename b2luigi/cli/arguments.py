@@ -1,7 +1,14 @@
 import argparse
 
 
-def get_cli_arguments():
+def get_cli_arguments(ignore_additional_command_line_args=False):
+    """
+
+    Args:
+        ignore_additional_command_line_args (bool, optional, default False): Ignore additional
+            command line arguments. This is useful if you want to use this function in a file
+            that also does some command line parsing.
+    """
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--show-output",
@@ -30,7 +37,10 @@ def get_cli_arguments():
     parser.add_argument("--task-id",
                         help="EXPERT.", default="")
 
-    args = parser.parse_args()
+    if not ignore_additional_command_line_args:
+        args = parser.parse_args()
+    else:
+        args, _ = parser.parse_known_args()
 
     if (args.test or args.dry_run) and (args.scheduler_host or args.scheduler_port):
         raise AttributeError("Can not test while using a central scheduler!")

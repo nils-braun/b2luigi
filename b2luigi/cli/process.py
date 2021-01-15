@@ -5,7 +5,7 @@ from b2luigi.cli import runner
 __has_run_already = False
 
 
-def process(task_like_elements, show_output=False, dry_run=False, test=False, batch=False, **kwargs):
+def process(task_like_elements, show_output=False, dry_run=False, test=False, batch=False, ignore_additional_command_line_args=False, **kwargs):
     """
     Call this function in your main method to tell ``b2luigi`` where your entry
     point of the task graph is.
@@ -37,13 +37,13 @@ def process(task_like_elements, show_output=False, dry_run=False, test=False, ba
     This means the call with::
 
         b2luigi.process(tasks, batch=True)
-    
+
     is equivalent to calling the script with::
 
         python script.py --batch
 
     Args:
-        task_like_elements (:obj:`Task` or list): Task(s) to execute with luigi. 
+        task_like_elements (:obj:`Task` or list): Task(s) to execute with luigi.
             Can either be a list of tasks or a task instance.
 
         show_output (bool, optional): Instead of running the task(s), write out all output files
@@ -51,17 +51,21 @@ def process(task_like_elements, show_output=False, dry_run=False, test=False, ba
             Good for testing of your tasks will do, what you think they should.
 
         dry_run (bool, optional): Instead od running the task(s), write out which tasks will
-            be executed. This is a simplified form of dependency resolution, so this 
+            be executed. This is a simplified form of dependency resolution, so this
             information may be wrong in some corner cases. Also good for testing.
 
         test (bool, optional): Does neither run on the batch system, with multiprocessing
-            or dispatched (see :obj:`DispatchableTask`) but directly on the machine for 
+            or dispatched (see :obj:`DispatchableTask`) but directly on the machine for
             debugging reasons. Does output all logs to the console.
 
         batch (bool, optional): Execute the tasks on the selected batch system.
             Refer to :ref:`quick-start-label` for more information.
             The default batch system is LSF, but this can be changed with the `batch_system`
             settings. See :obj:`get_setting` on how to define settings.
+
+        ignore_additional_command_line_args (bool, optional, default False): Ignore additional
+            command line arguments. This is useful if you want to use this function in a file
+            that also does some command line parsing.
 
         **kwargs: Additional keyword arguments passed to ``luigi.build``.
 
@@ -85,7 +89,7 @@ def process(task_like_elements, show_output=False, dry_run=False, test=False, ba
         task_list = task_like_elements
 
     # Check the CLI arguments and run as requested
-    cli_args = get_cli_arguments()
+    cli_args = get_cli_arguments(ignore_additional_command_line_args=ignore_additional_command_line_args)
 
     if cli_args.show_output or show_output:
         runner.show_all_outputs(task_list)
