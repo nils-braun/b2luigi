@@ -531,7 +531,7 @@ class Gbasf2Process(BatchProcess):
                 print(stdout)
                 if "No file found" in stdout:
                     raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
-                tmp_output_dir = os.path.join(tmpdir_path, self.gbasf2_project_name) + '/sub00'
+                tmp_output_dir = os.path.join(tmpdir_path, self.gbasf2_project_name, 'sub00')
                 downloaded_dataset_basenames = set(os.listdir(tmp_output_dir))
                 if output_dataset_basenames == downloaded_dataset_basenames:
                     print(f"Download of {self.gbasf2_project_name} files successful.\n"
