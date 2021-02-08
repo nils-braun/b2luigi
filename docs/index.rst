@@ -116,28 +116,24 @@ The name
 The team
 --------
 
-Main developer:
+Main developer
+    Michael Eliachevitch (`meliache`_)
 
-* Michael Eliachevitch (`meliache`_)
+Original author
+    Nils Braun (`nils-braun`_)
 
-Original author:
+Features, fixing, help and testing
+    * Felix Metzner (`FelixMetzner`_)
+    * Patrick Ecker (`eckerpatrick`_)
+    * Jochen Gemmler
+    * Maximilian Welsch (`welschma`_)
+    * Kilian Lieret (`klieret`_)
+    * Sviatoslav Bilokin (`bilokin`_)
+    * Phil Grace
 
-* Nils Braun (`nils-braun`_)
-
-Features, fixing, help and testing:
-
-* Felix Metzner (`FelixMetzner`_)
-* Patrick Ecker (`eckerpatrick`_)
-* Jochen Gemmler
-* Maximilian Welsch (`welschma`_)
-* Kilian Lieret (`klieret`_)
-* Sviatoslav Bilokin (`bilokin`_)
-* Phil Grace
-
-Stolen ideas:
-
-*   Implementation of SGE batch system (`sge`_).
-*   Implementation of LSF batch system (`lsf`_).
+Stolen ideas
+    * Implementation of SGE batch system (`sge`_).
+    * Implementation of LSF batch system (`lsf`_).
 
 
 .. _github: https://github.com/nils-braun/b2luigi
