@@ -118,6 +118,10 @@ The team
 
 Main developer:
 
+* Michael Eliachevitch (`meliache`_)
+
+Original author:
+
 *   Nils Braun (`nils-braun`_)
 
 Features, fixing, help and testing:
@@ -125,7 +129,6 @@ Features, fixing, help and testing:
 *   Felix Metzner
 *   Patrick Ecker
 *   Jochen Gemmler
-*   Michael Eliachevitch
 *   Maximilian Welsch
 
 Stolen ideas:
@@ -138,6 +141,7 @@ Stolen ideas:
 .. _`luigi documentation`: http://luigi.readthedocs.io/en/stable/
 .. _`Belle II`: http://belle2.org/
 .. _`nils-braun`: http://github.com/nils-braun
+.. _`meliache`: http://github.com/meliache
 .. _`sge`: https://github.com/spotify/luigi/blob/master/luigi/contrib/sge.py
 .. _`lsf`: https://github.com/spotify/luigi/pull/2373/files
 
