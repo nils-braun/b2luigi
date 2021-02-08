@@ -11,7 +11,6 @@ def get_basf2_git_hash():
 
         if basf2_release_location:
             return git.Repo(basf2_release_location).head.object.hexsha
-        else:
-            return "not_set"
+        return "not_set"
 
     return basf2_release

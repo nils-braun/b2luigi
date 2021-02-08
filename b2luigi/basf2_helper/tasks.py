@@ -18,8 +18,7 @@ class Basf2Task(b2luigi.DispatchableTask):
         file_name = self.get_output_file_name(*args, **kwargs)
         if os.path.splitext(file_name)[-1] == ".root":
             return ROOTLocalTarget(file_name)
-        else:
-            return super().get_output_file_target(*args, **kwargs)
+        return super().get_output_file_target(*args, **kwargs)
 
     def get_serialized_parameters(self):
         serialized_parameters = get_serialized_parameters(self)
