@@ -524,34 +524,32 @@ class Gbasf2Process(BatchProcess):
                 return
 
             # To prevent from task being accidentally marked as complete when the gbasf2 dataset download failed,
-            # we create a temporary directory in the parent of ``output_dir_path`` and first download the dataset there.
-            # The download command will download it into a subdirectory with the same name as the project.
+            # we create a temporary directory and first download the dataset there.
             # If the download had been successful and the local files are identical to the list of files on the grid,
-            # we move the downloaded dataset to the location specified by ``output_dir_path``
-            output_dir_parent = os.path.dirname(output_dir_path)
-            os.makedirs(output_dir_parent, exist_ok=True)
-            with tempfile.TemporaryDirectory(dir=output_dir_parent) as tmpdir_path:
-                ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string}")
-                print("Downloading dataset with command ", " ".join(ds_get_command))
-                stdout = run_with_gbasf2(ds_get_command, cwd=tmpdir_path, capture_output=True).stdout
-                print(stdout)
-                if "No file found" in stdout:
-                    raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
-                tmp_output_dir = os.path.join(tmpdir_path, self.gbasf2_project_name, 'sub00')
-                downloaded_dataset_basenames = set(os.listdir(tmp_output_dir))
-                if output_dataset_basenames == downloaded_dataset_basenames:
-                    print(f"Download of {self.gbasf2_project_name} files successful.\n"
-                          f"Moving output files to directory: {output_dir_path}")
-                    if os.path.exists(output_dir_path):
-                        shutil.rmtree(output_dir_path)
-                    shutil.move(src=tmp_output_dir, dst=output_dir_path)
-                else:
-                    raise RuntimeError(
-                        f"The downloaded set of files in {tmp_output_dir} is not equal to the " +
-                        f"list of dataset files on the grid for project {self.gbasf2_project_name}." +
-                        "\nDownloaded files:\n{}".format("\n".join(downloaded_dataset_basenames)) +
-                        "\nFiles on the grid:\n{}".format("\n".join(output_dataset_basenames))
-                    )
+            # we move the downloaded dataset to the location specified by ``output_dir_path``.
+            tmp_output_dir_path = f"{output_dir_path}_tmp"
+            os.makedirs(tmp_output_dir_path, exist_ok=True)
+
+            ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string}")
+            print("Downloading dataset with command ", " ".join(ds_get_command))
+            stdout = run_with_gbasf2(ds_get_command, cwd=tmp_output_dir_path, capture_output=True).stdout
+            print(stdout)
+            if "No file found" in stdout:
+                raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
+            tmp_output_dir = os.path.join(tmp_output_dir_path, self.gbasf2_project_name, 'sub00')
+            downloaded_dataset_basenames = set(os.listdir(tmp_output_dir))
+            if output_dataset_basenames != downloaded_dataset_basenames:
+                raise RuntimeError(
+                    f"The downloaded set of files in {tmp_output_dir} is not equal to the " +
+                    f"list of dataset files on the grid for project {self.gbasf2_project_name}." +
+                    "\nDownloaded files:\n{}".format("\n".join(downloaded_dataset_basenames)) +
+                    "\nFiles on the grid:\n{}".format("\n".join(output_dataset_basenames))
+                )
+            print(f"Download of {self.gbasf2_project_name} files successful.\n"
+                  f"Moving output files to directory: {output_dir_path}")
+            if os.path.exists(output_dir_path):
+                shutil.rmtree(output_dir_path)
+            shutil.move(src=tmp_output_dir, dst=output_dir_path)
 
     def _download_logs(self):
         """
