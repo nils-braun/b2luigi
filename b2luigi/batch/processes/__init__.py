@@ -142,13 +142,13 @@ class BatchProcess:
             self._put_to_result_queue(status=luigi.scheduler.DONE, explanation=job_output)
             self._terminated = True
             return False
-        elif job_status == JobStatus.aborted:
+        if job_status == JobStatus.aborted:
             job_output = ""
             self._put_to_result_queue(status=luigi.scheduler.FAILED, explanation=job_output)
             on_failure(self.task, job_output)
             self._terminated = True
             return False
-        elif job_status == JobStatus.running:
+        if job_status == JobStatus.running:
             return True
 
         raise ValueError("get_job_status() returned an unknown job state!")

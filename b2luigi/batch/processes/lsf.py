@@ -65,7 +65,7 @@ class LSFProcess(BatchProcess):
 
         if job_status == "DONE":
             return JobStatus.successful
-        elif job_status == "EXIT":
+        if job_status == "EXIT":
             return JobStatus.aborted
 
         return JobStatus.running

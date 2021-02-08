@@ -20,10 +20,9 @@ class TestProcess(BatchProcess):
 
         if returncode is None:
             return JobStatus.running
-        elif returncode:
+        if returncode:
             return JobStatus.aborted
-        else:
-            return JobStatus.successful
+        return JobStatus.successful
 
     def start_job(self):
         log_file_dir = get_log_file_dir(self.task)

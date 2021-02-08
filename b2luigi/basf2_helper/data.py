@@ -73,17 +73,17 @@ def _get_dir_structure(data_mode):
                                    "/hsm/belle2/bdata/Data/release-{p.release}/DB{p.database:08d}/prod{p.prod:08d}/" + \
                                    "e{p.experiment_number:04d}/4S/r{p.run_number:05d}/all/mdst/sub00/" + \
                                    "mdst.{p.prefix}.{p.experiment_number:04d}.{p.run_number:05d}.{p.file_name}.root")
-    elif data_mode == DataMode.cdst:
+    if data_mode == DataMode.cdst:
         return b2luigi.get_setting("cdst_dir_structure",
                                    "/hsm/belle2/bdata/Data/release-{p.release}/DB{p.database:08d}/prod{p.prod:08d}/" + \
                                    "e{p.experiment_number:04d}/4S/r{p.run_number:05d}/all/cdst/sub00/" + \
                                    "cdst.{p.prefix}.{p.experiment_number:04d}.{p.run_number:05d}.{p.file_name}.root")
-    elif data_mode == DataMode.skimmed_raw:
+    if data_mode == DataMode.skimmed_raw:
         return b2luigi.get_setting("skimmed_raw_dir_structure",
                                    "/hsm/belle2/bdata/Data/release-{p.release}/DB{p.database:08d}/prod{p.prod:08d}/" + \
                                    "e{p.experiment_number:04d}/4S/r{p.run_number:05d}/all/raw/sub00/" + \
                                    "raw.{p.prefix}.{p.file_name}.{p.experiment_number:04d}.{p.run_number:05d}.root")
-    elif data_mode == DataMode.raw:
+    if data_mode == DataMode.raw:
         return b2luigi.get_setting("raw_dir_structure",
                                    "/ghi/fs01/belle2/bdata/Data/Raw/e{p.experiment_number:04d}/r{p.run_number:05d}/sub00/" + \
                                    "{p.prefix}.{p.experiment_number:04d}.{p.run_number:05d}.{p.file_name}.root")
