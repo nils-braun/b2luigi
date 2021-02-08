@@ -122,14 +122,17 @@ Main developer:
 
 Original author:
 
-*   Nils Braun (`nils-braun`_)
+* Nils Braun (`nils-braun`_)
 
 Features, fixing, help and testing:
 
-*   Felix Metzner
-*   Patrick Ecker
-*   Jochen Gemmler
-*   Maximilian Welsch
+* Felix Metzner
+* Patrick Ecker
+* Jochen Gemmler
+* Maximilian Welsch
+* Kilian Lieret
+* Sviatoslav Bilokin
+* Phil Grace
 
 Stolen ideas:
 
