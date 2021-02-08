@@ -126,12 +126,12 @@ Original author:
 
 Features, fixing, help and testing:
 
-* Felix Metzner
-* Patrick Ecker
+* Felix Metzner (`FelixMetzner`_)
+* Patrick Ecker (`eckerpatrick`_)
 * Jochen Gemmler
-* Maximilian Welsch
-* Kilian Lieret
-* Sviatoslav Bilokin
+* Maximilian Welsch (`welschma`_)
+* Kilian Lieret (`klieret`_)
+* Sviatoslav Bilokin (`bilokin`_)
 * Phil Grace
 
 Stolen ideas:
@@ -141,10 +141,15 @@ Stolen ideas:
 
 
 .. _github: https://github.com/nils-braun/b2luigi
-.. _`luigi documentation`: http://luigi.readthedocs.io/en/stable/
-.. _`Belle II`: http://belle2.org/
-.. _`nils-braun`: http://github.com/nils-braun
-.. _`meliache`: http://github.com/meliache
+.. _`luigi documentation`: https://luigi.readthedocs.io/en/stable
+.. _`Belle II`: https://www.belle2.org
+.. _`nils-braun`: https://github.com/nils-braun
+.. _`meliache`: https://github.com/meliache
+.. _`welschma`: https://github.com/welschma
+.. _`FelixMetzner`: https://github.com/FelixMetzner
+.. _`eckerpatrick`: https://github.com/eckerpatrick
+.. _`klieret`: https://github.com/klieret
+.. _`bilokin`: https://github.com/bilokin
 .. _`sge`: https://github.com/spotify/luigi/blob/master/luigi/contrib/sge.py
 .. _`lsf`: https://github.com/spotify/luigi/pull/2373/files
 
