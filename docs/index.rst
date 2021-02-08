@@ -129,7 +129,7 @@ Features, fixing, help and testing
     * Maximilian Welsch (`welschma`_)
     * Kilian Lieret (`klieret`_)
     * Sviatoslav Bilokin (`bilokin`_)
-    * Phil Grace
+    * Phil Grace (`philiptgrace`_)
 
 Stolen ideas
     * Implementation of SGE batch system (`sge`_).
@@ -146,6 +146,7 @@ Stolen ideas
 .. _`eckerpatrick`: https://github.com/eckerpatrick
 .. _`klieret`: https://github.com/klieret
 .. _`bilokin`: https://github.com/bilokin
+.. _`philiptgrace`: https://github.com/philiptgrace
 .. _`sge`: https://github.com/spotify/luigi/blob/master/luigi/contrib/sge.py
 .. _`lsf`: https://github.com/spotify/luigi/pull/2373/files
 
