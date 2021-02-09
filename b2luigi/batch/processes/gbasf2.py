@@ -80,6 +80,7 @@ class Gbasf2Process(BatchProcess):
           ``B_ntuple.root``), but a collection of root files, one for each file in
           the input data set, in a directory with the base name of the root
           files, e.g.::
+
             <task output directory>
                         ├── B_ntuple.root
                         │   └── B_ntuple_0.root

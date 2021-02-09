@@ -12,29 +12,30 @@ class Task(luigi.Task):
     the parameters of the task.
     See :ref:`quick-start-label` on information on how to use the methods.
 
-    Example::
+    Example:
+        .. code-block:: python
 
-        class MyAverageTask(b2luigi.Task):
-            def requires(self):
-                for i in range(100):
-                    yield self.clone(MyNumberTask, some_parameter=i)
+          class MyAverageTask(b2luigi.Task):
+              def requires(self):
+                  for i in range(100):
+                      yield self.clone(MyNumberTask, some_parameter=i)
 
-            def output(self):
-                yield self.add_to_output("average.txt")
+              def output(self):
+                  yield self.add_to_output("average.txt")
 
-            def run(self):
-                # Build the mean
-                summed_numbers = 0
-                counter = 0
-                for input_file in self.get_input_file_names("output_file.txt"):
-                    with open(input_file, "r") as f:
-                        summed_numbers += float(f.read())
-                        counter += 1
+              def run(self):
+                  # Build the mean
+                  summed_numbers = 0
+                  counter = 0
+                  for input_file in self.get_input_file_names("output_file.txt"):
+                      with open(input_file, "r") as f:
+                          summed_numbers += float(f.read())
+                          counter += 1
 
-                average = summed_numbers / counter
+                  average = summed_numbers / counter
 
-                with self.get_output_file("average.txt").open("w") as f:
-                    f.write(f"{average}\\n")
+                  with self.get_output_file("average.txt").open("w") as f:
+                      f.write(f"{average}\\n")
 
     """
     def add_to_output(self, output_file_name):
@@ -42,9 +43,9 @@ class Task(luigi.Task):
         Call this in your output() function to add a target to the list of files,
         this task will output.
         Always use in combination with `yield`.
-        This function will automatically add all current parameter values to 
+        This function will automatically add all current parameter values to
         the file name when used in the form
-        
+
             result_dir/param_1=value/param_2=value/output_file_name
 
         This function will automatically use a ``LocalTarget``.
@@ -93,43 +94,44 @@ class Task(luigi.Task):
         """
         return self._transform_input(self.input(), key)
 
-
     def get_input_file_names_from_dict(self, requirement_key, key=None):
         """
         Get a dictionary of input file names of the tasks, which are defined in our requirements.
+
         The requirement method should return a dict whose values are generator expressions (!)
         yielding required task objects.
 
         Example:
+            .. code-block:: python
 
-            class TaskB(luigi.Task):
-    
-                def requires(self):
-                    return {
-                        "a": (TaskA(5.0, i) for i in range(100)),
-                        "b": (TaskA(1.0, i) for i in range(100)),
-                    }
+              class TaskB(luigi.Task):
 
-                def run(self):
-                    result_a = do_something_with_a(
-                        self.get_input_file_names_from_dict("a")
-                    )
-                    result_b = do_something_with_b(
-                        self.get_input_file_names_from_dict("b")
-                    )
+                  def requires(self):
+                      return {
+                          "a": (TaskA(5.0, i) for i in range(100)),
+                          "b": (TaskA(1.0, i) for i in range(100)),
+                      }
 
-                    combine_a_and_b(
-                        result_a, 
-                        result_b, 
-                        self.get_output_file_name("combined_results.txt")
-                    )
+                  def run(self):
+                      result_a = do_something_with_a(
+                          self.get_input_file_names_from_dict("a")
+                      )
+                      result_b = do_something_with_b(
+                          self.get_input_file_names_from_dict("b")
+                      )
 
-                def output(self):
-                    yield self.add_to_output("combined_results.txt")
+                      combine_a_and_b(
+                          result_a,
+                          result_b,
+                          self.get_output_file_name("combined_results.txt")
+                      )
+
+                  def output(self):
+                      yield self.add_to_output("combined_results.txt")
 
 
-        Either use the key argument or dictionary indexing with the key given to :obj:`add_to_output`
-        to get back a list (!) of file paths.
+            Either use the key argument or dictionary indexing with the key given to :obj:`add_to_output`
+            to get back a list (!) of file paths.
 
         Args:
             requirement_key (:obj:`str`): Specifies the required task expression.
