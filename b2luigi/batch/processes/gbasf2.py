@@ -502,8 +502,8 @@ class Gbasf2Process(BatchProcess):
             raise RuntimeError(f"Not dataset to download under project name {self.gbasf2_project_name}")
         task_output_dict = flatten_to_dict(self.task.output())
         for output_file_name, output_target in task_output_dict.items():
-            output_dir_path = output_target.path
             assert output_file_name == os.path.basename(output_file_name)  # not sure I need this
+            output_dir_path = output_target.path
             output_file_stem, output_file_ext = os.path.splitext(output_file_name)
             if not output_file_ext == ".root":
                 raise ValueError(
@@ -527,7 +527,7 @@ class Gbasf2Process(BatchProcess):
             # we create a temporary directory and first download the dataset there.
             # If the download had been successful and the local files are identical to the list of files on the grid,
             # we move the downloaded dataset to the location specified by ``output_dir_path``.
-            tmp_output_dir_path = f"{output_dir_path}_tmp"
+            tmp_output_dir_path = f"{output_dir_path}.partial"
             os.makedirs(tmp_output_dir_path, exist_ok=True)
 
             ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string}")
@@ -550,6 +550,7 @@ class Gbasf2Process(BatchProcess):
             if os.path.exists(output_dir_path):
                 shutil.rmtree(output_dir_path)
             shutil.move(src=tmp_output_dir, dst=output_dir_path)
+            shutil.rmtree(tmp_output_dir)
 
     def _download_logs(self):
         """
