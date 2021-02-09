@@ -12,29 +12,30 @@ class Task(luigi.Task):
     the parameters of the task.
     See :ref:`quick-start-label` on information on how to use the methods.
 
-    Example::
+    Example:
+        .. code-block:: python
 
-        class MyAverageTask(b2luigi.Task):
-            def requires(self):
-                for i in range(100):
-                    yield self.clone(MyNumberTask, some_parameter=i)
+          class MyAverageTask(b2luigi.Task):
+              def requires(self):
+                  for i in range(100):
+                      yield self.clone(MyNumberTask, some_parameter=i)
 
-            def output(self):
-                yield self.add_to_output("average.txt")
+              def output(self):
+                  yield self.add_to_output("average.txt")
 
-            def run(self):
-                # Build the mean
-                summed_numbers = 0
-                counter = 0
-                for input_file in self.get_input_file_names("output_file.txt"):
-                    with open(input_file, "r") as f:
-                        summed_numbers += float(f.read())
-                        counter += 1
+              def run(self):
+                  # Build the mean
+                  summed_numbers = 0
+                  counter = 0
+                  for input_file in self.get_input_file_names("output_file.txt"):
+                      with open(input_file, "r") as f:
+                          summed_numbers += float(f.read())
+                          counter += 1
 
-                average = summed_numbers / counter
+                  average = summed_numbers / counter
 
-                with self.get_output_file("average.txt").open("w") as f:
-                    f.write(f"{average}\\n")
+                  with self.get_output_file("average.txt").open("w") as f:
+                      f.write(f"{average}\\n")
 
     """
     def add_to_output(self, output_file_name):
@@ -42,7 +43,7 @@ class Task(luigi.Task):
         Call this in your output() function to add a target to the list of files,
         this task will output.
         Always use in combination with `yield`.
-        This function will automatically add all current parameter values to 
+        This function will automatically add all current parameter values to
         the file name when used in the form
 
             result_dir/param_1=value/param_2=value/output_file_name
@@ -129,8 +130,8 @@ class Task(luigi.Task):
                       yield self.add_to_output("combined_results.txt")
 
 
-        Either use the key argument or dictionary indexing with the key given to :obj:`add_to_output`
-        to get back a list (!) of file paths.
+            Either use the key argument or dictionary indexing with the key given to :obj:`add_to_output`
+            to get back a list (!) of file paths.
 
         Args:
             requirement_key (:obj:`str`): Specifies the required task expression.
