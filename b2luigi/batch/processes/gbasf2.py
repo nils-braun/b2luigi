@@ -147,6 +147,9 @@ class Gbasf2Process(BatchProcess):
           as they don't need the output locally but take the grid datasets as input. Also useful when you just want
           to produce data on the grid for other people to use.
 
+        - ``gbasf2_download_logs``: Whether to automatically download the log output of gbasf2 projects when the
+          task succeeds or fails. Having the logs is important for reproducibility, but k
+
         The following optional settings correspond to the equally named ``gbasf`` command line options
         (without the ``gbasf_`` prefix) that you can set to customize your gbasf2 project:
 
@@ -300,7 +303,8 @@ class Gbasf2Process(BatchProcess):
         """
         Things to do after all jobs in the project had been successful, e.g. downloading the dataset and logs
         """
-        self._download_logs()
+        if get_setting("gbasf2_download_logs", default=True, task=self.task):
+            self._download_logs()
         if get_setting("gbasf2_download_dataset", default=True, task=self.task):
             self._download_dataset()
 
@@ -313,7 +317,8 @@ class Gbasf2Process(BatchProcess):
                            if job_info["Status"] == "Failed"}
         n_failed = len(failed_job_dict)
         print(f"{n_failed} failed jobs:\n{failed_job_dict}")
-        self._download_logs()
+        if get_setting("gbasf2_download_logs", default=True, task=self.task):
+            self._download_logs()
 
     def _reschedule_failed_jobs(self):
         """
