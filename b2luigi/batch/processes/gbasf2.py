@@ -573,7 +573,7 @@ class Gbasf2Process(BatchProcess):
             # check if dataset had been already downloaded and if so, skip downloading
             if os.path.isdir(output_dir_path) and self._local_gb2_dataset_is_complete(output_file_name):
                 print(f"Dataset already exists in {output_dir_path}, skipping download.")
-                return
+                continue
 
             # To prevent from task being accidentally marked as complete when the gbasf2 dataset download failed,
             # we create a temporary directory and first download the dataset there.
