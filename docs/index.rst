@@ -116,28 +116,37 @@ The name
 The team
 --------
 
-Main developer:
+Main developer
+    Michael Eliachevitch (`meliache`_)
 
-*   Nils Braun (`nils-braun`_)
+Original author
+    Nils Braun (`nils-braun`_)
 
-Features, fixing, help and testing:
+Features, fixing, help and testing
+    * Felix Metzner (`FelixMetzner`_)
+    * Patrick Ecker (`eckerpatrick`_)
+    * Jochen Gemmler
+    * Maximilian Welsch (`welschma`_)
+    * Kilian Lieret (`klieret`_)
+    * Sviatoslav Bilokin (`bilokin`_)
+    * Phil Grace (`philiptgrace`_)
 
-*   Felix Metzner
-*   Patrick Ecker
-*   Jochen Gemmler
-*   Michael Eliachevitch
-*   Maximilian Welsch
-
-Stolen ideas:
-
-*   Implementation of SGE batch system (`sge`_).
-*   Implementation of LSF batch system (`lsf`_).
+Stolen ideas
+    * Implementation of SGE batch system (`sge`_).
+    * Implementation of LSF batch system (`lsf`_).
 
 
 .. _github: https://github.com/nils-braun/b2luigi
-.. _`luigi documentation`: http://luigi.readthedocs.io/en/stable/
-.. _`Belle II`: http://belle2.org/
-.. _`nils-braun`: http://github.com/nils-braun
+.. _`luigi documentation`: https://luigi.readthedocs.io/en/stable
+.. _`Belle II`: https://www.belle2.org
+.. _`nils-braun`: https://github.com/nils-braun
+.. _`meliache`: https://github.com/meliache
+.. _`welschma`: https://github.com/welschma
+.. _`FelixMetzner`: https://github.com/FelixMetzner
+.. _`eckerpatrick`: https://github.com/eckerpatrick
+.. _`klieret`: https://github.com/klieret
+.. _`bilokin`: https://github.com/bilokin
+.. _`philiptgrace`: https://github.com/philiptgrace
 .. _`sge`: https://github.com/spotify/luigi/blob/master/luigi/contrib/sge.py
 .. _`lsf`: https://github.com/spotify/luigi/pull/2373/files
 
