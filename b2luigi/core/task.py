@@ -75,8 +75,7 @@ class Task(luigi.Task):
 
         if key is not None:
             return file_paths[key]
-        else:
-            return file_paths
+        return file_paths
 
 
     def get_input_file_names(self, key=None):
