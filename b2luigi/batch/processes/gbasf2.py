@@ -9,9 +9,10 @@ import subprocess
 import tempfile
 import warnings
 from collections import Counter
-from collections.abc import Iterable
 from datetime import datetime
 from functools import lru_cache
+from itertools import groupby
+from typing import Iterable, List
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
@@ -536,16 +537,17 @@ class Gbasf2Process(BatchProcess):
             output_dir_path = os.path.join(output_dir_path + ".partial", self.gbasf2_project_name, 'sub00')
         if not os.path.isdir(output_dir_path):
             raise FileNotFoundError(errno.ENOTDIR, os.strerror(errno.ENOTDIR), output_dir_path)
-        downloaded_dataset_basenames = set(os.listdir(output_dir_path))
+        downloaded_dataset_basenames = os.listdir(output_dir_path)
 
         # not get the remote set of grid file names for the gbasf2 project output matching output_file_name
         ds_query_string = self._get_gbasf2_dataset_query(output_file_name)
         ds_list_command = shlex.split(f"gb2_ds_list {ds_query_string}")
         output_dataset_grid_filepaths = run_with_gbasf2(ds_list_command, capture_output=True).stdout.splitlines()
-        output_dataset_basenames = {os.path.basename(grid_path) for grid_path in output_dataset_grid_filepaths}
-
+        output_dataset_basenames = [os.path.basename(grid_path) for grid_path in output_dataset_grid_filepaths]
+        # remove duplicate LFNs that gb2_ds_list returns for outputs from rescheduled jobs
+        output_dataset_basenames = get_unique_lfns(output_dataset_basenames)
         # check if local and remote datasets are equal
-        if output_dataset_basenames == downloaded_dataset_basenames:
+        if set(output_dataset_basenames) == set(downloaded_dataset_basenames):
             return True
         if verbose:
             print(
@@ -869,3 +871,48 @@ def get_unique_project_name(task):
             "Only alphanumeric project names are officially supported by gbasf2."
         )
     return gbasf2_project_name
+
+
+def lfn_follows_gb2v5_convention(lfn: str) -> bool:
+    """
+    Check if the LFN follows the convention of gbasf2 release 5, i.e.
+       <name>_<gbasf2param>_<jobID>_<rescheduleNum>.root
+
+    Args:
+        lfn: Logical file name, a file path on the grid
+    """
+    # adapted the logic from the BelleDirac function ``findDuplicatedJobID()``
+    if len(lfn.split('_')) < 2 or 'job' not in lfn.split('_')[-2]:
+        return False
+    return True
+
+
+def _get_lfn_upto_reschedule_number(lfn: str) -> str:
+    """
+    Get a string of the gbasf2 v5 LFN upto the reschule number.
+
+    E.g. if the LFN is ``<name>_<gbasf2param>_<jobID>_<rescheduleNum>.root``
+    return ````<name>_<gbasf2param>_<jobID>``.
+    """
+    return "_".join(lfn.split("_")[0:4])
+
+
+def get_unique_lfns(lfns: Iterable[str]) -> List[str]:
+    """
+    From list of gbasf2 LFNs which include duplicate outputs for rescheduled
+    jobs return filtered list which only include the LFNs for the jobs with the
+    highest reschedule number.
+
+    Gbasf2 v5 has outputs of the form
+    ``<name>_<gbasf2param>_<jobID>_<rescheduleNum>.root``.  When using
+    ``gb2_ds_list``, we see duplicates LFNs where all parts are the same accept
+    the ``rescheduleNum``.  This function returns only those with the highest number.
+    """
+    # if dataset does not follow gbasf2 v5 convention, assume it was produced
+    # with old release and does not contain duplicates
+    if not all(lfn_follows_gb2v5_convention(lfn) for lfn in lfns):
+        return list(lfns)
+    # if it is of the gbasf v5 form, group the outputs by the substring upto the
+    # reschedule number and return list of maximums of each group
+    lfns = sorted(lfns, key=_get_lfn_upto_reschedule_number)
+    return [max(lfn_group) for _, lfn_group in groupby(lfns, key=_get_lfn_upto_reschedule_number)]
