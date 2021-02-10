@@ -1,3 +1,4 @@
+import errno
 import hashlib
 import json
 import os
@@ -488,6 +489,71 @@ class Gbasf2Process(BatchProcess):
             # write the template with the replacements to a new file which should be sent to the grid
             steering_file_stream.dump(self.wrapper_file_path)
 
+    def _get_gbasf2_dataset_query(self, output_file_name: str) -> str:
+        """
+        Helper method that returns the gbasf2 query string with the correct wildcard pattern
+        to get the subset of all files for ``output_file_name`` from the grid project associated with this task,
+        either, e.g. via the ``gb2_ds_list`` or ``gb2_ds_get`` commands.
+
+        Args:
+            output_file_name: Output file name, must be a root file, e.g. ``ntuple.root``.
+                Usually defined by the user via :py:func:`b2luigi.Task.add_to_output` in
+                the :py:func:`b2luigi.Task.output` method.
+        """
+        if output_file_name != os.path.basename(output_file_name):
+            raise ValueError(
+                f"For grid projects, the output file name must not be a basename, not a path, but is \"{output_file_name}\""
+            )
+        output_file_stem, output_file_ext = os.path.splitext(output_file_name)
+        if output_file_ext != ".root":
+            raise ValueError(
+                f"Output file name \"{output_file_name}\" does not end with \".root\", "
+                "but gbasf2 batch only supports root outputs"
+            )
+        dataset_query_string = \
+            f"/belle/user/{self.dirac_user}/{self.gbasf2_project_name}/sub00/{output_file_stem}_*{output_file_ext}"
+        return dataset_query_string
+
+    def _local_gb2_dataset_is_complete(self, output_file_name: str, check_temp_dir: bool = False, verbose: bool = False) -> bool:
+        """
+        Helper method that returns ``True`` if the download of the gbasf2
+        dataset for the output ``output_file_name`` is complete.
+
+        Args:
+            output_file_name: Output file name, must be a root file, e.g. ``ntuple.root``.
+                Usually defined by the user via :py:func:`b2luigi.Task.add_to_output` in
+                the :py:func:`b2luigi.Task.output` method.
+            check_temp_dir: Instead of checking the final output path, check whether the download into the
+                temporary ("partial") directory is complete. This function is usually called with this
+                argument set to ``True``, to check whether the dataset can be moved to its final output path.
+            verbose: If true, print filenames in datasets.
+        """
+        # first get the local set of files in the dataset for `output_file_name`
+        task_output_dict = flatten_to_dict(self.task.output())
+        output_target = task_output_dict[output_file_name]
+        output_dir_path = output_target.path
+        if check_temp_dir:
+            output_dir_path = os.path.join(output_dir_path + ".partial", self.gbasf2_project_name, 'sub00')
+        if not os.path.isdir(output_dir_path):
+            raise FileNotFoundError(errno.ENOTDIR, os.strerror(errno.ENOTDIR), output_dir_path)
+        downloaded_dataset_basenames = set(os.listdir(output_dir_path))
+
+        # not get the remote set of grid file names for the gbasf2 project output matching output_file_name
+        ds_query_string = self._get_gbasf2_dataset_query(output_file_name)
+        ds_list_command = shlex.split(f"gb2_ds_list {ds_query_string}")
+        output_dataset_grid_filepaths = run_with_gbasf2(ds_list_command, capture_output=True).stdout.splitlines()
+        output_dataset_basenames = {os.path.basename(grid_path) for grid_path in output_dataset_grid_filepaths}
+
+        # check if local and remote datasets are equal
+        if output_dataset_basenames == downloaded_dataset_basenames:
+            return True
+        if verbose:
+            print(
+                "\nDownloaded files:\n{}".format("\n".join(downloaded_dataset_basenames)) +
+                "\nFiles on the grid:\n{}".format("\n".join(output_dataset_basenames))
+            )
+        return False
+
     def _download_dataset(self):
         """
         Download the task outputs from the gbasf2 project dataset.
@@ -502,56 +568,38 @@ class Gbasf2Process(BatchProcess):
             raise RuntimeError(f"Not dataset to download under project name {self.gbasf2_project_name}")
         task_output_dict = flatten_to_dict(self.task.output())
         for output_file_name, output_target in task_output_dict.items():
+            dataset_query_string = self._get_gbasf2_dataset_query(output_file_name)
             output_dir_path = output_target.path
-            assert output_file_name == os.path.basename(output_file_name)  # not sure I need this
-            output_file_stem, output_file_ext = os.path.splitext(output_file_name)
-            if not output_file_ext == ".root":
-                raise ValueError(
-                    f"Output file name \"{output_file_name}\" does not end with \".root\", "
-                    "but gbasf2 batch only supports root outputs"
-                )
-
-            # Get list of files that we want to download from the grid via ``gb2_ds_list`` so that we can
-            # then compare this list with the results of the download to see if it was successful
-            dataset_query_string = \
-                f"/belle/user/{self.dirac_user}/{self.gbasf2_project_name}/sub00/{output_file_stem}_*{output_file_ext}"
-            ds_list_command = shlex.split(f"gb2_ds_list {dataset_query_string}")
-            output_dataset_grid_filepaths = run_with_gbasf2(ds_list_command, capture_output=True).stdout.splitlines()
-            output_dataset_basenames = {os.path.basename(grid_path) for grid_path in output_dataset_grid_filepaths}
             # check if dataset had been already downloaded and if so, skip downloading
-            if os.path.isdir(output_dir_path) and os.listdir(output_dir_path) == output_dataset_basenames:
+            if os.path.isdir(output_dir_path) and self._local_gb2_dataset_is_complete(output_file_name):
                 print(f"Dataset already exists in {output_dir_path}, skipping download.")
-                return
+                continue
 
             # To prevent from task being accidentally marked as complete when the gbasf2 dataset download failed,
-            # we create a temporary directory in the parent of ``output_dir_path`` and first download the dataset there.
-            # The download command will download it into a subdirectory with the same name as the project.
+            # we create a temporary directory and first download the dataset there.
             # If the download had been successful and the local files are identical to the list of files on the grid,
-            # we move the downloaded dataset to the location specified by ``output_dir_path``
-            output_dir_parent = os.path.dirname(output_dir_path)
-            os.makedirs(output_dir_parent, exist_ok=True)
-            with tempfile.TemporaryDirectory(dir=output_dir_parent) as tmpdir_path:
-                ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string}")
-                print("Downloading dataset with command ", " ".join(ds_get_command))
-                stdout = run_with_gbasf2(ds_get_command, cwd=tmpdir_path, capture_output=True).stdout
-                print(stdout)
-                if "No file found" in stdout:
-                    raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
-                tmp_output_dir = os.path.join(tmpdir_path, self.gbasf2_project_name, 'sub00')
-                downloaded_dataset_basenames = set(os.listdir(tmp_output_dir))
-                if output_dataset_basenames == downloaded_dataset_basenames:
-                    print(f"Download of {self.gbasf2_project_name} files successful.\n"
-                          f"Moving output files to directory: {output_dir_path}")
-                    if os.path.exists(output_dir_path):
-                        shutil.rmtree(output_dir_path)
-                    shutil.move(src=tmp_output_dir, dst=output_dir_path)
-                else:
-                    raise RuntimeError(
-                        f"The downloaded set of files in {tmp_output_dir} is not equal to the " +
-                        f"list of dataset files on the grid for project {self.gbasf2_project_name}." +
-                        "\nDownloaded files:\n{}".format("\n".join(downloaded_dataset_basenames)) +
-                        "\nFiles on the grid:\n{}".format("\n".join(output_dataset_basenames))
-                    )
+            # we move the downloaded dataset to the location specified by ``output_dir_path``.
+            tmp_output_dir_path = f"{output_dir_path}.partial"
+            os.makedirs(tmp_output_dir_path, exist_ok=True)
+
+            ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string}")
+            print("Downloading dataset with command ", " ".join(ds_get_command))
+            stdout = run_with_gbasf2(ds_get_command, cwd=tmp_output_dir_path, capture_output=True).stdout
+            print(stdout)
+            if "No file found" in stdout:
+                raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
+            tmp_output_dir = os.path.join(tmp_output_dir_path, self.gbasf2_project_name, 'sub00')
+            if not self._local_gb2_dataset_is_complete(output_file_name, check_temp_dir=True, verbose=True):
+                raise RuntimeError(
+                    f"The downloaded set of files in {tmp_output_dir} is not equal to the " +
+                    f"list of dataset files on the grid for project {self.gbasf2_project_name}."
+                )
+            print(f"Download of {self.gbasf2_project_name} files successful.\n"
+                  f"Moving output files to directory: {output_dir_path}")
+            if os.path.exists(output_dir_path):
+                shutil.rmtree(output_dir_path)
+            shutil.move(src=tmp_output_dir, dst=output_dir_path)
+            shutil.rmtree(tmp_output_dir_path)
 
     def _download_logs(self):
         """
