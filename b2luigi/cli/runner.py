@@ -102,6 +102,11 @@ def dry_run(task_list):
         print(task_class)
         for task in nonfinished_task_list[task_class]:
             print("\tWould run", task)
+
+            # execute the dry_run method of the task if it is implemented
+            if hasattr(task, 'dry_run'):
+                print("\t----------- call: dry_run() -------------")
+                task.dry_run()
             print()
 
             non_completed_tasks += 1
