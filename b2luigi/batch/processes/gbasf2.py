@@ -896,7 +896,7 @@ def _get_lfn_upto_reschedule_number(lfn: str) -> str:
     E.g. if the LFN is ``<name>_<gbasf2param>_<jobID>_<rescheduleNum>.root``
     return ````<name>_<gbasf2param>_<jobID>``.
     """
-    return "_".join(lfn.split("_")[0:4])
+    return "_".join(lfn.split("_")[:-1])
 
 
 def get_unique_lfns(lfns: Iterable[str]) -> List[str]:
