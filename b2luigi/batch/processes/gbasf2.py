@@ -592,10 +592,12 @@ class Gbasf2Process(BatchProcess):
                 raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
             tmp_output_dir = os.path.join(tmp_output_dir_path, self.gbasf2_project_name, 'sub00')
             if not self._local_gb2_dataset_is_complete(output_file_name, check_temp_dir=True, verbose=True):
-                raise RuntimeError(
-                    f"The downloaded set of files in {tmp_output_dir} is not equal to the " +
+                warnings.warn(
+                    f"Download incomplete. The downloaded set of files in {tmp_output_dir} is not equal to the " +
                     f"list of dataset files on the grid for project {self.gbasf2_project_name}."
                 )
+                return
+
             print(f"Download of {self.gbasf2_project_name} files successful.\n"
                   f"Moving output files to directory: {output_dir_path}")
             if os.path.exists(output_dir_path):
