@@ -105,7 +105,7 @@ def dry_run(task_list):
 
             # execute the dry_run method of the task if it is implemented
             if hasattr(task, 'dry_run'):
-                print("\t----------- call: dry_run() -------------")
+                print("\tcall: dry_run()")
                 task.dry_run()
             print()
 
