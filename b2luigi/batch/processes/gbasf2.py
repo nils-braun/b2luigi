@@ -12,7 +12,7 @@ from collections import Counter
 from datetime import datetime
 from functools import lru_cache
 from itertools import groupby
-from typing import Iterable, List
+from typing import Iterable, Set
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
@@ -897,7 +897,7 @@ def _get_lfn_upto_reschedule_number(lfn: str) -> str:
     return "_".join(lfn.split("_")[:-1])
 
 
-def get_unique_lfns(lfns: Iterable[str]) -> List[str]:
+def get_unique_lfns(lfns: Iterable[str]) -> Set[str]:
     """
     From list of gbasf2 LFNs which include duplicate outputs for rescheduled
     jobs return filtered list which only include the LFNs for the jobs with the
@@ -915,4 +915,4 @@ def get_unique_lfns(lfns: Iterable[str]) -> List[str]:
     # if it is of the gbasf v5 form, group the outputs by the substring upto the
     # reschedule number and return list of maximums of each group
     lfns = sorted(lfns, key=_get_lfn_upto_reschedule_number)
-    return [max(lfn_group) for _, lfn_group in groupby(lfns, key=_get_lfn_upto_reschedule_number)]
+    return {max(lfn_group) for _, lfn_group in groupby(lfns, key=_get_lfn_upto_reschedule_number)}
