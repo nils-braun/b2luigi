@@ -894,6 +894,11 @@ def _get_lfn_upto_reschedule_number(lfn: str) -> str:
     E.g. if the LFN is ``<name>_<gbasf2param>_<jobID>_<rescheduleNum>.root``
     return ````<name>_<gbasf2param>_<jobID>``.
     """
+    if not lfn_follows_gb2v5_convention(lfn):
+        raise ValueError(
+            "LFN does does not conform to the new gbasf2 v5 style, "
+            "thus getting the substring upto the reschedule number does not make sense"
+        )
     return "_".join(lfn.split("_")[:-1])
 
 
