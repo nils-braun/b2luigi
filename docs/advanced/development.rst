@@ -76,8 +76,6 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
             flit publish
 
-    At a later stage, I will try to automate this.
-
 
 Open TODOs
 ----------
