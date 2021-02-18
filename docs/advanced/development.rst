@@ -36,7 +36,18 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
         flit install -s
 
-4.  The documentation is hosted on read the docs and build automatically on every commit to main.
+    Now you can start hacking and your changes will be immediately available to you.
+
+4. We use the unittest_ package for testing some parts of the code. All tests reside in the
+   ``tests/`` sub-directory. To run all tests, run the command
+
+    .. code-block:: bash
+
+        python3 -m unittest
+
+   in the root of ``b2luigi`` repository. If you add some functionality, try to add some tests for it.
+
+5.  The documentation is hosted on `readthedocs`_ and build automatically on every commit to main.
     You can (and should) also build the documentation locally by installing ``sphinx``
 
     .. code-block:: bash
@@ -53,7 +64,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
     the created docs now (most likely http://127.0.0.1:8000).
     Please make sure the documentation looks fine before creating a pull request.
 
-5.  If you are a core developer and want to release a new version:
+6.  If you are a core developer and want to release a new version:
 
     a.  Make sure all changes are committed and merged on main
     b.  Use the ``bumpversion`` package to update the version in the python file ``b2luigi/__init__.py`` as well
@@ -84,4 +95,6 @@ For a list of potential features, improvements and bugfixes see the `github issu
 welcome, so feel free to pick one, e.g. with the ``good first issue`` or ``help wanted`` tags.
 
 .. _flit: https://pypi.org/project/flit/
-
+.. _github issues: https://github.com/nils-braun/b2luigi/issues
+.. _unittest: https://docs.python.org/3/library/unittest.html
+.. _readthedocs: https://readthedocs.org
