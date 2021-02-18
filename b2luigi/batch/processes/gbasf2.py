@@ -359,7 +359,7 @@ class Gbasf2Process(BatchProcess):
         Submit new gbasf2 project to grid
         """
         if check_project_exists(self.gbasf2_project_name, self.dirac_user):
-            warnings.warn(
+            print(
                 f"\nProject with name {self.gbasf2_project_name} already exists on grid, "
                 "therefore not submitting new project. If you want to submit a new project, "
                 "change the project name."
