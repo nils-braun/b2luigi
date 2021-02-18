@@ -250,17 +250,7 @@ class Gbasf2Process(BatchProcess):
         to ``gb2_job_status``, and return an overall project status, e.g. when
         all jobs are done, return ``JobStatus.successful`` to show that the
         gbasf2 project succeeded.
-
-        The status of each individual job can be one of::
-
-            [Submitting, Submitted, Received, Checking, Staging, Waiting, Matched, Rescheduled,
-             Running, Stalled, Completing, Done, Completed, Failed, Deleted, Killed]
-
-        (Taken from  https://github.com/DIRACGrid/DIRAC/blob/rel-v7r1/WorkloadManagementSystem/Client/JobStatus.py)
-
         """
-        # If project is does not exist on grid yet, so can't query for gbasf2 project status
-
         job_status_dict = get_gbasf2_project_job_status_dict(self.gbasf2_project_name, dirac_user=self.dirac_user)
         n_jobs_by_status = Counter()
         for _, job_info in job_status_dict.items():
@@ -698,8 +688,8 @@ def check_dataset_exists_on_grid(gbasf2_project_name, dirac_user=None):
 
 def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
     """
-    Returns a dictionary for all jobs in the project with a structure like the following,
-    which I have taken and adapted from an example output::
+    Returns a dictionary for all jobs in the project with a structure like the
+    following, which I have taken and adapted from an example output::
 
         {
             "<JobID>": {
@@ -716,10 +706,10 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
         ...
         }
 
-    For that purpose, the script in ``gbasf2_job_status.py`` is called.
-    That script directly interfaces with Dirac via its API, but it only works with the
-    gbasf2 environment and python2, which is why it is called as a subprocess.
-    The job status dictionary is passed to this function via json.
+    For that purpose, the script in ``gbasf2_job_status.py`` is called.  That
+    script directly interfaces with Dirac via its API, but it only works with
+    the gbasf2 environment and python2, which is why it is called as a
+    subprocess.  The job status dictionary is passed to this function via json.
     """
     if dirac_user is None:
         dirac_user = get_dirac_user()
