@@ -286,8 +286,15 @@ class Gbasf2Process(BatchProcess):
         if n_done == n_jobs:
             # download dataset only the first time that we return JobStatus.successful
             if not self._project_had_been_successful:
-                self._on_first_success_action()
-                self._project_had_been_successful = True
+                try:
+                    self._on_first_success_action()
+                    self._project_had_been_successful = True
+                # RuntimeError might occur when download out output dataset was not complete. This is
+                # frequent, so we want to catch that error and just marking the job as failed
+                except RuntimeError as err:
+                    warnings.warn(err, RuntimeError)
+                    return JobStatus.aborted
+
             return JobStatus.successful
 
         raise RuntimeError("Could not determine JobStatus")
@@ -585,12 +592,10 @@ class Gbasf2Process(BatchProcess):
                 raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
             tmp_output_dir = os.path.join(tmp_output_dir_path, self.gbasf2_project_name, 'sub00')
             if not self._local_gb2_dataset_is_complete(output_file_name, check_temp_dir=True, verbose=True):
-                warnings.warn(
+                raise RuntimeError(
                     f"Download incomplete. The downloaded set of files in {tmp_output_dir} is not equal to the " +
                     f"list of dataset files on the grid for project {self.gbasf2_project_name}.",
-                    category=RuntimeWarning
                 )
-                return
 
             print(f"Download of {self.gbasf2_project_name} files successful.\n"
                   f"Moving output files to directory: {output_dir_path}")
