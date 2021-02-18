@@ -333,7 +333,10 @@ class Gbasf2Process(BatchProcess):
         for job_id, job_info in job_status_dict.items():
             if job_info["Status"] == "Failed":
                 if self.n_retries_by_job[job_id] >= self.max_retries:
-                    warnings.warn(f"Reached maximum number of rescheduling tries ({self.max_retries}) for job {job_id}.")
+                    warnings.warn(
+                        f"Reached maximum number of rescheduling tries ({self.max_retries}) for job {job_id}.",
+                        RuntimeWarning
+                    )
                     return False
                 self._reschedule_job(job_id)
                 self.n_retries_by_job[job_id] += 1
@@ -594,7 +597,8 @@ class Gbasf2Process(BatchProcess):
             if not self._local_gb2_dataset_is_complete(output_file_name, check_temp_dir=True, verbose=True):
                 warnings.warn(
                     f"Download incomplete. The downloaded set of files in {tmp_output_dir} is not equal to the " +
-                    f"list of dataset files on the grid for project {self.gbasf2_project_name}."
+                    f"list of dataset files on the grid for project {self.gbasf2_project_name}.",
+                    category=RuntimeWarning
                 )
                 return
 
@@ -683,8 +687,11 @@ def check_dataset_exists_on_grid(gbasf2_project_name, dirac_user=None):
         return False
     output_lines_are_paths = all(os.path.abspath(line) for line in output_dataset_str.strip().splitlines())
     if not output_lines_are_paths:
-        warnings.warn("The output of ``{' '.join(ds_list_command)}`` contains lines that are not grid paths:\n" +
-                      output_dataset_str)
+        warnings.warn(
+            "The output of ``{' '.join(ds_list_command)}`` contains lines that are not grid paths:\n" +
+            output_dataset_str,
+            category=RuntimeWarning
+        )
         return False
     return True
 
