@@ -82,9 +82,8 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 Open TODOs
 ----------
 
-* Add support for different batch systems, e.g. htcondor and a batch system discovery
-* Integrate dirac or other grid systems as another batch system
-* Add helper messages on events (e.g. failed)
+For a list of potential features, improvements and bugfixes see the `github issues`_. Help is
+welcome, so feel free to pick one, e.g. with the ``good first issue`` or ``help wanted`` tags.
 
 .. _flit: https://pypi.org/project/flit/
 
