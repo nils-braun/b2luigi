@@ -106,6 +106,8 @@ class Gbasf2Process(BatchProcess):
           You can provide multiple inputs by having multiple paths contained in this string, separated by commas without spaces.
           An alternative is to just instantiate multiple tasks with different input datasets, if you want to know in retrospect
           which input dataset had been used for the production of a specific output.
+        - ``gbasf2_input_dslist``: Alternatively to ``gbasf2_input_dataset``, you can use this setting to provide a text file
+          containing the logical grid path names, one per line.
         - ``gbasf2_project_name_prefix``: A string with which your gbasf2 project names will start.
           To ensure the project associate with each unique task (i.e. for each of luigi parameters)
           is unique, the unique ``task.task_id`` is hashed and appended to the prefix
@@ -408,8 +410,22 @@ class Gbasf2Process(BatchProcess):
                               f"-p {self.gbasf2_project_name} -s {gbasf2_release} ")
 
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset", default=False, task=self.task)
+        gbasf2_input_dslist = get_setting("gbasf2_input_dslist", default=False, task=self.task)
+
+        gbasf2_input_dataset = get_setting("gbasf2_input_dataset", default=False, task=self.task)
+        gbasf2_input_dslist = get_setting("gbasf2_input_dslist", default=False, task=self.task)
+
+        if gbasf2_input_dataset is not False and gbasf2_input_dslist is not False:
+            raise RuntimeError("Can't use both `gbasf2_input_dataset` and `gbasf2_input_dslist` simultaneously.")
+
         if gbasf2_input_dataset is not False:
             gbasf2_command_str += f" -i {gbasf2_input_dataset} "
+        elif gbasf2_input_dslist is not False:
+            if not os.path.isfile(gbasf2_input_dslist):
+                raise FileNotFoundError(errno.ENOTDIR, os.strerror(errno.ENOTDIR), gbasf2_input_dslist)
+            gbasf2_command_str += f" --input_dslist {os.path.abspath(gbasf2_input_dslist)} "
+        else:
+            raise RuntimeError("Must set either `gbasf2_input_dataset` or `gbasf2_input_dslist`.")
 
         gbasf2_n_repition_jobs = get_setting("gbasf2_n_repition_job", default=False, task=self.task)
         if gbasf2_n_repition_jobs is not False:
