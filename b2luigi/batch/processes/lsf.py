@@ -78,6 +78,11 @@ class LSFProcess(BatchProcess):
         except AttributeError:
             pass
 
+        try:
+            command += ["-J", self.task.job_name]
+        except AttributeError:
+            pass
+
         log_file_dir = get_log_file_dir(self.task)
         os.makedirs(log_file_dir, exist_ok=True)
 
