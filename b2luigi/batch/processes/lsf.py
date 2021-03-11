@@ -42,6 +42,14 @@ class LSFProcess(BatchProcess):
 
       The default is the short queue "s".
 
+    * the LSF job name can be contralled via the ``job_name`` parameter, e.g.
+      .. code-block:: python
+
+        class MyLongTask(b2luigi.Task):
+            job_name = "my_fun_job"
+
+      The default "{FULL_PATH}/executable_wrapper.sh".
+
     * By default, the environment variables from the scheduler are copied to
       the workers.
       This also applies we start in the same working directory and can reuse
