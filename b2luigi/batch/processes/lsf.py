@@ -48,7 +48,7 @@ class LSFProcess(BatchProcess):
         class MyLongTask(b2luigi.Task):
             job_name = "my_fun_job"
 
-      The default "{FULL_PATH}/executable_wrapper.sh".
+      If no job_name is set the task will appear as "{FULL_PATH}/executable_wrapper.sh".
 
     * By default, the environment variables from the scheduler are copied to
       the workers.
