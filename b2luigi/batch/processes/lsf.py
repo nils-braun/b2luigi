@@ -79,8 +79,9 @@ class LSFProcess(BatchProcess):
     def start_job(self):
         command = ["bsub", "-env all"]
 
-        queue = get_setting("queue", task=self.task, default='s')
-        command += ["-q", queue]
+        queue = get_setting("queue", task=self.task, default=None)
+        if queue is not None:
+            command += ["-q", queue]
 
         job_name = get_setting("job_name", task=self.task, default=None)
         if job_name is not None:
