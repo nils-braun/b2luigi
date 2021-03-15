@@ -30,25 +30,23 @@ class LSFProcess(BatchProcess):
     """
     Reference implementation of the batch process for a LSF batch system.
 
-    Additional to the basic batch setup (see :ref:`batch-label`), additional
-    LSF-specific things are:
+    Additional to the basic batch setup (see :ref:`batch-label`), there are
+    LSF-specific settings. These are:
 
-    * the LSF queue can be controlled via the ``queue`` parameter, e.g.
+    * the LSF queue: ``queue``.
+    * the LSF job name: ``job_name``.
+
+    Both can be controlled via the standard settings interface, e.g.
 
       .. code-block:: python
 
         class MyLongTask(b2luigi.Task):
             queue = "l"
+            job_name = "my_long_task"
 
-      The default is the short queue "s".
-
-    * the LSF job name can be contralled via the ``job_name`` parameter, e.g.
-      .. code-block:: python
-
-        class MyLongTask(b2luigi.Task):
-            job_name = "my_fun_job"
-
-      If no job_name is set the task will appear as "{FULL_PATH}/executable_wrapper.sh".
+      The default queue is the short queue "s". If no job_name is set the task
+      will appear as "{result_dir}/parameter1=value/.../executable_wrapper.sh"
+      when running ``bjobs``.
 
     * By default, the environment variables from the scheduler are copied to
       the workers.
@@ -81,15 +79,12 @@ class LSFProcess(BatchProcess):
     def start_job(self):
         command = ["bsub", "-env all"]
 
-        try:
-            command += ["-q", self.task.queue]
-        except AttributeError:
-            pass
+        queue = get_setting("queue", task=self.task, default='s')
+        command += ["-q", queue]
 
-        try:
-            command += ["-J", self.task.job_name]
-        except AttributeError:
-            pass
+        job_name = get_setting("job_name", task=self.task, default=None)
+        if job_name is not None:
+            command += ["-J", job_name]
 
         log_file_dir = get_log_file_dir(self.task)
         os.makedirs(log_file_dir, exist_ok=True)
