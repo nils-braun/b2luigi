@@ -1,5 +1,6 @@
 import pickle
 
+from basf2 import conditions as b2conditions
 from basf2.pickle_path import serialize_path
 from variables import variables as vm
 
@@ -28,4 +29,5 @@ def write_path_and_aliases_to_file(basf2_path, file_path):
     with open(file_path, 'bw') as pickle_file:
         serialized = serialize_path(basf2_path)
         serialized["aliases"] = get_alias_dict_from_variable_manager()
+        serialized["globaltags"] = b2conditions.globaltags
         pickle.dump(serialized, pickle_file)
