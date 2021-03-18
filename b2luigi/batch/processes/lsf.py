@@ -31,12 +31,12 @@ class LSFProcess(BatchProcess):
     Reference implementation of the batch process for a LSF batch system.
 
     Additional to the basic batch setup (see :ref:`batch-label`), there are
-    LSF-specific settings. These are:
+    LSF-specific :meth:`settings <b2luigi.set_setting>`. These are:
 
     * the LSF queue: ``queue``.
     * the LSF job name: ``job_name``.
 
-    Both can be controlled via the standard settings interface, e.g.
+    For example:
 
       .. code-block:: python
 
@@ -44,8 +44,11 @@ class LSFProcess(BatchProcess):
             queue = "l"
             job_name = "my_long_task"
 
-      The default queue is the short queue "s". If no job_name is set the task
-      will appear as "{result_dir}/parameter1=value/.../executable_wrapper.sh"
+      The default queue is the short queue ``"s"``. If no ``job_name`` is set the task
+      will appear as ::
+
+        <result_dir>/parameter1=value/.../executable_wrapper.sh"
+
       when running ``bjobs``.
 
     * By default, the environment variables from the scheduler are copied to
