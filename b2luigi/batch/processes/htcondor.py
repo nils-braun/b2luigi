@@ -98,7 +98,8 @@ class HTCondorProcess(BatchProcess):
 
     * Please note that most of the HTCondor batch farms do not have the same
       environment setup on submission and worker machines, so you probably want to give an
-      ``env_script``, an ``env`` setting and/or a different ``executable``.
+      ``env_script``, an ``env`` :meth:`setting <b2luigi.set_setting>` and/or a different ``executable``.
+
     * HTCondor supports copying files from submission to workers. This means if the
       folder of your script(s)/python project/etc. is not accessible on the worker, you can
       copy it from the submission machine by adding it to the setting ``transfer_files``.
@@ -119,7 +120,7 @@ class HTCondorProcess(BatchProcess):
       forget to actually set it up in your setup script.
       Additionally, you might want to copy your ``settings.json`` as well.
 
-    * Via the ``htcondor_settings`` :meth:`settings <b2luigi.set_setting>` you can provide a dict as
+    * Via the ``htcondor_settings`` setting you can provide a dict as
       a for additional options, such as requested memory etc. Its value has to be a dictionary
       containing HTCondor settings as key/value pairs. These options will be written into the job
       submission file. For an overview of possible settings refer to the `HTCondor documentation
@@ -128,7 +129,7 @@ class HTCondorProcess(BatchProcess):
     * Same as for the :ref:`LSF`, the ``job_name`` setting allows giving a meaningful name to a
       group of jobs. If you want to be htcondor-specific, you can provide the ``JobBatchName`` as an
       entry in the ``htcondor_settings`` dict, which will override the global ``job_name`` setting.
-      This is useful for checking the status of specific jobs with
+      This is useful for manually checking the status of specific jobs with
 
       .. code-block:: bash
 
