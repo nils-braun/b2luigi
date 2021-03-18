@@ -119,11 +119,11 @@ class HTCondorProcess(BatchProcess):
       forget to actually set it up in your setup script.
       Additionally, you might want to copy your ``settings.json`` as well.
 
-    * You can give an ``htcondor_setting`` dict setting flag for additional options, such as
-      requested memory etc. It's value has to be a dictionary containing HTCondor settings as key/value pairs.
-      These options will be written into the job submission file.
-      For an overview of possible settings refer to the
-      `HTCondor documentation <https://htcondor.readthedocs.io/en/latest/users-manual/submitting-a-job.html#>`_.
+    * Via the ``htcondor_settings`` :meth:`settings <b2luigi.set_setting>` you can provide a dict as
+      a for additional options, such as requested memory etc. Its value has to be a dictionary
+      containing HTCondor settings as key/value pairs. These options will be written into the job
+      submission file. For an overview of possible settings refer to the `HTCondor documentation
+      <https://htcondor.readthedocs.io/en/latest/users-manual/submitting-a-job.html#>`_.
 
     Example:
 
@@ -213,7 +213,10 @@ class HTCondorProcess(BatchProcess):
 
             for transfer_file in transfer_files:
                 if os.path.abspath(transfer_file) != transfer_file:
-                    raise ValueError(f"You should only give absolute file names in transfer_files! {os.path.abspath(transfer_file)} != {transfer_file}")
+                    raise ValueError(
+                        "You should only give absolute file names in transfer_files!" +
+                        f"{os.path.abspath(transfer_file)} != {transfer_file}"
+                    )
 
             env_setup_script = get_setting("env_script", task=self.task, default="")
             if env_setup_script:
