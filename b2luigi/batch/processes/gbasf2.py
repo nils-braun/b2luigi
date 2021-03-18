@@ -289,7 +289,7 @@ class Gbasf2Process(BatchProcess):
                 try:
                     self._on_first_success_action()
                     self._project_had_been_successful = True
-                # RuntimeError might occur when download out output dataset was not complete. This is
+                # RuntimeError might occur when download of output dataset was not complete. This is
                 # frequent, so we want to catch that error and just marking the job as failed
                 except RuntimeError as err:
                     warnings.warn(err, RuntimeError)
