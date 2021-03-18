@@ -125,6 +125,15 @@ class HTCondorProcess(BatchProcess):
       submission file. For an overview of possible settings refer to the `HTCondor documentation
       <https://htcondor.readthedocs.io/en/latest/users-manual/submitting-a-job.html#>`_.
 
+    * Same as for the :ref:`LSF`, the ``job_name`` setting allows giving a meaningful name to a
+      group of jobs. If you want to be htcondor-specific, you can provide the ``JobBatchName`` as an
+      entry in the ``htcondor_settings`` dict, which will override the global ``job_name`` setting.
+      This is useful for checking the status of specific jobs with
+
+      .. code-block:: bash
+
+        condor_q -batch <job name>
+
     Example:
 
         .. literalinclude:: ../../examples/htcondor/htcondor_example.py
@@ -224,6 +233,10 @@ class HTCondorProcess(BatchProcess):
                 transfer_files.add(os.path.abspath(env_setup_script))
 
             general_settings.setdefault("transfer_input_files", ",".join(transfer_files))
+
+        job_name = get_setting("job_name", task=self.task, default=None)
+        if job_name is not None:
+            general_settings.setdefault("JobBatchName", job_name)
 
         for key, item in general_settings.items():
             submit_file_content.append(f"{key} = {item}")
