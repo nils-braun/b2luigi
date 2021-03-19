@@ -29,11 +29,24 @@ def apply_alias_dict_from_file(file_path):
         vm.addAlias(alias_name, alias_value)
 
 
+def get_global_tags_from_file(file_path):
+    """
+    Extract list of global tags from pickle file, and update the list of global tags.
+    """
+    with open(file_path, 'br') as pickle_file:
+        serialized = pickle.load(pickle_file)
+    try:
+        basf2.conditions.globaltags += serialized["globaltags"]
+    except KeyError:
+        pass
+
+
 pickle_file_path = "{{ pickle_file_path }}"
 if not os.path.isfile(pickle_file_path):
     raise FileNotFoundError(f"No pickle file found in {pickle_file_path}")
 
 apply_alias_dict_from_file(pickle_file_path)
+get_global_tags_from_file(pickle_file_path)
 path = b2pp.get_path_from_file(pickle_file_path)
 
 basf2.print_path(path)

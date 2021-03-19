@@ -70,7 +70,8 @@ class Gbasf2Process(BatchProcess):
           inhereting from ``Basf2PathTask`` or other tasks with a
           ``create_path()`` method that returns a basf2 path.
 
-        - It can be used **only for pickable basf2 paths**, as it stores
+        - It can be used **only for pickable basf2 paths**, with only some limited global basf2 state
+          saved (currently aliases and global tags). The batch process stores
           the path created by ``create_path`` in a python pickle file and runs that on the grid.
           Therefore, **python basf2 modules are not yet supported**.
           To see if the path produced by a steering file is pickable, you can try to dump it with
@@ -470,8 +471,8 @@ class Gbasf2Process(BatchProcess):
                 "Gbasf2 batch process can only used with tasks that generate basf2 paths with "
                 "a ``create_path()`` method, e.g. are an instance of ``Basf2PathTask``."
             ) from err
-        from b2luigi.batch.processes.gbasf2_utils.pickle_utils import write_path_and_aliases_to_file
-        write_path_and_aliases_to_file(basf2_path, self.pickle_file_path)
+        from b2luigi.batch.processes.gbasf2_utils.pickle_utils import write_path_and_state_to_file
+        write_path_and_state_to_file(basf2_path, self.pickle_file_path)
 
     def _create_wrapper_steering_file(self):
         """
