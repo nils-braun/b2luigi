@@ -16,7 +16,7 @@ def get_alias_dict_from_variable_manager():
 
 def write_path_and_state_to_file(basf2_path, file_path):
     """
-    Serialize basf2 path and variables from variable manage to file.
+    Serialize basf2 path and variables from variable manager to file.
 
     Variant of ``basf2.pickle_path.write_path_to_file``, only with additional
     serialization of the basf2 variable aliases and global tags.
