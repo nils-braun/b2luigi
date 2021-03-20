@@ -29,6 +29,23 @@ class TestHTCondorCreateSubmitFile(B2LuigiTestCase):
         with open(submit_file_path, "r") as submit_file:
             return submit_file.read()
 
+    def test_minimal_submit_file(self):
+        """
+        Minimal  submit file should have expected shape:
+
+            output = ...
+            error = ..
+            log = ..
+            executable = executable_wrapper.sh
+            queue 1
+        """
+        submit_file_lines = self._get_htcondor_submit_file_string(MyTask("some_parameter")).splitlines()
+        self.assertIn("output = ", submit_file_lines[0])
+        self.assertIn("error = ", submit_file_lines[1])
+        self.assertIn("log = ", submit_file_lines[2])
+        self.assertEqual("executable = executable_wrapper.sh", submit_file_lines[3])
+        self.assertEqual("queue 1", submit_file_lines[4])
+
     def test_not_setting_job_name(self):
         submit_file_string = self._get_htcondor_submit_file_string(MyTask("some_parameter"))
         self.assertNotIn("JobBatchName", submit_file_string)
