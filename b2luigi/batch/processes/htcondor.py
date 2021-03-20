@@ -235,8 +235,8 @@ class HTCondorProcess(BatchProcess):
 
             general_settings.setdefault("transfer_input_files", ",".join(transfer_files))
 
-        job_name = get_setting("job_name", task=self.task, default=None)
-        if job_name is not None:
+        job_name = get_setting("job_name", task=self.task, default=False)
+        if job_name is not False:
             general_settings.setdefault("JobBatchName", job_name)
 
         for key, item in general_settings.items():
