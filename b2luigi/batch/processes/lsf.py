@@ -7,6 +7,7 @@ from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.batch.cache import BatchJobStatusCache
 from b2luigi.core.utils import get_log_file_dir
 from b2luigi.core.executable import create_executable_wrapper
+from b2luigi.core.settings import get_setting
 
 
 class LSFJobStatusCache(BatchJobStatusCache):
@@ -82,12 +83,12 @@ class LSFProcess(BatchProcess):
     def start_job(self):
         command = ["bsub", "-env all"]
 
-        queue = get_setting("queue", task=self.task, default=None)
-        if queue is not None:
+        queue = get_setting("queue", task=self.task, default=False)
+        if queue is not False:
             command += ["-q", queue]
 
-        job_name = get_setting("job_name", task=self.task, default=None)
-        if job_name is not None:
+        job_name = get_setting("job_name", task=self.task, default=False)
+        if job_name is not False:
             command += ["-J", job_name]
 
         log_file_dir = get_log_file_dir(self.task)
