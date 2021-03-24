@@ -36,8 +36,8 @@ class Task(luigi.Task):
 
                   with self.get_output_file("average.txt").open("w") as f:
                       f.write(f"{average}\\n")
-
     """
+
     def add_to_output(self, output_file_name):
         """
         Call this in your output() function to add a target to the list of files,
@@ -67,7 +67,6 @@ class Task(luigi.Task):
         """
         return {output_file_name: self._get_output_file_target(output_file_name)}
 
-
     @staticmethod
     def _transform_input(input_generator, key=None):
         input_list = utils.flatten_to_list_of_dicts(input_generator)
@@ -76,7 +75,6 @@ class Task(luigi.Task):
         if key is not None:
             return file_paths[key]
         return file_paths
-
 
     def get_input_file_names(self, key=None):
         """
