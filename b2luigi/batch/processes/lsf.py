@@ -7,7 +7,7 @@ from b2luigi.batch.processes import BatchProcess, JobStatus
 from b2luigi.batch.cache import BatchJobStatusCache
 from b2luigi.core.utils import get_log_file_dir
 from b2luigi.core.executable import create_executable_wrapper
-
+from b2luigi.core.settings import get_setting
 
 class LSFJobStatusCache(BatchJobStatusCache):
 
