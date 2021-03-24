@@ -1,7 +1,4 @@
-import os
-import subprocess
 import functools
-import sys
 
 from b2luigi.core.settings import get_setting
 from b2luigi.core.task import Task
@@ -22,7 +19,7 @@ def dispatch(run_function):
         it is started in a subprocess and monitored by the parent process.
         When it dies unexpectedly (e.g. because of a segfault etc.)
         the task will be marked as failed. If not, it is successful.
-        The log output will be written to two files in the log folder (marked with 
+        The log output will be written to two files in the log folder (marked with
         the parameters of the task), which you can check afterwards::
 
             import b2luigi
@@ -38,7 +35,7 @@ def dispatch(run_function):
         If you want to control it in more detail, please check out :ref:`batch-label`.
 
     Implementation note:
-        In the subprocess we are calling the current executable (which should by python) 
+        In the subprocess we are calling the current executable (which should by python)
         with the current input file as a parameter, but let it only run this
         specific task (by handing over the task id and the `--batch-worker` option).
         The run function notices this and actually runs the task instead of dispatching again.
@@ -66,7 +63,7 @@ class DispatchableTask(Task):
     Except that, it has exactly the same functionality
     as a normal :obj:`Task`.
 
-    Important: 
+    Important:
         You need to overload the process function
         instead of the run function in this case!
     """

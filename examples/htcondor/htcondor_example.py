@@ -1,6 +1,5 @@
 import b2luigi
 import random
-import os
 
 
 class MyNumberTask(b2luigi.Task):
@@ -40,7 +39,7 @@ class MyAverageTask(b2luigi.Task):
 
     def run(self):
         print("I am now starting the average task")
-        
+
         # Build the mean
         summed_numbers = 0
         counter = 0

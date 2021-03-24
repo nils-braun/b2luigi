@@ -9,7 +9,7 @@ The following examples are not of interest to the general audience, but only for
 Running at the NAF
 ------------------
 
-The environment on the workers is different than on the scheduling machine, so we can not 
+The environment on the workers is different than on the scheduling machine, so we can not
 just copy the environment variables as on KEKCC.
 
 You can use setup script (e.g. called ``setup_basf2.sh``) with the following content
@@ -18,7 +18,7 @@ You can use setup script (e.g. called ``setup_basf2.sh``) with the following con
 
     source /cvmfs/belle.cern.ch/tools/b2setup release-XX-XX-XX
 
-All you have to do is specify the setup script as the ``env_script`` setting and also set the 
+All you have to do is specify the setup script as the ``env_script`` setting and also set the
 executable explicitly.
 
 .. code-block:: python
@@ -31,7 +31,7 @@ executable explicitly.
 
     class MyTask(b2luigi.Task):
         parameter = b2luigi.IntParameter()
-    
+
         def output(self):
             yield self.add_to_output("test.txt")
 
@@ -74,14 +74,14 @@ executable explicitly.
 Of course it is also possible to set those settings in the ``settings.json`` or as task-specific parameters.
 Please check out :func:`b2luigi.get_setting` for more information.
 
-Please note that the called script as well as the results folder need to be accessible from both 
+Please note that the called script as well as the results folder need to be accessible from both
 the scheduler and the worker machines.
 If needed, you can also include more setup steps in the source script.
 
 Running at KEKCC
 ----------------
 
-KEKCC uses LSF as the batch system. As this is the default for ``b2luigi`` there is 
+KEKCC uses LSF as the batch system. As this is the default for ``b2luigi`` there is
 nothing you need to do.
 
 nTuple Generation
@@ -111,15 +111,15 @@ nTuple Generation
         def create_path(self):
             # somehow create filenames from parameters
             # self.experiment_number, self.run_number,
-            # self.mode and self.file_number 
+            # self.mode and self.file_number
             # (parameters just examples)
-            input_file_names = .. 
+            input_file_names = ..
 
             path = basf2.create_path()
             modularAnalysis.inputMdstList('default', input_file_names, path=path)
 
             # Now fill your particle lists, just examples
-            modularAnalysis.fillParticleLists([('K+', 'kaonID > 0.1'), ('pi+', 'pionID > 0.1')], 
+            modularAnalysis.fillParticleLists([('K+', 'kaonID > 0.1'), ('pi+', 'pionID > 0.1')],
                                               path=path)
             modularAnalysis.reconstructDecay('D0 -> K- pi+', '1.7 < M < 1.9', path=path)
             modularAnalysis.fitVertex('D0', 0.1, path=path)

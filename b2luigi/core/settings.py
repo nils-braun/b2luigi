@@ -9,7 +9,7 @@ _current_global_settings = {}
 
 def get_setting(key, default=None, task=None, deprecated_keys=None):
     """
-    ``b2luigi`` adds a settings management to ``luigi`` 
+    ``b2luigi`` adds a settings management to ``luigi``
     and also uses it at various places.
     Many batch systems, the output and log path, the environment
     etc. is controlled via these settings.
@@ -23,27 +23,27 @@ def get_setting(key, default=None, task=None, deprecated_keys=None):
        Please note that you can either set the property directly, e.g.
 
        .. code-block:: python
- 
+
          class MyTask(b2luigi.Task):
              batch_system = "htcondor"
 
        or by using a function (which might even depend on the parameters)
- 
+
        .. code-block:: python
- 
+
          class MyTask(b2luigi.Task):
              @property
              def batch_system(self):
                  return "htcondor"
 
-       The latter is especially useful for batch system specific settings 
+       The latter is especially useful for batch system specific settings
        such as requested wall time etc.
 
-    2. Settings set directly by the user in your script with a call to 
+    2. Settings set directly by the user in your script with a call to
        :meth:`b2luigi.set_setting`.
-    3. Settings specified in the ``settings.json`` in the folder of your 
+    3. Settings specified in the ``settings.json`` in the folder of your
        script *or any folder above that*.
-       This makes it possible to have general project settings (e.g. the output path 
+       This makes it possible to have general project settings (e.g. the output path
        or the batch system) and a specific ``settings.json`` for your sub-project.
 
     With this function, you can get the current value of a specific setting with the given key.
@@ -54,10 +54,10 @@ def get_setting(key, default=None, task=None, deprecated_keys=None):
 
     Parameters:
         key (:obj:`str`): The name of the parameter to query.
-        task: (:obj:`b2luigi.Task`): If given, check if the task has a parameter 
+        task: (:obj:`b2luigi.Task`): If given, check if the task has a parameter
             with this name.
-        default (optional): If there is no setting which the name, 
-            either return this default or if it is not set, 
+        default (optional): If there is no setting which the name,
+            either return this default or if it is not set,
             raise a ValueError.
         deprecated_keys (:obj:`List`): Former names of this setting,
             will throw a warning when still used
@@ -76,7 +76,7 @@ def get_setting(key, default=None, task=None, deprecated_keys=None):
                 _warn_deprecated_setting(deprecated_key, key)
                 return value
             except KeyError:
-                pass 
+                pass
 
     # Still not found? At this point we can only return the default or raise an error
     if default is None:
@@ -163,6 +163,7 @@ def _get_setting_implementation(key, task):
 
 class DeprecatedSettingsWarning(DeprecationWarning):
     pass
+
 
 def _warn_deprecated_setting(setting_name, new_name):
     warnings.warn(f"The setting with the name {setting_name} is deprecated. "

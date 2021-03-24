@@ -6,7 +6,7 @@ Quick Start
 We use a very simple task definition file and submit it to a LSF batch system.
 
 .. hint::
-    The default batch system currently is LSF, so if you do not change it, LSF will be 
+    The default batch system currently is LSF, so if you do not change it, LSF will be
     used. Check out :ref:`batch-label` for more information.
 
 Our task will be very simple: we want to create 100 files with some random number in it.
@@ -22,11 +22,11 @@ Later, we will build the average of those numbers.
     A task can have parameters, as in our case the ``some_parameter`` defined in line 6.
     Each task needs to define, what it will output in its ``output`` function.
 
-    .. note:: 
+    .. note::
 
-        We have defined a result path in the script with 
+        We have defined a result path in the script with
 
-        .. code-block:: python 
+        .. code-block:: python
 
             b2luigi.set_setting("results")
 
@@ -44,11 +44,11 @@ Later, we will build the average of those numbers.
         But we strongly advice you to use ``b2luigi``'s task, as it has some more
         superior functions (see below).
 
-    Please not that we could have imported ``b2luigi`` with 
+    Please not that we could have imported ``b2luigi`` with
 
-    .. code-block:: python 
+    .. code-block:: python
 
-        import b2luigi as luigi 
+        import b2luigi as luigi
 
     to make the transition between ``b2luigi`` and ``luigi`` even simpler.
 
@@ -70,7 +70,7 @@ Later, we will build the average of those numbers.
 
     .. hint::
 
-        If you have no LSF queue ready or you do not want to run on the batch, 
+        If you have no LSF queue ready or you do not want to run on the batch,
         you can also remove the `batch` argument.
         This will fall back to a normal ``luigi`` execution.
         Please see :ref:`batch-label` for more information on batch execution
@@ -79,7 +79,7 @@ Later, we will build the average of those numbers.
 
 3.  After the job is completed, you will see something like:
 
-    .. code-block:: 
+    .. code-block::
 
         ===== Luigi Execution Summary =====
 
@@ -110,9 +110,9 @@ Later, we will build the average of those numbers.
 
     Before continuing, remove the output of the former calculation.
 
-    .. code-block:: bash 
+    .. code-block:: bash
 
-        rm -rf results 
+        rm -rf results
 
     If you now call
 
@@ -124,18 +124,18 @@ Later, we will build the average of those numbers.
 
         * The parameter values are automatically added to the output file (have a look into the ``results/``
           folder to see how it works and where the results are stored)
-        * The output for different parameters are stored on different locations, so no need to fear overriding 
+        * The output for different parameters are stored on different locations, so no need to fear overriding
           results.
-        * The format of the folder structure makes it easy to work on it using bash commands as well as 
+        * The format of the folder structure makes it easy to work on it using bash commands as well as
           automated procedures.
         * Other files related to your job, e.g. the submission files etc. are also placed into this
           folder (this is why the very first example defined it already).
         * The default is to use the folder where your script is located.
-    
-    .. hint::
-        In the example, the base path for the results is defined in the python file with 
 
-        .. code-block:: python 
+    .. hint::
+        In the example, the base path for the results is defined in the python file with
+
+        .. code-block:: python
 
             b2luigi.set_setting("result_dir", "results")
 
@@ -150,12 +150,12 @@ Later, we will build the average of those numbers.
         local sub project. Read the documentation on :meth:`b2luigi.get_setting` for
         more information on how to use it.
 
-    .. attention:: 
+    .. attention::
         The result path (as well as any other paths, e.g. the log folders) are always evaluated
         relatively to your script file.
         This means ``results`` will always be created in the folder where your script is,
         not where your current working directory is.
-        If you are unsure on the location, call 
+        If you are unsure on the location, call
 
         .. code-block:: bash
 

@@ -35,7 +35,7 @@ def on_temporary_files(run_function):
     A common problem when using long running tasks in luigi is the so called thanksgiving bug
     (see https://www.arashrouhani.com/luigi-budapest-bi-oct-2015/#/21).
     It occurs, when you define an output of a task and in its run function,
-    you create this output before filling it with content 
+    you create this output before filling it with content
     (maybe even only after a long lasting calculation).
     It may happen, that during the creation of the output and the finish of the calculation
     some other tasks checks if the output is already there, finds it and assumes,

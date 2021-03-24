@@ -35,8 +35,8 @@ where mode can be one of:
                 # automatically when starting the processing in dry-run mode
                 do_some_stuff_in_dry_run_mode()
 
-    This feature can be easily used for e.g. file name debugging, i.e. to print out the file names ``b2luigi`` 
-    will create when running the actual task. The exit code of the ``dry-run`` mode is 1 in case a task needs 
+    This feature can be easily used for e.g. file name debugging, i.e. to print out the file names ``b2luigi``
+    will create when running the actual task. The exit code of the ``dry-run`` mode is 1 in case a task needs
     to run and 0 otherwise.
 
 *   **show-output**: List all output files that this has produced/will produce. Files which already exist

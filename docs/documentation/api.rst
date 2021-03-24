@@ -3,7 +3,7 @@
 API Documentation
 =================
 
-``b2luigi`` summarizes different topics to help you in your everyday task 
+``b2luigi`` summarizes different topics to help you in your everyday task
 creation and processing.
 Most important is the :meth:`b2luigi.process` function, which lets you run
 arbitrary task graphs on the batch.
@@ -19,7 +19,7 @@ Super-hero Task Classes
 -----------------------
 
 If you want to use the default ``luigi.Task`` class or any derivative of it,
-you are totally fine. 
+you are totally fine.
 No need to change any of your scripts!
 But if you want to take advantage of some of the recipies we have developed
 to work with large luigi task sets, you can use the drop in replacements

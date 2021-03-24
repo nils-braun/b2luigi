@@ -1,6 +1,7 @@
 import b2luigi as luigi
 import random
 
+
 class TaskA(luigi.Task):
     central_value = luigi.FloatParameter()
     index = luigi.IntParameter()
@@ -16,12 +17,12 @@ class TaskA(luigi.Task):
 
 
 class TaskB(luigi.Task):
-    
+
     def requires(self):
         self.required_tasks = {
-                "a": (TaskA(5.0, i) for i in range(100)),
-                "b": (TaskA(1.0, i) for i in range(100)),
-            }
+            "a": (TaskA(5.0, i) for i in range(100)),
+            "b": (TaskA(1.0, i) for i in range(100)),
+        }
         return self.required_tasks
 
     @staticmethod
@@ -36,7 +37,6 @@ class TaskB(luigi.Task):
 
         return summed_numbers / counter
 
-    
     def average_inputs(self, input_file_list):
         summed_averages = 0
         counter = 0
@@ -48,10 +48,10 @@ class TaskB(luigi.Task):
 
     def run(self):
         print(self.get_input_file_names_from_dict("a"))
-        
+
         average_a = self.average_inputs(self.get_input_file_names_from_dict("a", "random_numbers.txt"))
         average_b = self.average_inputs(self.get_input_file_names_from_dict("b")["random_numbers.txt"])
-        
+
         with open(self.get_output_file_name("combined_average.txt"), "w") as out_file:
             out_file.write(f"{(average_a + average_b)/2}\n")
 
@@ -62,4 +62,3 @@ class TaskB(luigi.Task):
 if __name__ == "__main__":
     luigi.set_setting("result_path", "results")
     luigi.process(TaskB(), workers=4)
-
