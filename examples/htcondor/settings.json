@@ -4,6 +4,6 @@
 	"executable": ["python3"],
         "job_name": "b2luigi_example",
 	"htcondor_settings": {
-		"some": "settings",
+		"some": "settings"
 	}
 }
