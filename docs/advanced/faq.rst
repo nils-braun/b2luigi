@@ -31,14 +31,14 @@ task receive the same paths to write to!
 Can I exclude one job from batch processing
 -------------------------------------------
 
-The setting ``batch_system`` defines which submission method is used for scheduling 
+The setting ``batch_system`` defines which submission method is used for scheduling
 your tasks when using ``batch=True`` or ``--batch``.
 In most cases, you set your ``batch_system`` globally (e.g. in a ``settings.json``)
 file and start all your tasks with ``--batch`` or ``batch=True``.
-If you want a single task to run only locally (e.g. because of constraints in 
+If you want a single task to run only locally (e.g. because of constraints in
 the batch farm) you can set the ``batch_system`` only for this job by adding a member to this task:
 
-.. code-block:: python 
+.. code-block:: python
 
     class MyLocalTask(b2luigi.Task):
         batch_system = "local"

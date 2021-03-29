@@ -40,7 +40,7 @@ def product_dict(**kwargs):
 
             def requires(self):
                 for args in product_dict(arg_1=[1, 2], arg_2=[3, 4]):
-                    yield some_task(**args) 
+                    yield some_task(**args)
 
     Parameters:
         kwargs: Each keyword argument should be an iterable
@@ -271,17 +271,17 @@ def get_filename():
 
 def map_folder(input_folder):
     if os.path.isabs(input_folder):
-      return input_folder
+        return input_folder
 
     try:
-      filename = get_filename()
+        filename = get_filename()
     except AttributeError as ex:
-      raise type(ex)(
-        "Could not determine the current script location. "
-        "If you are running in an interactive shell (such as jupyter notebook) "
-        "make sure to only provide absolute paths in your settings.\nMore Info:\n"
-        + ex.message
-      ).with_traceback(sys.exc_info()[2])
+        raise type(ex)(
+            "Could not determine the current script location. "
+            "If you are running in an interactive shell (such as jupyter notebook) "
+            "make sure to only provide absolute paths in your settings.\nMore Info:\n" +
+            ex.message
+        ).with_traceback(sys.exc_info()[2])
 
     filepath = os.path.dirname(filename)
 

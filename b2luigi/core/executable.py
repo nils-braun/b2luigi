@@ -1,9 +1,10 @@
-from b2luigi.core.utils import create_cmd_from_task, get_task_file_dir, get_log_file_dir, add_on_failure_function, get_filename, map_folder
-from b2luigi.core.settings import get_setting
-
 import os
 import stat
 import subprocess
+
+from b2luigi.core.settings import get_setting
+from b2luigi.core.utils import (add_on_failure_function, create_cmd_from_task, get_filename, get_log_file_dir,
+                                get_task_file_dir, map_folder)
 
 
 def create_executable_wrapper(task):
@@ -66,8 +67,8 @@ def create_executable_wrapper(task):
 def run_task_remote(task):
     """
     Run a given task "remotely", which means
-    create an exectable script and call it via a subprocess 
-    call. 
+    create an exectable script and call it via a subprocess
+    call.
     """
     log_file_dir = get_log_file_dir(task)
     os.makedirs(log_file_dir, exist_ok=True)

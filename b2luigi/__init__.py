@@ -17,28 +17,28 @@ from b2luigi.cli.process import process
 
 class requires(object):
     """
-    This "hack" copies the luigi.requires functionality, except that we allow for 
+    This "hack" copies the luigi.requires functionality, except that we allow for
     additional kwarg arguments when called.
 
-    It can be used to require a certain task, but with some variables already set, 
+    It can be used to require a certain task, but with some variables already set,
     e.g.
 
         class TaskA(b2luigi.Task):
              some_parameter = b2luigi.IntParameter()
              some_other_parameter = b2luigi.IntParameter()
- 
+
              def output(self):
                  yield self.add_to_output("test.txt")
- 
+
          @b2luigi.requires(TaskA, some_parameter=3)
          class TaskB(b2luigi.Task):
              another_parameter = b2luigi.IntParameter()
- 
+
              def output(self):
                  yield self.add_to_output("out.dat")
 
-    TaskB will not require TaskA, where some_parameter is already set to 3. 
-    This also means, that TaskB only has the parameters another_parameter 
+    TaskB will not require TaskA, where some_parameter is already set to 3.
+    This also means, that TaskB only has the parameters another_parameter
     and some_other_parameter (because some_parameter is already fixed).
 
     """
@@ -52,7 +52,7 @@ class requires(object):
         # Get all parameter objects from the underlying task
         for param_name, param_obj in self.task_to_require.get_params():
             # Check if the parameter exists in the inheriting task
-            if not hasattr(task_that_requires, param_name) and not param_name in self.kwargs:
+            if not hasattr(task_that_requires, param_name) and param_name not in self.kwargs:
                 # If not, add it to the inheriting task
                 setattr(task_that_requires, param_name, param_obj)
 

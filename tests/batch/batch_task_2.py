@@ -23,7 +23,7 @@ class MyAdditionalTask(b2luigi.Task):
     @b2luigi.dispatch
     @b2luigi.on_temporary_files
     def run(self):
-        with open(self.get_output_file_name("combined.txt"), "w") as f:
+        with open(self.get_output_file_name("combined.txt"), "w"):
             os.kill(os.getpid(), 11)
 
 

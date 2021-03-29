@@ -5,7 +5,7 @@ Installation
 
 This installation description is for the general user. If you are using the Belle II software, see below:
 
-1.  Setup your local environment. 
+1.  Setup your local environment.
     For example, run:
 
     .. code-block:: bash
@@ -37,7 +37,7 @@ Now you can go on with the :ref:`quick-start-label`.
 b2luigi and Belle II
 ---------------------
 
-Starting from release 04-00-00, `b2luigi` is already included in the externals. 
+Starting from release 04-00-00, `b2luigi` is already included in the externals.
 Follow this guid, if you want to update to the newest version nevertheless.
 
 1.  Setup your local environment. You can use a local environment (installed on your machine) or a release on cvmfs.

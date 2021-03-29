@@ -33,7 +33,6 @@ class Basf2Task(b2luigi.DispatchableTask):
         return return_dict
 
 
-
 class Basf2PathTask(Basf2Task):
     num_processes = b2luigi.IntParameter(significant=False, default=0)
     max_event = b2luigi.IntParameter(significant=False, default=0)

@@ -32,11 +32,14 @@ jobs:
         python -m pip install --upgrade pip wheel setuptools
         pip uninstall b2luigi
         pip install -U pytest pytest-cov python-coveralls
-        pip install flit 
+        pip install flit
         flit install -s
 
         # Print out the pip versions for debugging
         pip list
+
+    - name: Static checks of code and style with pre-commit
+      uses: pre-commit/action@v2.0.0
 
     - name: Test with pytest
       run: |
@@ -53,4 +56,3 @@ jobs:
       if: ${{ always() }}
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
-

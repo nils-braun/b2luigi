@@ -36,5 +36,5 @@ class HashedParameterTestCase(B2LuigiTestCase):
 
         task = MyTask(my_parameter=["Some", "strange", "items", "with", "bad / signs"])
 
-        self.assertTrue(task.get_output_file_name("test.txt")\
-            .endswith("results/my_parameter=hashed_08928069d368e4a0f8ac02a0193e443b/test.txt"))
+        self.assertTrue(task.get_output_file_name("test.txt")
+                        .endswith("results/my_parameter=hashed_08928069d368e4a0f8ac02a0193e443b/test.txt"))

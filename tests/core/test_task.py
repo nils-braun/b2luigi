@@ -12,11 +12,11 @@ class TaskTestCase(B2LuigiTestCase):
             def output(self):
                 yield self.add_to_output("file_a")
                 yield self.add_to_output("file_b")
-        
+
         task = TaskA(some_parameter=3)
 
         b2luigi.set_setting("result_dir", "results/some_crazy_path")
-        
+
         self.assertEqual(get_filled_params(task), {"some_parameter": 3})
         self.assertFalse(task.get_input_file_names())
         self.assertRaises(KeyError, lambda: task._get_input_targets("some_file"))
