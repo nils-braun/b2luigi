@@ -293,7 +293,7 @@ class Gbasf2Process(BatchProcess):
                 # RuntimeError might occur when download of output dataset was not complete. This is
                 # frequent, so we want to catch that error and just marking the job as failed
                 except RuntimeError as err:
-                    warnings.warn(err, RuntimeError)
+                    warnings.warn(err, RuntimeWarning)
                     return JobStatus.aborted
 
             return JobStatus.successful
