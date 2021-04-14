@@ -1,0 +1,14 @@
+{
+    "gbasf2_install_directory": "/work/akhmet/Belle2Project/gbasf2",
+    "gbasf2_input_dataset": "/work/akhmet/Belle2Project/flist_test.txt",
+    "gbasf2_project_name_prefix": "TrainingFEI",
+    "gbasf2_release": "light-2102-nemesis",
+    "gbasf2_print_status_updates": true,
+    "gbasf2_max_retries": 10,
+    "gbasf2_download_logs": true,
+    "local_cpus" : 12,
+    "working_dir" : "/ceph/akhmet/b2luigi/results",
+    "log_dir" : "/ceph/akhmet/b2luigi/results",
+    "result_dir" : "/ceph/akhmet/b2luigi/results",
+    "executable" : ["python3"]
+}
