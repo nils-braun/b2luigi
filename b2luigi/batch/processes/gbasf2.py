@@ -410,7 +410,11 @@ class Gbasf2Process(BatchProcess):
 
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset", default=False, task=self.task)
         if gbasf2_input_dataset is not False:
-            gbasf2_command_str += f" -i {gbasf2_input_dataset} "
+            if ".txt" not in gbasf2_input_dataset:
+                gbasf2_command_str += f" -i {gbasf2_input_dataset} "
+            # Assuming, that instead of a local or LFN path, a .txt file with these paths is provided
+            else:
+                gbasf2_command_str += f" --input_dslist {gbasf2_input_dataset} "
 
         gbasf2_n_repition_jobs = get_setting("gbasf2_n_repition_job", default=False, task=self.task)
         if gbasf2_n_repition_jobs is not False:
