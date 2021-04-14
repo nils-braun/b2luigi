@@ -1,5 +1,6 @@
 from multiprocessing import Pool
 import os
+import glob
 
 import b2luigi as luigi
 from b2luigi.basf2_helper.tasks import Basf2PathTask
@@ -50,9 +51,8 @@ class FEIAnalysisTask(Basf2PathTask):
 
     cache = luigi.IntParameter(significant=False)
     monitor = luigi.BoolParameter(significant=False)
-    mode = luigi.Parameter()
     stage = luigi.IntParameter()
-    
+    mode = luigi.Parameter()
 
     def output(self):
         for outname in fei_analysis_outputs[self.stage]:
@@ -66,8 +66,8 @@ class FEIAnalysisTask(Basf2PathTask):
 class MergeOutputsTask(luigi.Task):
 
     ncpus = luigi.IntParameter(significant=False) # to be used with setting 'local_cpus' in settings.json
-    mode = luigi.IntParameter()
-    stage = luigi.Parameter()
+    stage = luigi.IntParameter()
+    mode = luigi.Parameter()
 
     def output(self):
         for outname in fei_analysis_outputs[self.stage]:
@@ -88,7 +88,8 @@ class MergeOutputsTask(luigi.Task):
     def run(self):
         cmds = []
         for inname in fei_analysis_outputs[self.stage]:
-            cmds.append(f"analysis-fei-mergefiles {inname} " + " ".join(self.get_input_file_names(inname)))
+            # for some reason, only a one-element list: self.get_input_file_names(inname) (specific to gbasf2 output structure)
+            cmds.append(f"analysis-fei-mergefiles {self.get_output_file_name(inname)} " + " ".join(glob.glob(os.path.join(self.get_input_file_names(inname)[0],"*.root"))))
 
         p = Pool(self.ncpus)
         p.map(shell_command,cmds)
@@ -96,15 +97,11 @@ class MergeOutputsTask(luigi.Task):
 class ProduceStatisticsTask(luigi.WrapperTask):
 
     def requires(self):
-        input_dataset = "/work/akhmet/Belle2Project/flist_test.txt"
 
-        yield FEIAnalysisTask(
-            cache=-1,
-            monitor=False,
-            mode="TrainingInput",
+        yield MergeOutputsTask(
+            mode="Merging",
             stage=-1,
-            gbasf2_project_name_prefix=luigi.get_setting("gbasf2_project_name_prefix"),
-            gbasf2_input_dataset=luigi.get_setting("gbasf2_input_dataset"),
+            ncpus=luigi.get_setting("local_cpus"),
         )
 
 
