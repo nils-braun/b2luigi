@@ -412,9 +412,6 @@ class Gbasf2Process(BatchProcess):
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset", default=False, task=self.task)
         gbasf2_input_dslist = get_setting("gbasf2_input_dslist", default=False, task=self.task)
 
-        gbasf2_input_dataset = get_setting("gbasf2_input_dataset", default=False, task=self.task)
-        gbasf2_input_dslist = get_setting("gbasf2_input_dslist", default=False, task=self.task)
-
         if gbasf2_input_dataset is not False and gbasf2_input_dslist is not False:
             raise RuntimeError("Can't use both `gbasf2_input_dataset` and `gbasf2_input_dslist` simultaneously.")
 
