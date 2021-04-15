@@ -88,7 +88,7 @@ class FEIAnalysisTask(Basf2PathTask):
                 ncpus=luigi.get_setting("local_cpus"),
             )
 
-            # need symlinks to *.xml files of FEi training of previous stages
+            # need symlinks to *.xml files of FEI training of previous stages
             for fei_stage in range(self.stage):
 
                 yield FEITrainingTask(
