@@ -3,6 +3,7 @@ import os
 import glob
 import shlex
 import pickle
+import datetime
 
 import b2luigi as luigi
 from b2luigi.basf2_helper.tasks import Basf2PathTask
@@ -69,6 +70,7 @@ class FEIAnalysisTask(Basf2PathTask):
         if self.stage == -1:
             return [] # default implementation, as in the luigi.Task (if no requirements are present)
         else:
+            # need the timestamp of the additional inputs to build their TMP-SE path
             yield PrepareInputsTask(
                 mode="AnalysisInput",
                 stage=self.stage - 1,
@@ -76,13 +78,28 @@ class FEIAnalysisTask(Basf2PathTask):
                 remote_initial_se=luigi.get_setting("remote_initial_se"),
             )
 
+            # need a symlink to the merged mcParticlesCount.root file
+            yield MergeOutputsTask(
+                mode="Merging",
+                stage=-1,
+                ncpus=luigi.get_setting("local_cpus"),
+            )
+
+            # TODO: yield for *.xml files of previous stages
+
     def create_path(self):
 
         luigi.set_setting("gbasf2_cputime",grid_cpu_time[self.stage])
+
+        os.system(f"ln -s {self.get_input_file_names('mcParticlesCount.root')[0]} mcParticlesCount.root")
+
+        timestamp = open(f"{self.get_input_file_names('successfull_input_upload.txt')[0]}","r").read().strip()
         if self.stage > -1:
-            additional_file = os.path.join(luigi.get_setting("remote_tmp_directory"),"stage"+str(self.stage - 1),"sub00","fei_analysis_inputs.tar.gz")
+            additional_file = os.path.join(luigi.get_setting("remote_tmp_directory").rstrip('/')+timestamp,"stage"+str(self.stage - 1),"sub00","fei_analysis_inputs.tar.gz")
             luigi.set_setting("gbasf_additional_files",additional_file)
         path = create_fei_path(filelist=[], cache=self.cache, monitor=self.monitor)
+        os.system("rm mcParticlesCount.root")
+        os.system("rm -f Summary.pickle*")
         return path
 
 class MergeOutputsTask(luigi.Task):
@@ -248,8 +265,10 @@ class PrepareInputsTask(luigi.Task):
         tarcmd += f"popd"
         os.system(tarcmd)
 
+
         # upload tarball to initial storage element
-        foldername = os.path.join(self.remote_tmp_directory,"stage"+str(self.stage))
+        timestamp = datetime.datetime.now().strftime("_%b-%d-%Y_%H-%M-%S")
+        foldername = os.path.join(self.remote_tmp_directory.rstrip('/')+timestamp,"stage"+str(self.stage))
         completed_copy = run_with_gbasf2(shlex.split(f"gb2_ds_put -d {self.remote_initial_se} -i {taroutdir} --datablock sub00 {foldername}"))
 
         # replicate tarball to other storage element sites (defined by used input datasets)
@@ -259,7 +278,9 @@ class PrepareInputsTask(luigi.Task):
            completed_replicas.append(run_with_gbasf2(shlex.split(f"gb2_ds_rep {foldername}/sub00 -d {ds_site} -s {self.remote_initial_se} --force")))
 
         if sum([proc.returncode for proc in completed_replicas + [completed_copy]]) == 0:
-            os.system(f"touch {self.get_output_file_name('successfull_input_upload.txt')}")
+            with open(f"{self.get_output_file_name('successfull_input_upload.txt')}","w") as timestampfile:
+                timestampfile.write(timestamp)
+                timestampfile.close()
 
 class ProduceStatisticsTask(luigi.WrapperTask):
 
