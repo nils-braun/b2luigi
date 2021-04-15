@@ -12,6 +12,7 @@ from b2luigi.batch.processes.gbasf2 import run_with_gbasf2
 
 from B_generic_train import create_fei_path
 import fei
+from fei.core import get_stages_from_particles
 
 def shell_command(cmd):
     os.system(cmd)
@@ -157,13 +158,37 @@ class FEITrainingTask(luigi.Task):
 
     stage = luigi.IntParameter()
     mode = luigi.Parameter()
+    first_xml_output = None
 
     def output(self):
 
         if self.stage == -1:
             yield self.add_to_output("dataset_sites.txt")
         else:
-            pass
+            monitor = True if self.stage == 6 else False
+
+            # create symlinks to files, which are needed for current FEI analysis stage
+            for key in self.get_input_file_names():
+                if key == "mcParticlesCount.root" or key == "training_input.root" or key.endswith(".xml"):
+                    os.system(f"ln -s {self.get_input_file_names(key)[0]} {key}")
+
+            # load path to determine .xml output names
+            os.system("rm -f Summary.pickle*")
+            if not os.path.exists('Summary.pickle'):
+                path = create_fei_path(filelist=[], cache=0, monitor=monitor)
+            particles, configuration = pickle.load(open('Summary.pickle', 'rb'))
+            myparticles = get_stages_from_particles(particles)
+            for p in myparticles[self.stage]:
+                for channel in p.channels:
+                    if not self.first_xml_output:
+                        self.first_xml_output = channel.label + '.xml'
+                    yield self.add_to_output(channel.label + '.xml')
+
+            # remove symlinks and not needed Summary.pickle files
+            for key in self.get_input_file_names():
+                if key == "mcParticlesCount.root" or key == "training_input.root" or key.endwith(".xml"):
+                    os.system(f"rm {key}")
+            os.system("rm -f Summary.pickle*")
 
     def requires(self):
 
@@ -197,6 +222,7 @@ class FEITrainingTask(luigi.Task):
     def run(self):
 
         if self.stage == -1:
+
             input_ds = luigi.get_setting("gbasf2_input_dataset")
             input_dslist = []
             if input_ds.endswith('.txt'):
@@ -213,13 +239,36 @@ class FEITrainingTask(luigi.Task):
             for stdout in proc_stdouts:
                 sites += [l.split(':')[0].replace('DATA','TMP') for l in stdout if 'SE' in l]
             sites = list(set(sites))
-            for site in sites:
-                print(site)
             with open(f"{self.get_output_file_name('dataset_sites.txt')}",'w') as output_sites:
                 output_sites.write('\n'.join(sites))
                 output_sites.close()
         else:
-            pass
+
+            # determine directory of outputs:
+            outputdir = os.path.dirname(self.get_output_file_name(self.first_xml_output))
+
+            # create symlinks to files, which are needed for current FEI analysis stage
+            for key in self.get_input_file_names():
+                if key == "mcParticlesCount.root" or key == "training_input.root" or key.endswith(".xml"):
+                    os.system(f"ln -s {self.get_input_file_names(key)[0]} {key}")
+
+            # load path to perform training
+            monitor = True if self.stage == 6 else False
+            os.system("rm -f Summary.pickle*")
+            if not os.path.exists('Summary.pickle'):
+                path = create_fei_path(filelist=[], cache=0, monitor=monitor)
+            particles, configuration = pickle.load(open('Summary.pickle', 'rb'))
+            weightfiles = fei.do_trainings(particles, configuration)
+
+            # remove symlinks and not needed Summary.pickle files
+            for key in self.get_input_file_names():
+                if key == "mcParticlesCount.root" or key == "training_input.root" or key.endwith(".xml"):
+                    os.system(f"rm {key}")
+            os.system("rm -f Summary.pickle*")
+
+            # move *.xml and *.log files to output directory
+            if len(glob.glob("*.xml")) == len(glob.glob("*.log")) and len(glob.glob("*.xml")) > 0:
+                os.system(f'mv *.xml *.log {outputdir}')
 
 class PrepareInputsTask(luigi.Task):
 
@@ -303,11 +352,16 @@ class ProduceStatisticsTask(luigi.WrapperTask):
 
     def requires(self):
 
-        yield MergeOutputsTask(
-            mode="Merging",
+        yield FEITrainingTask(
+            mode="Training",
             stage=0,
-            ncpus=luigi.get_setting("local_cpus"),
         )
+
+        #yield MergeOutputsTask(
+        #    mode="Merging",
+        #    stage=0,
+        #    ncpus=luigi.get_setting("local_cpus"),
+        #)
 
         #yield PrepareInputsTask(
         #    mode="AnalysisInput",
