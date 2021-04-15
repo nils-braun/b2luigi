@@ -96,7 +96,7 @@ class FEIAnalysisTask(Basf2PathTask):
         timestamp = open(f"{self.get_input_file_names('successfull_input_upload.txt')[0]}","r").read().strip()
         if self.stage > -1:
             additional_file = os.path.join(luigi.get_setting("remote_tmp_directory").rstrip('/')+timestamp,"stage"+str(self.stage - 1),"sub00","fei_analysis_inputs.tar.gz")
-            luigi.set_setting("gbasf_additional_files",additional_file)
+            luigi.set_setting("gbasf2_additional_files",additional_file)
         path = create_fei_path(filelist=[], cache=self.cache, monitor=self.monitor)
         os.system("rm mcParticlesCount.root")
         os.system("rm -f Summary.pickle*")
