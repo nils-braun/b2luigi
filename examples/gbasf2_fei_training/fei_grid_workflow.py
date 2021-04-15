@@ -12,7 +12,6 @@ from b2luigi.batch.processes.gbasf2 import run_with_gbasf2
 
 from B_generic_train import create_fei_path
 import fei
-from fei.core import get_stages_from_particles
 
 def shell_command(cmd):
     os.system(cmd)
@@ -173,28 +172,14 @@ class FEITrainingTask(luigi.Task):
         else:
             monitor = True if self.stage == 6 else False
 
-            # create symlinks to files, which are needed for current FEI analysis stage
-            for key in self.get_input_file_names():
-                if key == "mcParticlesCount.root" or key == "training_input.root" or key.endswith(".xml"):
-                    os.system(f"ln -sf {self.get_input_file_names(key)[0]} {key}")
-
-            # load path to determine .xml output names
-            os.system("rm -f Summary.pickle*")
-            if not os.path.exists('Summary.pickle'):
-                path = create_fei_path(filelist=[], cache=0, monitor=monitor)
-            particles, configuration = pickle.load(open('Summary.pickle', 'rb'))
-            myparticles = get_stages_from_particles(particles)
+            # load particles to determine .xml output names
+            particles = fei.get_default_channels()
+            myparticles = fei.core.get_stages_from_particles(particles)
             for p in myparticles[self.stage]:
                 for channel in p.channels:
                     if not self.first_xml_output:
                         self.first_xml_output = channel.label + '.xml'
                     yield self.add_to_output(channel.label + '.xml')
-
-            # remove symlinks and not needed Summary.pickle files
-            for key in self.get_input_file_names():
-                if key == "mcParticlesCount.root" or key == "training_input.root" or key.endswith(".xml"):
-                    os.system(f"rm {key}")
-            os.system("rm -f Summary.pickle*")
 
     def requires(self):
 
