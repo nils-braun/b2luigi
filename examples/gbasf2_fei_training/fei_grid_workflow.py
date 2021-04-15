@@ -79,6 +79,9 @@ class FEIAnalysisTask(Basf2PathTask):
     def create_path(self):
 
         luigi.set_setting("gbasf2_cputime",grid_cpu_time[self.stage])
+        if self.stage > -1:
+            additional_file = os.path.join(luigi.get_setting("remote_tmp_directory"),"stage"+str(self.stage - 1),"sub00","fei_analysis_inputs.tar.gz")
+            luigi.set_setting("gbasf_additional_files",additional_file)
         path = create_fei_path(filelist=[], cache=self.cache, monitor=self.monitor)
         return path
 
@@ -262,12 +265,18 @@ class ProduceStatisticsTask(luigi.WrapperTask):
 
     def requires(self):
 
-        yield PrepareInputsTask(
-            mode="AnalysisInput",
-            stage=-1,
-            remote_tmp_directory=luigi.get_setting("remote_tmp_directory"),
-            remote_initial_se=luigi.get_setting("remote_initial_se"),
+        yield MergeOutputsTask(
+            mode="Merging",
+            stage=0,
+            ncpus=luigi.get_setting("local_cpus"),
         )
+
+        #yield PrepareInputsTask(
+        #    mode="AnalysisInput",
+        #    stage=-1,
+        #    remote_tmp_directory=luigi.get_setting("remote_tmp_directory"),
+        #    remote_initial_se=luigi.get_setting("remote_initial_se"),
+        #)
 
 
 if __name__ == '__main__':
