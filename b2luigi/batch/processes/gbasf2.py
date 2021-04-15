@@ -70,7 +70,8 @@ class Gbasf2Process(BatchProcess):
           inhereting from ``Basf2PathTask`` or other tasks with a
           ``create_path()`` method that returns a basf2 path.
 
-        - It can be used **only for pickable basf2 paths**, as it stores
+        - It can be used **only for pickable basf2 paths**, with only some limited global basf2 state
+          saved (currently aliases and global tags). The batch process stores
           the path created by ``create_path`` in a python pickle file and runs that on the grid.
           Therefore, **python basf2 modules are not yet supported**.
           To see if the path produced by a steering file is pickable, you can try to dump it with
@@ -252,17 +253,7 @@ class Gbasf2Process(BatchProcess):
         to ``gb2_job_status``, and return an overall project status, e.g. when
         all jobs are done, return ``JobStatus.successful`` to show that the
         gbasf2 project succeeded.
-
-        The status of each individual job can be one of::
-
-            [Submitting, Submitted, Received, Checking, Staging, Waiting, Matched, Rescheduled,
-             Running, Stalled, Completing, Done, Completed, Failed, Deleted, Killed]
-
-        (Taken from  https://github.com/DIRACGrid/DIRAC/blob/rel-v7r1/WorkloadManagementSystem/Client/JobStatus.py)
-
         """
-        # If project is does not exist on grid yet, so can't query for gbasf2 project status
-
         job_status_dict = get_gbasf2_project_job_status_dict(self.gbasf2_project_name, dirac_user=self.dirac_user)
         n_jobs_by_status = Counter()
         for _, job_info in job_status_dict.items():
@@ -298,8 +289,15 @@ class Gbasf2Process(BatchProcess):
         if n_done == n_jobs:
             # download dataset only the first time that we return JobStatus.successful
             if not self._project_had_been_successful:
-                self._on_first_success_action()
-                self._project_had_been_successful = True
+                try:
+                    self._on_first_success_action()
+                    self._project_had_been_successful = True
+                # RuntimeError might occur when download of output dataset was not complete. This is
+                # frequent, so we want to catch that error and just marking the job as failed
+                except RuntimeError as err:
+                    warnings.warn(err, RuntimeWarning)
+                    return JobStatus.aborted
+
             return JobStatus.successful
 
         raise RuntimeError("Could not determine JobStatus")
@@ -335,7 +333,10 @@ class Gbasf2Process(BatchProcess):
         for job_id, job_info in job_status_dict.items():
             if job_info["Status"] == "Failed":
                 if self.n_retries_by_job[job_id] >= self.max_retries:
-                    warnings.warn(f"Reached maximum number of rescheduling tries ({self.max_retries}) for job {job_id}.")
+                    warnings.warn(
+                        f"Reached maximum number of rescheduling tries ({self.max_retries}) for job {job_id}.",
+                        RuntimeWarning
+                    )
                     return False
                 self._reschedule_job(job_id)
                 self.n_retries_by_job[job_id] += 1
@@ -358,7 +359,7 @@ class Gbasf2Process(BatchProcess):
         Submit new gbasf2 project to grid
         """
         if check_project_exists(self.gbasf2_project_name, self.dirac_user):
-            warnings.warn(
+            print(
                 f"\nProject with name {self.gbasf2_project_name} already exists on grid, "
                 "therefore not submitting new project. If you want to submit a new project, "
                 "change the project name."
@@ -483,8 +484,8 @@ class Gbasf2Process(BatchProcess):
                 "Gbasf2 batch process can only used with tasks that generate basf2 paths with "
                 "a ``create_path()`` method, e.g. are an instance of ``Basf2PathTask``."
             ) from err
-        from b2luigi.batch.processes.gbasf2_utils.pickle_utils import write_path_and_aliases_to_file
-        write_path_and_aliases_to_file(basf2_path, self.pickle_file_path)
+        from b2luigi.batch.processes.gbasf2_utils.pickle_utils import write_path_and_state_to_file
+        write_path_and_state_to_file(basf2_path, self.pickle_file_path)
 
     def _create_wrapper_steering_file(self):
         """
@@ -606,9 +607,10 @@ class Gbasf2Process(BatchProcess):
             tmp_output_dir = os.path.join(tmp_output_dir_path, self.gbasf2_project_name, 'sub00')
             if not self._local_gb2_dataset_is_complete(output_file_name, check_temp_dir=True, verbose=True):
                 raise RuntimeError(
-                    f"The downloaded set of files in {tmp_output_dir} is not equal to the " +
-                    f"list of dataset files on the grid for project {self.gbasf2_project_name}."
+                    f"Download incomplete. The downloaded set of files in {tmp_output_dir} is not equal to the " +
+                    f"list of dataset files on the grid for project {self.gbasf2_project_name}.",
                 )
+
             print(f"Download of {self.gbasf2_project_name} files successful.\n"
                   f"Moving output files to directory: {output_dir_path}")
             if os.path.exists(output_dir_path):
@@ -694,16 +696,19 @@ def check_dataset_exists_on_grid(gbasf2_project_name, dirac_user=None):
         return False
     output_lines_are_paths = all(os.path.abspath(line) for line in output_dataset_str.strip().splitlines())
     if not output_lines_are_paths:
-        warnings.warn("The output of ``{' '.join(ds_list_command)}`` contains lines that are not grid paths:\n" +
-                      output_dataset_str)
+        warnings.warn(
+            "The output of ``{' '.join(ds_list_command)}`` contains lines that are not grid paths:\n" +
+            output_dataset_str,
+            category=RuntimeWarning
+        )
         return False
     return True
 
 
 def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
     """
-    Returns a dictionary for all jobs in the project with a structure like the following,
-    which I have taken and adapted from an example output::
+    Returns a dictionary for all jobs in the project with a structure like the
+    following, which I have taken and adapted from an example output::
 
         {
             "<JobID>": {
@@ -720,10 +725,10 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
         ...
         }
 
-    For that purpose, the script in ``gbasf2_job_status.py`` is called.
-    That script directly interfaces with Dirac via its API, but it only works with the
-    gbasf2 environment and python2, which is why it is called as a subprocess.
-    The job status dictionary is passed to this function via json.
+    For that purpose, the script in ``gbasf2_job_status.py`` is called.  That
+    script directly interfaces with Dirac via its API, but it only works with
+    the gbasf2 environment and python2, which is why it is called as a
+    subprocess.  The job status dictionary is passed to this function via json.
     """
     if dirac_user is None:
         dirac_user = get_dirac_user()

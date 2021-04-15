@@ -1,13 +1,10 @@
-import os
-import sys
 import time
-import abc
 import enum
 
 import luigi
 import luigi.scheduler
 
-from b2luigi.core.utils import on_failure, create_cmd_from_task
+from b2luigi.core.utils import on_failure
 
 
 class JobStatus(enum.Enum):
@@ -48,9 +45,9 @@ class BatchProcess:
         What is the batch command now? In each job, we call a specific executable bash script
         only created for this task. It contains the setup of the environment (if given by the
         user via the settings), the change of the working directory (the directory of the
-        python script or a specified directory by the user) and a call of this script with the 
-        current python interpreter (the one you used to call this main file or given by the 
-        setting ``executable``) . However, we give this call an additional parameter, which tells it 
+        python script or a specified directory by the user) and a call of this script with the
+        current python interpreter (the one you used to call this main file or given by the
+        setting ``executable``) . However, we give this call an additional parameter, which tells it
         to only run one single task. Task can be identified by their task id. A typical task command may look like::
 
             /<path-to-your-exec>/python /your-project/some-file.py --batch-runner --task-id MyTask_38dsf879w3
@@ -89,7 +86,7 @@ class BatchProcess:
         If the task status is unknown, return aborted. If the task has not started already but
         is scheduled, return running nevertheless (for b2luigi it makes no difference).
         No matter if aborted via a call to kill_job, by the batch system or by an exception in the
-        job itself, you should return aborted if the job is not finished successfully 
+        job itself, you should return aborted if the job is not finished successfully
         (maybe you need to check the exit code of your job).
         """
         raise NotImplementedError
@@ -100,12 +97,12 @@ class BatchProcess:
         It is called exactly once. You need to store any information identifying
         your batch job on your own.
 
-        You can use the ``b2luigi.core.utils.get_log_file_dir`` and the 
+        You can use the ``b2luigi.core.utils.get_log_file_dir`` and the
         ``b2luigi.core.executable.create_executable_wrapper`` functions to get the log base name
-        and to create the executable script which you should call in your batch job. 
+        and to create the executable script which you should call in your batch job.
 
         After the start_job function is called by the framework (and no exception is thrown),
-        it is assumed that a batch job is started or scheduled. 
+        it is assumed that a batch job is started or scheduled.
 
         After the job is finished (no matter if aborted or successful) we assume the stdout and stderr
         is written into the two files given by b2luigi.core.utils.get_log_file_dir(self.task).

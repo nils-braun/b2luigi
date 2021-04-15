@@ -7,10 +7,10 @@ class BatchJobStatusCache(abc.ABC, TTLCache):
     """
     Abstract base class for job status caches.
     Useful if the batch system provides the status of all jobs
-    as a list, which might be faster than asking for each job 
+    as a list, which might be faster than asking for each job
     separately.
 
-    Override the function _ask_for_job_status, which should 
+    Override the function _ask_for_job_status, which should
     set the job status for the specific job if
     specified or for all accessible jobs (e.g. for all of this user).
     Having too much information (e.g. information on jobs
@@ -35,4 +35,3 @@ class BatchJobStatusCache(abc.ABC, TTLCache):
             return self[job_id]
 
         raise KeyError
-

@@ -2,8 +2,6 @@ import os
 
 from ..helpers import B2LuigiTestCase
 
-import b2luigi
-
 
 class TemporaryWrapperTestCase(B2LuigiTestCase):
     def test_result_dir(self):
@@ -13,7 +11,6 @@ class TemporaryWrapperTestCase(B2LuigiTestCase):
 
         with open("results/test.txt", "r") as f:
             self.assertEqual(f.read(), "Test")
-
 
     def test_result_dir_from_other_location(self):
         os.makedirs("some_other_folder", exist_ok=True)

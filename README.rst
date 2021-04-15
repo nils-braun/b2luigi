@@ -1,14 +1,16 @@
 b2luigi
 =======
 
-.. image:: https://readthedocs.org/projects/b2luigi/badge/?version=latest&style=flat-sphare
+.. image:: https://img.shields.io/readthedocs/b2luigi
            :target: https://b2luigi.readthedocs.io/en/stable/
-.. image:: https://badge.fury.io/py/b2luigi.svg
-           :target: https://badge.fury.io/py/b2luigi
-.. image:: https://coveralls.io/repos/github/nils-braun/b2luigi/badge.svg?branch=main
-           :target: https://coveralls.io/github/nils-braun/b2luigi?branch=main
-.. image:: https://travis-ci.org/nils-braun/b2luigi.svg?branch=main
-           :target: https://travis-ci.org/nils-braun/b2luigi
+.. image:: https://img.shields.io/github/license/nils-braun/b2luigi
+           :target: https://github.com/nils-braun/b2luigi/blob/main/LICENSE
+.. image:: https://img.shields.io/codecov/c/github/nils-braun/b2luigi?logo=codecov
+           :target: https://codecov.io/gh/nils-braun/b2luigi
+.. image:: https://img.shields.io/github/workflow/status/nils-braun/b2luigi/Test?logo=github
+           :target: https://github.com/nils-braun/b2luigi/actions
+.. image:: https://img.shields.io/pypi/v/b2luigi?logo=pypi
+           :target: https://pypi.python.org/pypi/b2luigi/
 
 
 ``b2luigi`` is a helper package constructed around ``luigi``, that helps you schedule working packages (so called tasks)

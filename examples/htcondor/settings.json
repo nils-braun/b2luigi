@@ -2,7 +2,8 @@
 	"batch_system": "htcondor",
 	"env_script": "setup_script.sh",
 	"executable": ["python3"],
+        "job_name": "b2luigi_example",
 	"htcondor_settings": {
-		"some": "settings",
+		"some": "settings"
 	}
 }

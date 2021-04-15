@@ -12,6 +12,7 @@ from b2luigi.batch.processes.gbasf2 import (_get_lfn_upto_reschedule_number, get
 
 # first test utilities for working with logical file names on the grid
 
+
 class TestLFNFollowsGbasf2V5Convention(unittest.TestCase):
     def test_newstyle_lfn_is_true(self):
         lfn = 'Upsilon4SBpcandee_00000_job181817516_03.root'

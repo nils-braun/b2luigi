@@ -5,7 +5,15 @@ from b2luigi.cli import runner
 __has_run_already = False
 
 
-def process(task_like_elements, show_output=False, dry_run=False, test=False, batch=False, ignore_additional_command_line_args=False, **kwargs):
+def process(
+        task_like_elements,
+        show_output=False,
+        dry_run=False,
+        test=False,
+        batch=False,
+        ignore_additional_command_line_args=False,
+        **kwargs
+):
     """
     Call this function in your main method to tell ``b2luigi`` where your entry
     point of the task graph is.

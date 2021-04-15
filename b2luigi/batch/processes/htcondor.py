@@ -98,7 +98,8 @@ class HTCondorProcess(BatchProcess):
 
     * Please note that most of the HTCondor batch farms do not have the same
       environment setup on submission and worker machines, so you probably want to give an
-      ``env_script``, an ``env`` setting and/or a different ``executable``.
+      ``env_script``, an ``env`` :meth:`setting <b2luigi.set_setting>` and/or a different ``executable``.
+
     * HTCondor supports copying files from submission to workers. This means if the
       folder of your script(s)/python project/etc. is not accessible on the worker, you can
       copy it from the submission machine by adding it to the setting ``transfer_files``.
@@ -119,11 +120,20 @@ class HTCondorProcess(BatchProcess):
       forget to actually set it up in your setup script.
       Additionally, you might want to copy your ``settings.json`` as well.
 
-    * You can give an ``htcondor_setting`` dict setting flag for additional options, such as
-      requested memory etc. It's value has to be a dictionary containing HTCondor settings as key/value pairs.
-      These options will be written into the job submission file.
-      For an overview of possible settings refer to the
-      `HTCondor documentation <https://htcondor.readthedocs.io/en/latest/users-manual/submitting-a-job.html#>`_.
+    * Via the ``htcondor_settings`` setting you can provide a dict as
+      a for additional options, such as requested memory etc. Its value has to be a dictionary
+      containing HTCondor settings as key/value pairs. These options will be written into the job
+      submission file. For an overview of possible settings refer to the `HTCondor documentation
+      <https://htcondor.readthedocs.io/en/latest/users-manual/submitting-a-job.html#>`_.
+
+    * Same as for the :ref:`LSF`, the ``job_name`` setting allows giving a meaningful name to a
+      group of jobs. If you want to be htcondor-specific, you can provide the ``JobBatchName`` as an
+      entry in the ``htcondor_settings`` dict, which will override the global ``job_name`` setting.
+      This is useful for manually checking the status of specific jobs with
+
+      .. code-block:: bash
+
+        condor_q -batch <job name>
 
     Example:
 
@@ -213,7 +223,10 @@ class HTCondorProcess(BatchProcess):
 
             for transfer_file in transfer_files:
                 if os.path.abspath(transfer_file) != transfer_file:
-                    raise ValueError(f"You should only give absolute file names in transfer_files! {os.path.abspath(transfer_file)} != {transfer_file}")
+                    raise ValueError(
+                        "You should only give absolute file names in transfer_files!" +
+                        f"{os.path.abspath(transfer_file)} != {transfer_file}"
+                    )
 
             env_setup_script = get_setting("env_script", task=self.task, default="")
             if env_setup_script:
@@ -221,6 +234,10 @@ class HTCondorProcess(BatchProcess):
                 transfer_files.add(os.path.abspath(env_setup_script))
 
             general_settings.setdefault("transfer_input_files", ",".join(transfer_files))
+
+        job_name = get_setting("job_name", task=self.task, default=False)
+        if job_name is not False:
+            general_settings.setdefault("JobBatchName", job_name)
 
         for key, item in general_settings.items():
             submit_file_content.append(f"{key} = {item}")

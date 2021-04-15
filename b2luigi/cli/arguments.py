@@ -44,7 +44,7 @@ def get_cli_arguments(ignore_additional_command_line_args=False):
 
     if (args.test or args.dry_run) and (args.scheduler_host or args.scheduler_port):
         raise AttributeError("Can not test while using a central scheduler!")
-    if args.batch_runner and not args.task_id :
+    if args.batch_runner and not args.task_id:
         raise AttributeError("A batch runner should always have a fully qualified task id.")
     if args.show_output and (args.scheduler_host or args.scheduler_port or args.batch or args.test):
         print("Ignoring all other parameters, as you have given the --show-output parameter.")
