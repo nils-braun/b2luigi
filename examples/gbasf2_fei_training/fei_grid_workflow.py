@@ -323,14 +323,15 @@ class PrepareInputsTask(luigi.Task):
         outputs = [outs[0] for outs in self.get_input_file_names().values() if outs[0].endswith('.root') or outs[0].endswith('.xml')]
         taroutname = self.get_output_file_name("fei_analysis_inputs.tar.gz")
         taroutdir = os.path.dirname(taroutname)
+        outputsstring = ' '.join(['"'+o+'"' for o in outputs])
         tarcmd = f"rm -f {self.get_output_file_name('successfull_input_upload.txt')}; "
-        tarcmd += f"cp {' '.join(outputs)} {taroutdir}; "
+        tarcmd += f"cp {outputsstring} {taroutdir}; "
         tarcmd += f"pushd {taroutdir}; "
-        tarcmd += f"tar -vczf {taroutname} {' '.join([os.path.basename(o) for o in outputs])}; "
-        tarcmd += f"rm -f {' '.join([os.path.basename(o) for o in outputs])}; "
+        baseoutputsstring = ' '.join(['"'+os.path.basename(o)+'"' for o in outputs])
+        tarcmd += f"tar -vczf {taroutname} {baseoutputsstring}; "
+        tarcmd += f"rm -f {baseoutputsstring}; "
         tarcmd += f"popd"
         os.system(tarcmd)
-
 
         # upload tarball to initial storage element
         timestamp = datetime.datetime.now().strftime("_%b-%d-%Y_%H-%M-%S")
@@ -352,10 +353,10 @@ class ProduceStatisticsTask(luigi.WrapperTask):
 
     def requires(self):
 
-        yield FEITrainingTask(
-            mode="Training",
-            stage=0,
-        )
+        #yield FEITrainingTask(
+        #    mode="Training",
+        #    stage=0,
+        #)
 
         #yield MergeOutputsTask(
         #    mode="Merging",
@@ -363,12 +364,12 @@ class ProduceStatisticsTask(luigi.WrapperTask):
         #    ncpus=luigi.get_setting("local_cpus"),
         #)
 
-        #yield PrepareInputsTask(
-        #    mode="AnalysisInput",
-        #    stage=-1,
-        #    remote_tmp_directory=luigi.get_setting("remote_tmp_directory"),
-        #    remote_initial_se=luigi.get_setting("remote_initial_se"),
-        #)
+        yield PrepareInputsTask(
+            mode="AnalysisInput",
+            stage=0,
+            remote_tmp_directory=luigi.get_setting("remote_tmp_directory"),
+            remote_initial_se=luigi.get_setting("remote_initial_se"),
+        )
 
 
 if __name__ == '__main__':
