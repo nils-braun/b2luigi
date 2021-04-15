@@ -42,6 +42,7 @@ fei_analysis_outputs[6] = [
 
 
 class FEIAnalysisTask(Basf2PathTask):
+
     batch_system = "gbasf2"
 
     git_hash = luigi.Parameter(hashed=True,default=get_basf2_git_hash(),significant=False)
@@ -55,10 +56,22 @@ class FEIAnalysisTask(Basf2PathTask):
     mode = luigi.Parameter()
 
     def output(self):
+
         for outname in fei_analysis_outputs[self.stage]:
             yield self.add_to_output(outname)
 
+    def requires(self):
+
+        if self.stage == -1:
+            return [] # default implementation, as in the luigi.Task (if no requirements are present)
+        else:
+            yield PrepareInputsTask(
+                mode="AnalysisInput",
+                stage=self.stage - 1,
+            )
+
     def create_path(self):
+
         luigi.set_setting("gbasf2_cputime",grid_cpu_time[self.stage])
         path = create_fei_path(filelist=[], cache=self.cache, monitor=self.monitor)
         return path
@@ -70,10 +83,12 @@ class MergeOutputsTask(luigi.Task):
     mode = luigi.Parameter()
 
     def output(self):
+
         for outname in fei_analysis_outputs[self.stage]:
             yield self.add_to_output(outname)
 
     def requires(self):
+
         cache = -1 if self.stage == -1 else 0
         monitor = True if self.stage == 6 else False
         yield FEIAnalysisTask(
@@ -86,6 +101,7 @@ class MergeOutputsTask(luigi.Task):
         )
 
     def run(self):
+
         cmds = []
         for inname in fei_analysis_outputs[self.stage]:
             # for some reason, only a one-element list: self.get_input_file_names(inname) (specific to gbasf2 output structure)
@@ -93,6 +109,79 @@ class MergeOutputsTask(luigi.Task):
 
         p = Pool(self.ncpus)
         p.map(shell_command,cmds)
+
+class FEITrainingTask(luigi.Task):
+
+    stage = luigi.IntParameter()
+    mode = luigi.Parameter()
+
+    def output(self):
+
+        if self.stage == -1:
+            self.add_to_output("no_training_needed.txt")
+        else:
+            pass
+
+    def requires(self):
+
+        # need merged mcParticlesCount.root from stage -1
+        yield MergeOutputsTask(
+            mode="Merging",
+            stage=-1,
+            ncpus=luigi.get_setting("local_cpus"),
+        )
+
+        # need merged training_input.root from current stage
+        if self.stage > -1:
+
+            yield MergeOutputsTask(
+                mode="Merging",
+                stage=self.stage,
+                ncpus=luigi.get_setting("local_cpus"),
+            )
+
+        # need .xml training files from all previous stages of FEI training,
+        # beginning with stage 1
+        if self.stage > 0:
+
+            for fei_stage in range(self.stage):
+
+                yield FEITrainingTask(
+                    mode="Training",
+                    stage=fei_stage,
+                )
+
+class PrepareInputsTask(luigi.Task):
+
+    stage = luigi.IntParameter()
+    mode = luigi.Parameter()
+
+    def requires(self):
+
+        # need merged mcParticlesCount.root from stage -1
+        yield MergeOutputsTask(
+            mode="Merging",
+            stage=-1,
+            ncpus=luigi.get_setting("local_cpus"),
+        )
+
+        if self.stage > -1:
+            # need .xml training files from current stage of FEI training
+            yield FEITrainingTask(
+                mode="Training",
+                stage=self.stage,
+            )
+
+        # need .xml training files from all previous stages of FEI training,
+        # beginning with stage 1
+        if self.stage > 0:
+
+            for fei_stage in range(self.stage):
+
+                yield FEITrainingTask(
+                    mode="Training",
+                    stage=fei_stage,
+                )
 
 class ProduceStatisticsTask(luigi.WrapperTask):
 
