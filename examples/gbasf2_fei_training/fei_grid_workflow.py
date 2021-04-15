@@ -2,6 +2,7 @@ from multiprocessing import Pool
 import os
 import glob
 import shlex
+import pickle
 
 import b2luigi as luigi
 from b2luigi.basf2_helper.tasks import Basf2PathTask
@@ -9,6 +10,7 @@ from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes.gbasf2 import run_with_gbasf2
 
 from B_generic_train import create_fei_path
+import fei
 
 def shell_command(cmd):
     os.system(cmd)
@@ -122,7 +124,7 @@ class FEITrainingTask(luigi.Task):
     def output(self):
 
         if self.stage == -1:
-            yield self.add_to_output("no_training_needed.txt")
+            yield self.add_to_output("dataset_sites.txt")
         else:
             pass
 
@@ -158,7 +160,27 @@ class FEITrainingTask(luigi.Task):
     def run(self):
 
         if self.stage == -1:
-            os.system(f"touch {self.get_output_file_name('no_training_needed.txt')}")
+            input_ds = luigi.get_setting("gbasf2_input_dataset")
+            input_dslist = []
+            if input_ds.endswith('.txt'):
+                input_dslist = [line.strip() for line in open(input_ds,'r').readlines()]
+            else:
+                input_dslist = [input_ds]
+
+            proc_stdouts = []
+            for index,ds in enumerate(input_dslist):
+                proc = run_with_gbasf2(shlex.split(f"gb2_ds_list {ds} -lg"),capture_output=True)
+                proc_stdouts.append(proc.stdout.splitlines())
+
+            sites = []
+            for stdout in proc_stdouts:
+                sites += [l.split(':')[0].replace('DATA','TMP') for l in stdout if 'SE' in l]
+            sites = list(set(sites))
+            for site in sites:
+                print(site)
+            with open(f"{self.get_output_file_name('dataset_sites.txt')}",'w') as output_sites:
+                output_sites.write('\n'.join(sites))
+                output_sites.close()
         else:
             pass
 
@@ -184,6 +206,13 @@ class PrepareInputsTask(luigi.Task):
             ncpus=luigi.get_setting("local_cpus"),
         )
 
+        # need dataset_sites.txt file from stage -1 of FEI training,
+        # which is (ab)used to create that site list
+        yield FEITrainingTask(
+            mode="Training",
+            stage=-1,
+        )
+
         # need .xml training files from current stage of FEI training
         if self.stage > -1:
             yield FEITrainingTask(
@@ -205,7 +234,7 @@ class PrepareInputsTask(luigi.Task):
     def run(self):
 
         # create tarball with all required input files for FEIAnalysisTask
-        outputs = [outs[0] for outs in self.get_input_file_names().values()]
+        outputs = [outs[0] for outs in self.get_input_file_names().values() if outs[0].endswith('.root') or outs[0].endswith('.xml')]
         taroutname = self.get_output_file_name("fei_analysis_inputs.tar.gz")
         taroutdir = os.path.dirname(taroutname)
         tarcmd = f"rm -f {self.get_output_file_name('successfull_input_upload.txt')}; "
@@ -217,11 +246,11 @@ class PrepareInputsTask(luigi.Task):
         os.system(tarcmd)
 
         # upload tarball to initial storage element
-        foldername = os.path.join(self.remote_tmp_directory,str(self.stage))
+        foldername = os.path.join(self.remote_tmp_directory,"stage"+str(self.stage))
         completed_copy = run_with_gbasf2(shlex.split(f"gb2_ds_put -d {self.remote_initial_se} -i {taroutdir} --datablock sub00 {foldername}"))
 
         # replicate tarball to other storage element sites (defined by used input datasets)
-        dataset_sites = ["Napoli-TMP-SE","BNL-TMP-SE"]
+        dataset_sites = [site.strip() for site in open(self.get_input_file_names('dataset_sites.txt')[0],'r').readlines()]
         completed_replicas = []
         for ds_site in dataset_sites:
            completed_replicas.append(run_with_gbasf2(shlex.split(f"gb2_ds_rep {foldername}/sub00 -d {ds_site} -s {self.remote_initial_se} --force")))
