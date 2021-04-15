@@ -68,8 +68,11 @@ class FEIAnalysisTask(Basf2PathTask):
     def requires(self):
 
         if self.stage == -1:
+
             return [] # default implementation, as in the luigi.Task (if no requirements are present)
+
         else:
+
             # need the timestamp of the additional inputs to build their TMP-SE path
             yield PrepareInputsTask(
                 mode="AnalysisInput",
@@ -85,20 +88,34 @@ class FEIAnalysisTask(Basf2PathTask):
                 ncpus=luigi.get_setting("local_cpus"),
             )
 
-            # TODO: yield for *.xml files of previous stages
+            # need symlinks to *.xml files of FEi training of previous stages
+            for fei_stage in range(self.stage):
+
+                yield FEITrainingTask(
+                    mode="Training",
+                    stage=fei_stage,
+                )
 
     def create_path(self):
 
         luigi.set_setting("gbasf2_cputime",grid_cpu_time[self.stage])
 
-        os.system(f"ln -s {self.get_input_file_names('mcParticlesCount.root')[0]} mcParticlesCount.root")
+        # create symlinks to files, which are needed for current FEI analysis stage
+        for key in self.get_input_file_names():
+            if key == "mcParticlesCount.root" or key.endwith(".xml"):
+                os.system(f"ln -s {self.get_input_file_names(key)[0]} {key}")
+        path = create_fei_path(filelist=[], cache=self.cache, monitor=self.monitor)
 
+        # determine the remote TMP-SE destination of input tarball for gbasf2 command
         timestamp = open(f"{self.get_input_file_names('successfull_input_upload.txt')[0]}","r").read().strip()
         if self.stage > -1:
             additional_file = os.path.join(luigi.get_setting("remote_tmp_directory").rstrip('/')+timestamp,"stage"+str(self.stage - 1),"sub00","fei_analysis_inputs.tar.gz")
-            luigi.set_setting("gbasf2_additional_files",additional_file)
-        path = create_fei_path(filelist=[], cache=self.cache, monitor=self.monitor)
-        os.system("rm mcParticlesCount.root")
+            luigi.set_setting("gbasf2_input_datafiles",[additional_file])
+
+        # remove symlinks and not needed Summary.pickle files
+        for key in self.get_input_file_names():
+            if key == "mcParticlesCount.root" or key.endwith(".xml"):
+                os.system(f"rm {key}")
         os.system("rm -f Summary.pickle*")
         return path
 
