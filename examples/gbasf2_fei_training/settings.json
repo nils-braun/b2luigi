@@ -6,6 +6,8 @@
     "gbasf2_print_status_updates": true,
     "gbasf2_max_retries": 10,
     "gbasf2_download_logs": true,
+    "remote_tmp_directory": "/belle/user/aakhmets/fei_input_files/",
+    "remote_initial_se": "KIT-TMP-SE",
     "local_cpus" : 12,
     "working_dir" : "/ceph/akhmet/b2luigi/results",
     "log_dir" : "/ceph/akhmet/b2luigi/results",

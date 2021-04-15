@@ -1,10 +1,12 @@
 from multiprocessing import Pool
 import os
 import glob
+import shlex
 
 import b2luigi as luigi
 from b2luigi.basf2_helper.tasks import Basf2PathTask
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
+from b2luigi.batch.processes.gbasf2 import run_with_gbasf2
 
 from B_generic_train import create_fei_path
 
@@ -68,6 +70,8 @@ class FEIAnalysisTask(Basf2PathTask):
             yield PrepareInputsTask(
                 mode="AnalysisInput",
                 stage=self.stage - 1,
+                remote_tmp_directory=luigi.get_setting("remote_tmp_directory"),
+                remote_initial_se=luigi.get_setting("remote_initial_se"),
             )
 
     def create_path(self):
@@ -104,7 +108,7 @@ class MergeOutputsTask(luigi.Task):
 
         cmds = []
         for inname in fei_analysis_outputs[self.stage]:
-            # for some reason, only a one-element list: self.get_input_file_names(inname) (specific to gbasf2 output structure)
+            # for some reason, only a one-element list: self.get_input_file_names(inname)
             cmds.append(f"analysis-fei-mergefiles {self.get_output_file_name(inname)} " + " ".join(glob.glob(os.path.join(self.get_input_file_names(inname)[0],"*.root"))))
 
         p = Pool(self.ncpus)
@@ -118,7 +122,7 @@ class FEITrainingTask(luigi.Task):
     def output(self):
 
         if self.stage == -1:
-            self.add_to_output("no_training_needed.txt")
+            yield self.add_to_output("no_training_needed.txt")
         else:
             pass
 
@@ -151,10 +155,25 @@ class FEITrainingTask(luigi.Task):
                     stage=fei_stage,
                 )
 
+    def run(self):
+
+        if self.stage == -1:
+            os.system(f"touch {self.get_output_file_name('no_training_needed.txt')}")
+        else:
+            pass
+
 class PrepareInputsTask(luigi.Task):
+
+    remote_tmp_directory = luigi.Parameter(significant=False) # should be set via settings
+    remote_initial_se = luigi.Parameter(significant=False) # should be set via settings
 
     stage = luigi.IntParameter()
     mode = luigi.Parameter()
+
+    def output(self):
+
+        yield self.add_to_output('fei_analysis_inputs.tar.gz')
+        yield self.add_to_output('successfull_input_upload.txt')
 
     def requires(self):
 
@@ -165,8 +184,8 @@ class PrepareInputsTask(luigi.Task):
             ncpus=luigi.get_setting("local_cpus"),
         )
 
+        # need .xml training files from current stage of FEI training
         if self.stage > -1:
-            # need .xml training files from current stage of FEI training
             yield FEITrainingTask(
                 mode="Training",
                 stage=self.stage,
@@ -183,14 +202,42 @@ class PrepareInputsTask(luigi.Task):
                     stage=fei_stage,
                 )
 
+    def run(self):
+
+        # create tarball with all required input files for FEIAnalysisTask
+        outputs = [outs[0] for outs in self.get_input_file_names().values()]
+        taroutname = self.get_output_file_name("fei_analysis_inputs.tar.gz")
+        taroutdir = os.path.dirname(taroutname)
+        tarcmd = f"rm -f {self.get_output_file_name('successfull_input_upload.txt')}; "
+        tarcmd += f"cp {' '.join(outputs)} {taroutdir}; "
+        tarcmd += f"pushd {taroutdir}; "
+        tarcmd += f"tar -vczf {taroutname} {' '.join([os.path.basename(o) for o in outputs])}; "
+        tarcmd += f"rm -f {' '.join([os.path.basename(o) for o in outputs])}; "
+        tarcmd += f"popd"
+        os.system(tarcmd)
+
+        # upload tarball to initial storage element
+        foldername = os.path.join(self.remote_tmp_directory,str(self.stage))
+        completed_copy = run_with_gbasf2(shlex.split(f"gb2_ds_put -d {self.remote_initial_se} -i {taroutdir} --datablock sub00 {foldername}"))
+
+        # replicate tarball to other storage element sites (defined by used input datasets)
+        dataset_sites = ["Napoli-TMP-SE","BNL-TMP-SE"]
+        completed_replicas = []
+        for ds_site in dataset_sites:
+           completed_replicas.append(run_with_gbasf2(shlex.split(f"gb2_ds_rep {foldername}/sub00 -d {ds_site} -s {self.remote_initial_se} --force")))
+
+        if sum([proc.returncode for proc in completed_replicas + [completed_copy]]) == 0:
+            os.system(f"touch {self.get_output_file_name('successfull_input_upload.txt')}")
+
 class ProduceStatisticsTask(luigi.WrapperTask):
 
     def requires(self):
 
-        yield MergeOutputsTask(
-            mode="Merging",
+        yield PrepareInputsTask(
+            mode="AnalysisInput",
             stage=-1,
-            ncpus=luigi.get_setting("local_cpus"),
+            remote_tmp_directory=luigi.get_setting("remote_tmp_directory"),
+            remote_initial_se=luigi.get_setting("remote_initial_se"),
         )
 
 
