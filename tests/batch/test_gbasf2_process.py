@@ -7,7 +7,6 @@ from b2luigi.batch.processes.gbasf2 import Gbasf2Process, get_unique_project_nam
 
 from ..helpers import B2LuigiTestCase
 from .batch_task_1 import MyTask
-import shlex
 import tempfile
 
 
@@ -41,7 +40,7 @@ class testBuildGbasf2SubmitCommand(B2LuigiTestCase):
         class _Task(MyGbasf2Task):
             gbasf2_input_dataset = b2luigi.Parameter(default=self.dummy_lfn)
         gb2_cmd = self._build_gbasf2_submit_command(_Task("some_parameter"))
-        gb2_cmd_str = shlex.join(gb2_cmd)
+        gb2_cmd_str = " ".join(gb2_cmd)
         self.assertEqual(gb2_cmd.count(self.dummy_lfn), 1)
         self.assertEqual(gb2_cmd.count("-i"), 1)
         self.assertEqual(gb2_cmd_str.count(f" -i {self.dummy_lfn}"), 1)
@@ -52,7 +51,7 @@ class testBuildGbasf2SubmitCommand(B2LuigiTestCase):
         class _Task(MyGbasf2Task):
             gbasf2_input_dslist = self.dummy_lfn_file.name
         gb2_cmd = self._build_gbasf2_submit_command(_Task("some_parameter"))
-        gb2_cmd_str = shlex.join(gb2_cmd)
+        gb2_cmd_str = " ".join(gb2_cmd)
         self.assertEqual(gb2_cmd.count(self.dummy_lfn_file.name), 1)
         self.assertEqual(gb2_cmd.count("--input_dslist"), 1)
         self.assertEqual(gb2_cmd_str.count(f" --input_dslist {self.dummy_lfn_file.name}"), 1)
