@@ -101,28 +101,29 @@ class FEIAnalysisTask(Basf2PathTask):
         luigi.set_setting("gbasf2_cputime",grid_cpu_time[self.stage])
 
         # determine the remote TMP-SE destination of input tarball for gbasf2 command
-        timestamp = open(f"{self.get_input_file_names('successfull_input_upload.txt')[0]}","r").read().strip()
         if self.stage > -1:
+            timestamp = open(f"{self.get_input_file_names('successfull_input_upload.txt')[0]}","r").read().strip()
             additional_file = os.path.join(luigi.get_setting("remote_tmp_directory").rstrip('/')+timestamp,"stage"+str(self.stage - 1),"sub00","fei_analysis_inputs.tar.gz")
             luigi.set_setting("gbasf2_input_datafiles",[additional_file])
 
-        # create symlinks to files, which are needed for current FEI analysis stage
-        for key in self.get_input_file_names():
-            if key.endswith(".xml"):
-                filepath = '"' + self.get_input_file_names(key)[0] + '"'
-                adjusted_key = '"' + key  + '"'
-                os.system(f"ln -sf {filepath} {adjusted_key}")
-        # need extra line for mcParticlesCount.root symlink, since removed otherwise
-        os.system(f"ln -sf {self.get_input_file_names('mcParticlesCount.root')[0]} mcParticlesCount.root")
+            # create symlinks to files, which are needed for current FEI analysis stage
+            for key in self.get_input_file_names():
+                if key.endswith(".xml"):
+                    filepath = '"' + self.get_input_file_names(key)[0] + '"'
+                    adjusted_key = '"' + key  + '"'
+                    os.system(f"ln -sf {filepath} {adjusted_key}")
+            # need extra line for mcParticlesCount.root symlink, since removed otherwise
+            os.system(f"ln -sf {self.get_input_file_names('mcParticlesCount.root')[0]} mcParticlesCount.root")
 
         path = create_fei_path(filelist=[], cache=self.cache, monitor=self.monitor)
 
-        # remove symlinks and not needed Summary.pickle files
-        for key in self.get_input_file_names():
-            if key == "mcParticlesCount.root" or key.endswith(".xml"):
-                adjusted_key = '"' + key  + '"'
-                os.system(f"rm {adjusted_key}")
-        os.system("rm -f Summary.pickle*")
+        if self.stage > -1:
+            # remove symlinks and not needed Summary.pickle files
+            for key in self.get_input_file_names():
+                if key == "mcParticlesCount.root" or key.endswith(".xml"):
+                    adjusted_key = '"' + key  + '"'
+                    os.system(f"rm {adjusted_key}")
+            os.system("rm -f Summary.pickle*")
         return path
 
 class MergeOutputsTask(luigi.Task):
