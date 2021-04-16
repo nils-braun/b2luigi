@@ -242,7 +242,9 @@ class FEITrainingTask(luigi.Task):
             # create symlinks to files, which are needed for current FEI analysis stage
             for key in self.get_input_file_names():
                 if key == "mcParticlesCount.root" or key == "training_input.root" or key.endswith(".xml"):
-                    os.system(f"ln -sf {self.get_input_file_names(key)[0]} {key}")
+                    filepath = '"' + self.get_input_file_names(key)[0] + '"'
+                    adjusted_key = '"' + key + '"'
+                    os.system(f"ln -sf {filepath} {adjusted_key}")
 
             # load path to perform training
             monitor = True if self.stage == 6 else False
@@ -255,12 +257,15 @@ class FEITrainingTask(luigi.Task):
             # remove symlinks and not needed Summary.pickle files
             for key in self.get_input_file_names():
                 if key == "mcParticlesCount.root" or key == "training_input.root" or key.endswith(".xml"):
-                    os.system(f"rm {key}")
+                    adjusted_key = '"' + key + '"'
+                    os.system(f"rm {adjusted_key}")
             os.system("rm -f Summary.pickle*")
 
             # move *.xml and *.log files to output directory
-            if len(glob.glob("*.xml")) == len(glob.glob("*.log")) and len(glob.glob("*.xml")) > 0:
-                os.system(f'mv *.xml *.log {outputdir}')
+            if len(glob.glob("*.xml")) > 0:
+                os.system(f'mv *.xml {outputdir}')
+            if len(glob.glob("*.log")) > 0:
+                os.system(f'mv *.log {outputdir}')
 
 class PrepareInputsTask(luigi.Task):
 
