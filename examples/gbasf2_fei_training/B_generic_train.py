@@ -13,6 +13,11 @@ import modularAnalysis as ma
 #tar.extractall()
 #tar.close()
 
+# Get FEI default channels.
+# Utilise the arguments to toggle on and off certain channels
+def get_particles():
+    return fei.get_default_channels()
+
 def create_fei_path(filelist=[],cache=0,monitor=False,verbose=False):
 
     # create path
@@ -30,9 +35,7 @@ def create_fei_path(filelist=[],cache=0,monitor=False,verbose=False):
     # /belle/MC/release-04-00-03/DB00000757/MC13a/prod00014142/s00/e0000/4S/r00000/charged/mdst (51 Mio)
     # /belle/MC/release-04-00-03/DB00000757/MC13a/prod00014143/s00/e0000/4S/r00000/charged/mdst (51 Mio)
 
-    # Get FEI default channels.
-    # Utilise the arguments to toggle on and off certain channels
-    particles = fei.get_default_channels()
+    particles = get_particles()
 
     # Set up FEI configuration specifying the FEI prefix
     #configuration = fei.config.FeiConfiguration(prefix='FEI_TEST', training=True, monitor=False,  cache=-1) # for creation of mcParticlesCount.root

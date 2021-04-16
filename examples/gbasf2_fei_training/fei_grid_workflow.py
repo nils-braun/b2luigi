@@ -10,7 +10,7 @@ from b2luigi.basf2_helper.tasks import Basf2PathTask
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes.gbasf2 import run_with_gbasf2
 
-from B_generic_train import create_fei_path
+from B_generic_train import create_fei_path, get_particles
 import fei
 
 def shell_command(cmd):
@@ -174,7 +174,7 @@ class FEITrainingTask(luigi.Task):
             monitor = True if self.stage == 6 else False
 
             # load particles to determine .xml output names
-            particles = fei.get_default_channels()
+            particles = get_particles()
             myparticles = fei.core.get_stages_from_particles(particles)
             for p in myparticles[self.stage]:
                 for channel in p.channels:
