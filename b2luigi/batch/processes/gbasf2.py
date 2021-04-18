@@ -603,12 +603,33 @@ class Gbasf2Process(BatchProcess):
             tmp_output_dir_path = f"{output_dir_path}.partial"
             os.makedirs(tmp_output_dir_path, exist_ok=True)
 
-            ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string}")
-            print("Downloading dataset with command ", " ".join(ds_get_command))
+            # Need a file to repeat download for FAILED ones only
+            monitoring_failed_downloads_file = os.path.join(tmp_output_dir_path, "failed_files.txt")
+
+            # In case of first download, this file does not exist
+            if not os.path.exists(monitoring_failed_downloads_file):
+
+                ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string}")
+                print("Downloading dataset with command ", " ".join(ds_get_command))
+
+            # Any further time is based on the list of files from failed downloads
+            else:
+                ds_get_command = shlex.split(f"gb2_ds_get --force --input_dslist {monitoring_failed_downloads_file}")
+                print("Downloading remaining files from dataset with command ", " ".join(ds_get_command))
+
             stdout = run_with_gbasf2(ds_get_command, cwd=tmp_output_dir_path, capture_output=True).stdout
             print(stdout)
             if "No file found" in stdout:
                 raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
+
+            failed_files = stdout.split('Failed files:')[-1].\
+                split("Files with duplicated jobID, not downloaded:")[0].strip().split('\n')
+            if len(failed_files) > 0:
+                with open(monitoring_failed_downloads_file, 'w') as ffs:
+                    ffs.write("\n".join(failed_files))
+            else:
+                os.system(f'rm -f {monitoring_failed_downloads_file}')
+
             tmp_output_dir = os.path.join(tmp_output_dir_path, self.gbasf2_project_name, 'sub00')
             if not self._local_gb2_dataset_is_complete(output_file_name, check_temp_dir=True, verbose=True):
                 raise RuntimeError(
