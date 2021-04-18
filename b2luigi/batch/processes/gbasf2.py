@@ -327,31 +327,43 @@ class Gbasf2Process(BatchProcess):
         Tries to reschedule failed jobs in the project if ``self.max_retries`` has not been reached
         and returns ``True`` if rescheduling has been successful.
         """
+        jobs_to_be_rescheduled = []
+        jobs_hitting_max_n_retries = []
         job_status_dict = get_gbasf2_project_job_status_dict(
             self.gbasf2_project_name, dirac_user=self.dirac_user)
+
         for job_id, job_info in job_status_dict.items():
             if job_info["Status"] == "Failed":
-                if self.n_retries_by_job[job_id] >= self.max_retries:
-                    warnings.warn(
-                        f"Reached maximum number of rescheduling tries ({self.max_retries}) for job {job_id}.",
-                        RuntimeWarning
-                    )
-                    return False
-                self._reschedule_job(job_id)
-                self.n_retries_by_job[job_id] += 1
-                with open(self.retries_file_path, "w") as retries_file:
-                    json.dump(self.n_retries_by_job, retries_file)
+                if self.n_retries_by_job[job_id] < self.max_retries:
+                    self.n_retries_by_job[job_id] += 1
+                    jobs_to_be_rescheduled.append(job_id)
+                else:
+                    jobs_hitting_max_n_retries.append(job_id)
+
+        if len(jobs_to_be_rescheduled) > 0:
+            self._reschedule_jobs(jobs_to_be_rescheduled)
+            with open(self.retries_file_path, "w") as retries_file:
+                json.dump(self.n_retries_by_job, retries_file)
+
+        if len(jobs_hitting_max_n_retries) > 0:
+            warnings.warn(
+               f"Reached maximum number of rescheduling tries ({self.max_retries}) for following jobs:" + "\n\t".join([str(j) for j in jobs_hitting_max_n_retries]) + "\n",
+                RuntimeWarning
+            )
+            return False
+
         return True
 
-    def _reschedule_job(self, job_id):
+    def _reschedule_jobs(self, job_ids):
         """
-        Reschedule job if the number of retries for it is below ``self.max_retries``
+        Reschedule chosen list of jobs 
         """
-        n_retries = self.n_retries_by_job[job_id]
-        print(f"Rescheduling job {job_id} (retry no. {n_retries + 1}).")
-        if self.n_retries_by_job[job_id] < self.max_retries:
-            reschedule_command = shlex.split(f"gb2_job_reschedule --jobid {job_id} --force")
-            run_with_gbasf2(reschedule_command)
+        for job_id in job_ids:
+            n_retries = self.n_retries_by_job[job_id]
+            print(f"Rescheduling job {job_id} (retry no. {n_retries}).")
+
+        reschedule_command = shlex.split(f"gb2_job_reschedule --jobid {' '.join(job_ids)} --force")
+        run_with_gbasf2(reschedule_command)
 
     def start_job(self):
         """
