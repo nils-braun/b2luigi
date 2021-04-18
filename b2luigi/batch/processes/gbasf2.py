@@ -158,6 +158,7 @@ class Gbasf2Process(BatchProcess):
         (without the ``gbasf_`` prefix) that you can set to customize your gbasf2 project:
 
         ``gbasf2_additional_files``,
+        ``gbasf2_input_datafiles``,
         ``gbasf2_n_repition_job``,
         ``gbasf2_force_submission``,
         ``gbasf2_cputime``,
@@ -415,6 +416,10 @@ class Gbasf2Process(BatchProcess):
         gbasf2_n_repition_jobs = get_setting("gbasf2_n_repition_job", default=False, task=self.task)
         if gbasf2_n_repition_jobs is not False:
             gbasf2_command_str += f" --repetition {gbasf2_n_repition_jobs} "
+
+        gbasf2_input_datafiles = get_setting("gbasf2_input_datafiles", default=[], task=self.task)
+        if len(gbasf2_input_datafiles) > 0:
+            gbasf2_command_str += f" --input_datafiles {' '.join(gbasf2_input_datafiles)}"
 
         # now add some additional optional options to the gbasf2 job submission string
 
