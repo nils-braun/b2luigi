@@ -370,9 +370,9 @@ class ProduceStatisticsTask(luigi.WrapperTask):
 
         yield FEIAnalysisTask(
             cache=0,
-            monitor=False,
+            monitor=True,
             mode="TrainingInput",
-            stage=1,
+            stage=6,
             gbasf2_project_name_prefix=luigi.get_setting("gbasf2_project_name_prefix"),
             gbasf2_input_dataset=luigi.get_setting("gbasf2_input_dataset"),
         )
