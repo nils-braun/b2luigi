@@ -357,7 +357,7 @@ class Gbasf2Process(BatchProcess):
 
     def _reschedule_jobs(self, job_ids):
         """
-        Reschedule chosen list of jobs 
+        Reschedule chosen list of jobs.
         """
         for job_id in job_ids:
             n_retries = self.n_retries_by_job[job_id]
