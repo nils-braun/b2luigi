@@ -349,15 +349,15 @@ class Gbasf2Process(BatchProcess):
                 else:
                     jobs_hitting_max_n_retries.append(job_id)
 
-        if len(jobs_to_be_rescheduled) > 0:
+        if jobs_to_be_rescheduled:
             self._reschedule_jobs(jobs_to_be_rescheduled)
             with open(self.retries_file_path, "w") as retries_file:
                 json.dump(self.n_retries_by_job, retries_file)
 
-        if len(jobs_hitting_max_n_retries) > 0:
+        if jobs_hitting_max_n_retries > 0:
             warnings.warn(
                f"Reached maximum number of rescheduling tries ({self.max_retries}) for following jobs:" +
-               "\n\t".join([str(j) for j in jobs_hitting_max_n_retries]) + "\n",
+               "\n\t".join(str(j) for j in jobs_hitting_max_n_retries) + "\n",
                RuntimeWarning
             )
             return False
@@ -368,9 +368,8 @@ class Gbasf2Process(BatchProcess):
         """
         Reschedule chosen list of jobs.
         """
-        for job_id in job_ids:
-            n_retries = self.n_retries_by_job[job_id]
-            print(f"Rescheduling job {job_id} (retry no. {n_retries}).")
+        print("Rescheduling jobs:")
+        print("\n    ".join(f"{job_id} ({retries} retries)") for job_id, retries in self.n_retries_by_job.items() + "\n")
 
         reschedule_command = shlex.split(f"gb2_job_reschedule --jobid {' '.join(job_ids)} --force")
         run_with_gbasf2(reschedule_command)
@@ -440,7 +439,7 @@ class Gbasf2Process(BatchProcess):
             gbasf2_command_str += f" --repetition {gbasf2_n_repition_jobs} "
 
         gbasf2_input_datafiles = get_setting("gbasf2_input_datafiles", default=[], task=self.task)
-        if len(gbasf2_input_datafiles) > 0:
+        if gbasf2_input_datafiles:
             gbasf2_command_str += f" --input_datafiles {' '.join(gbasf2_input_datafiles)}"
 
         # now add some additional optional options to the gbasf2 job submission string
@@ -616,7 +615,7 @@ class Gbasf2Process(BatchProcess):
             monitoring_failed_downloads_file = os.path.join(tmp_output_dir_path, "failed_files.txt")
 
             # In case of first download, this file does not exist
-            if not os.path.exists(monitoring_failed_downloads_file):
+            if not os.path.isfile(monitoring_failed_downloads_file):
 
                 ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string}")
                 print("Downloading dataset with command ", " ".join(ds_get_command))
@@ -633,11 +632,15 @@ class Gbasf2Process(BatchProcess):
 
             failed_files = stdout.split('Failed files:')[-1].\
                 split("Files with duplicated jobID, not downloaded:")[0].strip().split('\n')
-            if len(failed_files) > 0:
+            if failed_files:
                 with open(monitoring_failed_downloads_file, 'w') as ffs:
                     ffs.write("\n".join(failed_files))
             else:
-                os.system(f'rm -f {monitoring_failed_downloads_file}')
+                try:
+                    os.remove(monitoring_failed_downloads_file)
+                except OSError as e:
+                    if e.errno != errno.ENOENT:  # errno.ENOENT = no such file or directory
+                        raise  # re-raise exception if a different error occurred
 
             tmp_output_dir = os.path.join(tmp_output_dir_path, self.gbasf2_project_name, 'sub00')
             if not self._local_gb2_dataset_is_complete(output_file_name, check_temp_dir=True, verbose=True):
