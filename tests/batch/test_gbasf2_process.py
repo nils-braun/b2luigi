@@ -1,17 +1,58 @@
+import json
 import os
+import tempfile
 from typing import List
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import b2luigi
-from b2luigi.batch.processes.gbasf2 import Gbasf2Process, get_unique_project_name
+from b2luigi.batch.processes.gbasf2 import Gbasf2Process, JobStatus, get_unique_project_name
 
 from ..helpers import B2LuigiTestCase
 from .batch_task_1 import MyTask
-import tempfile
 
 
 class MyGbasf2Task(MyTask):
     gbasf2_project_name_prefix = "my_gb2_task_"
+
+
+class testGbasf2GetJobStatus(B2LuigiTestCase):
+
+    job_statuses_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "_gbasf2_project_statuses")
+
+    def setUp(self):
+        super().setUp()
+        self.gb2_mock_process = Mock()
+        self.gb2_mock_process.task = MyGbasf2Task("some_parameter")
+        self.gb2_mock_process.dirac_user = "username"
+        self.gb2_mock_process.gbasf2_project_name = get_unique_project_name(self.gb2_mock_process.task)
+        self.gb2_mock_process.max_retries = 0
+        b2luigi.set_setting("gbasf2_print_status_updates", False)
+
+    def _get_job_status_dict(self, job_status_fname):
+        with open(os.path.join(self.job_statuses_dir, job_status_fname)) as job_status_json_file:
+            return json.load(job_status_json_file)
+
+    def assert_job_status(self, job_status_fname, expected_job_status):
+        with patch("b2luigi.batch.processes.gbasf2.get_gbasf2_project_job_status_dict",
+                   MagicMock(return_value=self._get_job_status_dict(job_status_fname))):
+            job_status = Gbasf2Process.get_job_status(self.gb2_mock_process)
+            self.assertEqual(job_status, expected_job_status)
+
+    def test_get_job_status_all_done(self):
+        "Test gbasf2 project status dict where all jobs are done"
+        self.assert_job_status("done_testjbucket1357828d80b3.json", JobStatus.successful)
+
+    def test_get_job_status_one_failed(self):
+        "Test gbasf2 project status dict where one job in project failed"
+        self.assert_job_status("failed_7663_r03743_10_prod00013766_11x1.json", JobStatus.aborted)
+
+    def test_get_job_status_running(self):
+        "Test gbasf2 project status dict where several jobs are either running or waiting"
+        self.assert_job_status("running_TrainingFEI_17-04-2021a10a957289.json", JobStatus.running)
+
+    def test_get_job_status_major_status_done_but_minor_status_not(self):
+        "Test gbasf2 project status dict where major job status is all done but application status is not ``DONE``"
+        self.assert_job_status("all_done_but_application_error.json", JobStatus.aborted)
 
 
 class testBuildGbasf2SubmitCommand(B2LuigiTestCase):
