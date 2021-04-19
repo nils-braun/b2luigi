@@ -39,6 +39,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
     Now you can start hacking and your changes will be immediately available to you.
 
 4. Install `pre-commit`_, which automatically checks your code
+
     .. code-block:: bash
 
         pip3 [ --user ] install pre-commit
@@ -46,7 +47,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
         pre-commit  # run pre-commit manually, checks all staged ("added") changes
 
    In particular, the python files are checked with `flake8`_ for syntax and
-   `PEP 8`_ style errors. I would recommend using an IDE or editor which
+   `PEP 8`_ style errors. I recommend using an IDE or editor which
    automatically highlights errors with flake8 or a similar python linter (e.g.
    pylint).
 
