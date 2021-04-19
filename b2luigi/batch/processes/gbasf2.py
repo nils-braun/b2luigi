@@ -356,7 +356,7 @@ class Gbasf2Process(BatchProcess):
             with open(self.retries_file_path, "w") as retries_file:
                 json.dump(self.n_retries_by_job, retries_file)
 
-        if jobs_hitting_max_n_retries > 0:
+        if jobs_hitting_max_n_retries:
             warnings.warn(
                f"Reached maximum number of rescheduling tries ({self.max_retries}) for following jobs:" +
                "\n\t".join(str(j) for j in jobs_hitting_max_n_retries) + "\n",
@@ -371,7 +371,7 @@ class Gbasf2Process(BatchProcess):
         Reschedule chosen list of jobs.
         """
         print("Rescheduling jobs:")
-        print("\n    ".join(f"{job_id} ({retries} retries)") for job_id, retries in self.n_retries_by_job.items() + "\n")
+        print("\n    ".join(f"{job_id} ({self.n_retries_by_job[job_id]} retries)" for job_id in job_ids))
 
         reschedule_command = shlex.split(f"gb2_job_reschedule --jobid {' '.join(job_ids)} --force")
         run_with_gbasf2(reschedule_command)
