@@ -15,7 +15,7 @@ class MyGbasf2Task(MyTask):
     gbasf2_project_name_prefix = "my_gb2_task_"
 
 
-class testGbasf2GetJobStatus(B2LuigiTestCase):
+class TestGbasf2GetJobStatus(B2LuigiTestCase):
 
     job_statuses_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "_gbasf2_project_statuses")
 
@@ -55,7 +55,7 @@ class testGbasf2GetJobStatus(B2LuigiTestCase):
         self.assert_job_status("all_done_but_application_error.json", JobStatus.aborted)
 
 
-class testBuildGbasf2SubmitCommand(B2LuigiTestCase):
+class TestBuildGbasf2SubmitCommand(B2LuigiTestCase):
     dummy_lfn = "/grid/path/to/dataset"
 
     def setUp(self):
