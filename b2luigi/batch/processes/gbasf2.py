@@ -258,6 +258,14 @@ class Gbasf2Process(BatchProcess):
         for _, job_info in job_status_dict.items():
             n_jobs_by_status[job_info["Status"]] += 1
 
+        # recheck the status more closely, and correct
+        # reason: sometimes 'Status' marked as 'Done',
+        # while 'ApplicationStatus' is not 'Done'
+        for _, job_info in job_status_dict.items():
+            if job_info["Status"] == "Done" and (job_info["ApplicationStatus"] != "Done"):
+                n_jobs_by_status["Done"] -= 1
+                n_jobs_by_status["Failed"] += 1
+
         # print summary of jobs in project if setting is set and job status changed
         if (get_setting("gbasf2_print_status_updates", default=True, task=self.task) and
                 n_jobs_by_status != self._n_jobs_by_status):
@@ -316,7 +324,8 @@ class Gbasf2Process(BatchProcess):
         """
         job_status_dict = get_gbasf2_project_job_status_dict(self.gbasf2_project_name, dirac_user=self.dirac_user)
         failed_job_dict = {job_id: job_info for job_id, job_info in job_status_dict.items()
-                           if job_info["Status"] == "Failed"}
+                           if job_info["Status"] == "Failed" or
+                           (job_info["Status"] == "Done" and job_info["ApplicationStatus"] != "Done")}
         n_failed = len(failed_job_dict)
         print(f"{n_failed} failed jobs:\n{failed_job_dict}")
         if get_setting("gbasf2_download_logs", default=True, task=self.task):
@@ -333,7 +342,7 @@ class Gbasf2Process(BatchProcess):
             self.gbasf2_project_name, dirac_user=self.dirac_user)
 
         for job_id, job_info in job_status_dict.items():
-            if job_info["Status"] == "Failed":
+            if job_info["Status"] == "Failed" or (job_info["Status"] == "Done" and job_info["ApplicationStatus"] != "Done"):
                 if self.n_retries_by_job[job_id] < self.max_retries:
                     self.n_retries_by_job[job_id] += 1
                     jobs_to_be_rescheduled.append(job_id)
@@ -704,7 +713,8 @@ class Gbasf2GridProjectTarget(Target):
         if check_project_exists(self.project_name, dirac_user=self.dirac_user):
             # if there's data named after that project on the grid, ensure there are no jobs writig to it
             project_status_dict = get_gbasf2_project_job_status_dict(self.project_name, self.dirac_user)
-            all_jobs_done = all(job_info["Status"] == "Done" for job_info in project_status_dict.values())
+            all_jobs_done = all(job_info["Status"] == "Done" and
+                                job_info["ApplicationStatus"] == "Done" for job_info in project_status_dict.values())
             if not all_jobs_done:
                 return False
         return True
