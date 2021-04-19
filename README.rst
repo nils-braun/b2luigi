@@ -7,7 +7,7 @@ b2luigi
            :target: https://github.com/nils-braun/b2luigi/blob/main/LICENSE
 .. image:: https://img.shields.io/codecov/c/github/nils-braun/b2luigi?logo=codecov
            :target: https://codecov.io/gh/nils-braun/b2luigi
-.. image:: https://img.shields.io/github/workflow/status/nils-braun/b2luigi/Test?logo=github
+.. image:: https://img.shields.io/github/workflow/status/nils-braun/b2luigi/Test%20Default%20Branch?logo=github
            :target: https://github.com/nils-braun/b2luigi/actions
 .. image:: https://img.shields.io/pypi/v/b2luigi?logo=pypi
            :target: https://pypi.python.org/pypi/b2luigi/
