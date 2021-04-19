@@ -1,6 +1,6 @@
 {
     "gbasf2_install_directory": "/work/akhmet/Belle2Project/gbasf2",
-    "gbasf2_input_dataset": "/work/akhmet/Belle2Project/flist_BGx1_test.txt",
+    "gbasf2_input_dslist": "/work/akhmet/Belle2Project/flist_BGx1_test.txt",
     "gbasf2_project_name_prefix": "TrainingFEI_17-04-2021",
     "gbasf2_release": "light-2102-nemesis",
     "gbasf2_print_status_updates": true,
