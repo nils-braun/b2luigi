@@ -183,8 +183,8 @@ class FEITrainingTask(luigi.Task):
             for p in myparticles[self.stage]:
                 for channel in p.channels:
                     if not self.first_xml_output:
-                        self.first_xml_output = channel.label + '.xml'
-                    yield self.add_to_output(channel.label + '.xml')
+                        self.first_xml_output = f"{channel.label}.xml"
+                    yield self.add_to_output(f"{channel.label}.xml")
 
     def requires(self):
 
