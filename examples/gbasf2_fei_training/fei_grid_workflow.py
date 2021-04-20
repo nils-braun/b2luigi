@@ -346,7 +346,7 @@ class PrepareInputsTask(luigi.Task):
         completed_replicas = []
         for ds_site in dataset_sites:
             completed_replicas.append(run_with_gbasf2(shlex.split(f"gb2_ds_rep {foldername}/"
-                                      "sub00 -d {ds_site} -s {self.remote_initial_se} --force")))
+                                      f"sub00 -d {ds_site} -s {self.remote_initial_se} --force")))
 
         if sum([proc.returncode for proc in completed_replicas + [completed_copy]]) == 0:
             with open(f"{self.get_output_file_name('successfull_input_upload.txt')}", "w") as timestampfile:
