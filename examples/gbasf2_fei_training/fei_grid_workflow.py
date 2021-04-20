@@ -339,7 +339,7 @@ class PrepareInputsTask(luigi.Task):
         timestamp = datetime.datetime.now().strftime("_%b-%d-%Y_%H-%M-%S")
         foldername = os.path.join(self.remote_tmp_directory.rstrip('/')+timestamp, "stage"+str(self.stage))
         completed_copy = run_with_gbasf2(shlex.split(f"gb2_ds_put -d {self.remote_initial_se} "
-                                         "-i {taroutdir} --datablock sub00 {foldername}"))
+                                         f"-i {taroutdir} --datablock sub00 {foldername}"))
 
         # replicate tarball to other storage element sites (defined by used input datasets)
         dataset_sites = [site.strip() for site in open(self.get_input_file_names('dataset_sites.txt')[0], 'r').readlines()]
