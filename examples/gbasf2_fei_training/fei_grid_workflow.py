@@ -332,8 +332,7 @@ class PrepareInputsTask(luigi.Task):
         tarcmd += f"pushd {taroutdir}; "
         baseoutputsstring = ' '.join(['"'+os.path.basename(o)+'"' for o in outputs])
         tarcmd += f"tar -vczf {taroutname} {baseoutputsstring}; "
-        tarcmd += f"rm -f {baseoutputsstring}; "
-        tarcmd += "popd"
+        tarcmd += f"rm -f {baseoutputsstring}; popd"
         os.system(tarcmd)
 
         # upload tarball to initial storage element
