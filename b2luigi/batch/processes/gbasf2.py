@@ -372,7 +372,7 @@ class Gbasf2Process(BatchProcess):
         Reschedule chosen list of jobs.
         """
         print("Rescheduling jobs:")
-        print("\n    ".join(f"{job_id} ({self.n_retries_by_job[job_id]} retries)" for job_id in job_ids))
+        print("\n    " + "\n    ".join(f"{job_id} ({self.n_retries_by_job[job_id]} retries)" for job_id in job_ids))
 
         reschedule_command = shlex.split(f"gb2_job_reschedule --jobid {' '.join(job_ids)} --force")
         run_with_gbasf2(reschedule_command)
