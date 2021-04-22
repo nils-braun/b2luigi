@@ -4,6 +4,7 @@
     "gbasf2_project_name_prefix": "TrainingFEI_17-04-2021",
     "gbasf2_release": "light-2102-nemesis",
     "gbasf2_print_status_updates": true,
+    "gbasf2_noscout": true,
     "gbasf2_max_retries": 10,
     "gbasf2_download_logs": false,
     "remote_tmp_directory": "/belle/user/aakhmets/fei_input_files/",
