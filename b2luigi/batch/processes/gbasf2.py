@@ -159,6 +159,7 @@ class Gbasf2Process(BatchProcess):
         The following optional settings correspond to the equally named ``gbasf`` command line options
         (without the ``gbasf_`` prefix) that you can set to customize your gbasf2 project:
 
+        ``gbasf2_noscout``,
         ``gbasf2_additional_files``,
         ``gbasf2_input_datafiles``,
         ``gbasf2_n_repition_job``,
@@ -431,6 +432,10 @@ class Gbasf2Process(BatchProcess):
         gbasf2_input_sandbox_files = [os.path.basename(self.pickle_file_path)] + list(gbasf2_additional_files)
         gbasf2_command_str = (f"gbasf2 {self.wrapper_file_path} -f {' '.join(gbasf2_input_sandbox_files)} " +
                               f"-p {self.gbasf2_project_name} -s {gbasf2_release} ")
+
+        gbasf2_noscout = get_setting("gbasf2_noscout", default=False, task=self.task)
+        if gbasf2_noscout:
+            gbasf2_command_str += " --noscout "
 
         gbasf2_input_dataset = get_setting("gbasf2_input_dataset", default=False, task=self.task)
         gbasf2_input_dslist = get_setting("gbasf2_input_dslist", default=False, task=self.task)
