@@ -3,6 +3,7 @@ import os
 import glob
 import shlex
 import pickle
+import json
 import datetime
 
 import b2luigi as luigi
@@ -46,6 +47,61 @@ fei_analysis_outputs[6] = [
     "Monitor_PreReconstruction_AfterVertex.root",
     "Monitor_PreReconstruction_BeforeRanking.root",
 ]
+
+
+class FEIAnalysisSummaryTask(luigi.Task):
+
+    gbasf2_project_name_prefix = luigi.Parameter(significant=False)
+    gbasf2_input_dslist = luigi.Parameter(hashed=True, significant=False)
+
+    cache = luigi.IntParameter(significant=False)
+    monitor = luigi.BoolParameter(significant=False)
+    stage = luigi.IntParameter()
+    mode = luigi.Parameter()
+
+    # should be a json file with directories to outputs of FEIAnalysisTask instances
+    def output(self):
+
+        yield self.add_to_output("list_of_output_directories.json")
+
+    # creates a separate FEIAnalysisTask for each dataset (line) in the dslist
+    # this is done under assumption,
+    # that an input dataset does not have more than 1000 files == number of jobs
+    def requires(self):
+
+        dslistfile = open(self.gbasf2_input_dslist, 'r')
+        dslist = [dsname.strip() for dsname in dslistfile.readlines()]
+        dslistfile.close()
+
+        for index, dataset in enumerate(dslist):
+
+            partial_dslistname, extension = os.path.splitext(self.gbasf2_input_dslist)
+            partial_dslistname += f"_part{index}" + extension
+
+            if not os.path.exists(partial_dslistname):
+                partial_dslist = open(partial_dslistname, 'w')
+                partial_dslist.write(dataset)
+                partial_dslist.close()
+
+            yield FEIAnalysisTask(
+                cache=self.cache,
+                monitor=self.monitor,
+                mode=f"{self.mode}Part{index}",
+                stage=self.stage,
+                gbasf2_project_name_prefix=luigi.get_setting("gbasf2_project_name_prefix") + f"_Part{index}",
+                gbasf2_input_dslist=partial_dslistname,
+            )
+
+    def run(self):
+
+        outputs = {}
+        for inname in fei_analysis_outputs[self.stage]:
+            outputs[inname] = []
+            for folder in self.get_input_file_names(inname):
+                outputs[inname] += glob.glob(os.path.join(folder, "*.root"))
+
+        with open(self.get_output_file_name("list_of_output_directories.json"), 'w') as jsonfile:
+            json.dump(outputs, jsonfile, sort_keys=True, indent=2)
 
 
 class FEIAnalysisTask(Basf2PathTask):
@@ -145,7 +201,7 @@ class MergeOutputsTask(luigi.Task):
 
         cache = -1 if self.stage == -1 else 0
         monitor = True if self.stage == 6 else False
-        yield FEIAnalysisTask(
+        yield FEIAnalysisSummaryTask(
             cache=cache,
             monitor=monitor,
             mode="TrainingInput",
@@ -157,10 +213,14 @@ class MergeOutputsTask(luigi.Task):
     def run(self):
 
         cmds = []
+        outputs = {}
+        with open(self.get_input_file_names("list_of_output_directories.json")[0], 'r') as jsonfile:
+            outputs = json.load(jsonfile)
+
         for inname in fei_analysis_outputs[self.stage]:
             # for some reason, only a one-element list: self.get_input_file_names(inname)
             cmds.append(f"analysis-fei-mergefiles {self.get_output_file_name(inname)} " +
-                        " ".join(glob.glob(os.path.join(self.get_input_file_names(inname)[0], "*.root"))))
+                        " ".join(outputs[inname]))
 
         p = Pool(self.ncpus)
         p.map(shell_command, cmds)
@@ -195,7 +255,7 @@ class FEITrainingTask(luigi.Task):
             ncpus=luigi.get_setting("local_cpus"),
         )
 
-        # need merged training_input.root from current stage
+        # need merged training_input.root or merged Monitor files from current stage
         if self.stage > -1:
 
             yield MergeOutputsTask(
@@ -363,11 +423,11 @@ class ProduceStatisticsTask(luigi.WrapperTask):
         #     stage=0,
         # )
 
-        # yield MergeOutputsTask(
-        #     mode="Merging",
-        #     stage=0,
-        #     ncpus=luigi.get_setting("local_cpus"),
-        # )
+        yield MergeOutputsTask(
+            mode="Merging",
+            stage=6,
+            ncpus=luigi.get_setting("local_cpus"),
+        )
 
         # yield PrepareInputsTask(
         #     mode="AnalysisInput",
@@ -376,17 +436,18 @@ class ProduceStatisticsTask(luigi.WrapperTask):
         #     remote_initial_se=luigi.get_setting("remote_initial_se"),
         # )
 
-        yield FEIAnalysisTask(
-            cache=0,
-            monitor=True,
-            mode="TrainingInput",
-            stage=6,
-            gbasf2_project_name_prefix=luigi.get_setting("gbasf2_project_name_prefix"),
-            gbasf2_input_dslist=luigi.get_setting("gbasf2_input_dslist"),
-        )
+        # yield FEIAnalysisTask(
+        #     cache=0,
+        #     monitor=True,
+        #     mode="TrainingInput",
+        #     stage=6,
+        #     gbasf2_project_name_prefix=luigi.get_setting("gbasf2_project_name_prefix"),
+        #     gbasf2_input_dslist=luigi.get_setting("gbasf2_input_dslist"),
+        # )
 
 
 if __name__ == '__main__':
     main_task_instance = ProduceStatisticsTask()
-    n_gbasf2_tasks = len(list(main_task_instance.requires()))
+    dslist = luigi.get_setting("gbasf2_input_dslist")
+    n_gbasf2_tasks = len(open(dslist, 'r').readlines())
     luigi.process(main_task_instance, workers=n_gbasf2_tasks)
