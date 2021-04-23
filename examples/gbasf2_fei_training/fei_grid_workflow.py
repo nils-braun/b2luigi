@@ -5,6 +5,7 @@ import shlex
 import pickle
 import json
 import datetime
+import subprocess
 
 import b2luigi as luigi
 from b2luigi.basf2_helper.tasks import Basf2PathTask
@@ -236,7 +237,7 @@ class FEITrainingTask(luigi.Task):
 
         if self.stage == -1:
             yield self.add_to_output("dataset_sites.txt")
-        else:
+        elif self.stage < 6:
             # load particles to determine .xml output names
             particles = get_particles()
             myparticles = fei.core.get_stages_from_particles(particles)
@@ -245,6 +246,9 @@ class FEITrainingTask(luigi.Task):
                     if not self.first_xml_output:
                         self.first_xml_output = f"{channel.label}.xml"
                     yield self.add_to_output(f"{channel.label}.xml")
+        else:
+            yield self.add_to_output("summary.tex")
+            yield self.add_to_output("summary.txt")
 
     def requires(self):
 
@@ -305,31 +309,47 @@ class FEITrainingTask(luigi.Task):
 
             # create symlinks to files, which are needed for current FEI analysis stage
             for key in self.get_input_file_names():
-                if key == "mcParticlesCount.root" or key == "training_input.root" or key.endswith(".xml"):
+                if key == "mcParticlesCount.root" or key == "training_input.root" or "Monitor" in key or key.endswith(".xml"):
                     filepath = '"' + self.get_input_file_names(key)[0] + '"'
                     adjusted_key = '"' + key + '"'
                     os.system(f"ln -sf {filepath} {adjusted_key}")
 
-            # load path to perform training
-            monitor = True if self.stage == 6 else False
-            os.system("rm -f Summary.pickle*")
-            if not os.path.exists('Summary.pickle'):
-                create_fei_path(filelist=[], cache=0, monitor=monitor)
-            particles, configuration = pickle.load(open('Summary.pickle', 'rb'))
-            fei.do_trainings(particles, configuration)
+            if self.stage < 6:
+                # load path to perform training
+                monitor = True if self.stage == 6 else False
+                os.system("rm -f Summary.pickle*")
+                if not os.path.exists('Summary.pickle'):
+                    create_fei_path(filelist=[], cache=0, monitor=monitor)
+                particles, configuration = pickle.load(open('Summary.pickle', 'rb'))
+                fei.do_trainings(particles, configuration)
+            else:
+                cmds = []
+                printReporting = os.path.join(os.getenv("BELLE2_LOCAL_DIR"), "analysis/scripts/fei/printReporting.py")
+                latexReporting = os.path.join(os.getenv("BELLE2_LOCAL_DIR"), "analysis/scripts/fei/latexReporting.py")
+                cmds.append(f"basf2 {printReporting} > {self.get_output_file_name('summary.txt')}")
+                cmds.append(f"basf2 {latexReporting} > {self.get_output_file_name('summary.tex')}")
+                retcodes = [subprocess.call(cmd, shell=True) for cmd in cmds]
+
+                # if non-zero error code, output files probably corrupt, so removing them
+                if sum(retcodes) != 0:
+                    if os.path.exists(self.get_output_file_name('summary.txt')):
+                        os.remove(self.get_output_file_name('summary.txt'))
+                    if os.path.exists(self.get_output_file_name('summary.tex')):
+                        os.remove(self.get_output_file_name('summary.tex'))
 
             # remove symlinks and not needed Summary.pickle files
             for key in self.get_input_file_names():
-                if key == "mcParticlesCount.root" or key == "training_input.root" or key.endswith(".xml"):
+                if key == "mcParticlesCount.root" or key == "training_input.root" or "Monitor" in key or key.endswith(".xml"):
                     adjusted_key = '"' + key + '"'
                     os.system(f"rm {adjusted_key}")
             os.system("rm -f Summary.pickle*")
 
-            # move *.xml and *.log files to output directory
-            if len(glob.glob("*.xml")) > 0:
-                os.system(f'mv *.xml {outputdir}')
-            if len(glob.glob("*.log")) > 0:
-                os.system(f'mv *.log {outputdir}')
+            if self.stage < 6:
+                # move *.xml and *.log files to output directory
+                if len(glob.glob("*.xml")) > 0:
+                    os.system(f'mv *.xml {outputdir}')
+                if len(glob.glob("*.log")) > 0:
+                    os.system(f'mv *.log {outputdir}')
 
 
 class PrepareInputsTask(luigi.Task):
