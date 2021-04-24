@@ -359,7 +359,7 @@ class Gbasf2Process(BatchProcess):
 
         if jobs_hitting_max_n_retries:
             warnings.warn(
-               f"Reached maximum number of rescheduling tries ({self.max_retries}) for following jobs:" +
+               f"Reached maximum number of rescheduling tries ({self.max_retries}) for following jobs:\n\t" +
                "\n\t".join(str(j) for j in jobs_hitting_max_n_retries) + "\n",
                RuntimeWarning
             )
