@@ -607,6 +607,7 @@ class Gbasf2Process(BatchProcess):
         """
         failed_files = stdout.split('Failed files:')[-1].\
             split("Files with duplicated jobID, not downloaded:")[0].strip().split('\n')
+        failed_files = [line for line in failed_files if len(line.strip()) > 0]
         return failed_files
 
     def _download_dataset(self):
