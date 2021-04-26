@@ -601,6 +601,14 @@ class Gbasf2Process(BatchProcess):
             )
         return False
 
+    def _failed_files_from_dataset_download(self, stdout):
+        """
+        Parse stdout from gb2_ds_get dataset download command to extract LFN's of failed file downloads.
+        """
+        failed_files = stdout.split('Failed files:')[-1].\
+            split("Files with duplicated jobID, not downloaded:")[0].strip().split('\n')
+        return failed_files
+
     def _download_dataset(self):
         """
         Download the task outputs from the gbasf2 project dataset.
@@ -648,8 +656,7 @@ class Gbasf2Process(BatchProcess):
             if "No file found" in stdout:
                 raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
 
-            failed_files = stdout.split('Failed files:')[-1].\
-                split("Files with duplicated jobID, not downloaded:")[0].strip().split('\n')
+            failed_files = self._failed_files_from_dataset_download(stdout)
             if failed_files:
                 with open(monitoring_failed_downloads_file, 'w') as ffs:
                     ffs.write("\n".join(failed_files))
