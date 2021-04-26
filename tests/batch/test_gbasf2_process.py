@@ -33,9 +33,9 @@ class TestGbasf2FailedFilesDownload(B2LuigiTestCase):
             return download_stdout_file.read()
 
     def assert_failed_files(self, download_stdout_name, expected_number_of_failed_files):
-            failed_files = Gbasf2Process._failed_files_from_dataset_download(self.gb2_mock_process,
-                                                                             self._get_download_stdout(download_stdout_name))
-            self.assertEqual(len(failed_files), expected_number_of_failed_files)
+        failed_files = Gbasf2Process._failed_files_from_dataset_download(self.gb2_mock_process,
+                                                                         self._get_download_stdout(download_stdout_name))
+        self.assertEqual(len(failed_files), expected_number_of_failed_files)
 
     def test_failed_files_all_successful(self):
         "Test gbasf2 project download output where all downloads are successful"
