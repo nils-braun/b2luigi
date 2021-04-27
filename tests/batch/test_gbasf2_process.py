@@ -67,7 +67,6 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
 
     job_statuses_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "_gbasf2_project_statuses")
     joblist_tmpfile_name = "jobs_to_be_rescheduled.txt"
-    jobs_to_be_rescheduled = []
 
     def setUp(self):
         super().setUp()
@@ -76,6 +75,7 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
         self.gb2_mock_process.dirac_user = "username"
         self.gb2_mock_process.gbasf2_project_name = get_unique_project_name(self.gb2_mock_process.task)
         self.gb2_mock_process.n_retries_by_job = Counter()
+        self.gb2_mock_process.jobs_to_be_rescheduled = []
         self.gb2_mock_process.max_retries = 1
         b2luigi.set_setting("gbasf2_print_status_updates", False)
 
@@ -90,11 +90,11 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
         with patch("b2luigi.batch.processes.gbasf2.get_gbasf2_project_job_status_dict",
                    MagicMock(return_value=self._get_job_status_dict(job_status_fname))):
             with patch("b2luigi.batch.processes.gbasf2.Gbasf2Process._reschedule_jobs",
-                       new=self._reschedule_jobs):
+                       side_effect=self._reschedule_jobs):
 
                 Gbasf2Process._reschedule_failed_jobs(self.gb2_mock_process)
 
-                self.assertEqual(sorted(self.jobs_to_be_rescheduled), sorted(expected_jobs_to_be_rescheduled))
+                self.assertEqual(sorted(self.gb2_mock_process.jobs_to_be_rescheduled), sorted(expected_jobs_to_be_rescheduled))
                 for jobid in self.jobs_to_be_rescheduled:
                     self.assertEqual(jobid, self.gb2_mock_process.n_retries_by_job[jobid], 1)
 
