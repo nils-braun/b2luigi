@@ -92,7 +92,7 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
 
                 Gbasf2Process._reschedule_failed_jobs(self.gb2_mock_process)
 
-                self.assertEqual(sorted(self.gb2_mock_process.n_retries_by_job.keys()), sorted(expected_jobs_to_be_rescheduled))
+                self.assertCountEqual(list(self.gb2_mock_process.n_retries_by_job.keys()), expected_jobs_to_be_rescheduled)
                 for jobid in self.gb2_mock_process.n_retries_by_job.keys():
                     self.assertEqual(self.gb2_mock_process.n_retries_by_job[jobid], 1)
 
