@@ -97,10 +97,13 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
 
                 joblist_tmpfile_path = os.path.join(os.path.dirname(self.gb2_mock_process.task.get_output_file_name("test.txt")),
                                                     self.joblist_tmpfile_name)
-                joblist_tmpfile = open(joblist_tmpfile_path, 'r')
-                jobs_to_be_rescheduled = sorted([line.strip() for line in joblist_tmpfile.readlines()])
-                joblist_tmpfile.close()
-                os.remove(joblist_tmpfile_path)
+
+                jobs_to_be_rescheduled = []
+                if os.path.isfile(joblist_tmpfile_path):
+                    joblist_tmpfile = open(joblist_tmpfile_path, 'r')
+                    jobs_to_be_rescheduled = sorted([line.strip() for line in joblist_tmpfile.readlines()])
+                    joblist_tmpfile.close()
+                    os.remove(joblist_tmpfile_path)
 
                 self.assertEqual(jobs_to_be_rescheduled, sorted(expected_jobs_to_be_rescheduled))
                 for jobid in jobs_to_be_rescheduled:
