@@ -73,6 +73,7 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
         self.gb2_mock_process.task = MyGbasf2Task("some_parameter")
         self.gb2_mock_process.dirac_user = "username"
         self.gb2_mock_process.gbasf2_project_name = get_unique_project_name(self.gb2_mock_process.task)
+        self.gb2_mock_process.n_retries_by_job = self.gb2_mock_process.task.n_retries_by_job
         self.gb2_mock_process.max_retries = 0
         b2luigi.set_setting("gbasf2_print_status_updates", False)
 
@@ -93,7 +94,7 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
             with patch("b2luigi.batch.processes.gbasf2.Gbasf2Process._reschedule_jobs",
                        new=self._reschedule_jobs):
 
-                Gbasf2Process._reschedule_failed_jobs(self.gb2_mock_process.task)
+                Gbasf2Process._reschedule_failed_jobs(self.gb2_mock_process)
 
                 joblist_tmpfile_path = os.path.join(os.path.dirname(self.gb2_mock_process.task.get_output_file_name("test.txt")),
                                                     self.joblist_tmpfile_name)
