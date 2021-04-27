@@ -67,6 +67,7 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
 
     job_statuses_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "_gbasf2_project_statuses")
     joblist_tmpfile_name = "jobs_to_be_rescheduled.txt"
+    jobs_to_be_rescheduled = []
 
     def setUp(self):
         super().setUp()
@@ -83,11 +84,7 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
             return json.load(job_status_json_file)
 
     def _reschedule_jobs(self, job_ids):
-        joblist_tmpfile_path = os.path.join(self.test_dir, self.joblist_tmpfile_name)
-        print("TEST FILE:", joblist_tmpfile_path)
-        joblist_tmpfile = open(joblist_tmpfile_path, 'w')
-        joblist_tmpfile.write("\n".join(job_ids))
-        joblist_tmpfile.close()
+        self.jobs_to_be_rescheduled = job_ids
 
     def assert_rescheduled_jobs(self, job_status_fname, expected_jobs_to_be_rescheduled):
         with patch("b2luigi.batch.processes.gbasf2.get_gbasf2_project_job_status_dict",
@@ -97,34 +94,24 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
 
                 Gbasf2Process._reschedule_failed_jobs(self.gb2_mock_process)
 
-                joblist_tmpfile_path = os.path.join(self.test_dir, self.joblist_tmpfile_name)
-
-                jobs_to_be_rescheduled = []
-                if os.path.isfile(joblist_tmpfile_path):
-                    print("TEST FILE EXISTS")
-                    joblist_tmpfile = open(joblist_tmpfile_path, 'r')
-                    jobs_to_be_rescheduled = sorted([line.strip() for line in joblist_tmpfile.readlines()])
-                    joblist_tmpfile.close()
-                    os.remove(joblist_tmpfile_path)
-
-                self.assertEqual(jobs_to_be_rescheduled, sorted(expected_jobs_to_be_rescheduled))
-                for jobid in jobs_to_be_rescheduled:
-                    self.assertEqual(jobid, self.gb2_mock_process.task.n_retries_by_job[jobid], 1)
+                self.assertEqual(sorted(self.jobs_to_be_rescheduled), sorted(expected_jobs_to_be_rescheduled))
+                for jobid in self.jobs_to_be_rescheduled:
+                    self.assertEqual(jobid, self.gb2_mock_process.n_retries_by_job[jobid], 1)
 
     def test_reschedule_jobs_all_done(self):
-        "Test gbasf2 project status dict where all jobs are done"
+        "Test gbasf2 project rescheduling with dict where all jobs are done"
         self.assert_rescheduled_jobs("done_testjbucket1357828d80b3.json", [])
 
     def test_reschedule_jobs_one_failed(self):
-        "Test gbasf2 project status dict where one job in project failed"
+        "Test gbasf2 project rescheduling with dict where one job in project failed"
         self.assert_rescheduled_jobs("failed_7663_r03743_10_prod00013766_11x1.json", ["188623842", "188625261"])
 
     def test_reschedule_jobs_running(self):
-        "Test gbasf2 project status dict where several jobs are either running or waiting"
+        "Test gbasf2 project rescheduling with dict where several jobs are either running or waiting"
         self.assert_rescheduled_jobs("running_TrainingFEI_17-04-2021a10a957289.json", [])
 
     def test_reschedule_jobs_major_status_done_but_minor_status_not(self):
-        "Test gbasf2 project status dict where major job status is all done but application status is not ``DONE``"
+        "Test gbasf2 project rescheduling with dict where major job status is all done but application status is not ``DONE``"
         self.assert_rescheduled_jobs("all_done_but_application_error.json", ["187522107"])
 
 
