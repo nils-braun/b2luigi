@@ -69,7 +69,7 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
 
     def setUp(self):
         super().setUp()
-        self.gb2_mock_process = Mock()
+        self.gb2_mock_process = MagicMock()
         self.gb2_mock_process.task = MyGbasf2Task("some_parameter")
         self.gb2_mock_process.dirac_user = "username"
         self.gb2_mock_process.gbasf2_project_name = get_unique_project_name(self.gb2_mock_process.task)
