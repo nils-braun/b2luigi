@@ -75,7 +75,7 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
         self.gb2_mock_process.dirac_user = "username"
         self.gb2_mock_process.gbasf2_project_name = get_unique_project_name(self.gb2_mock_process.task)
         self.gb2_mock_process.n_retries_by_job = Counter()
-        self.gb2_mock_process.max_retries = 0
+        self.gb2_mock_process.max_retries = 1
         b2luigi.set_setting("gbasf2_print_status_updates", False)
 
     def _get_job_status_dict(self, job_status_fname):
@@ -117,7 +117,7 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
 
     def test_reschedule_jobs_one_failed(self):
         "Test gbasf2 project status dict where one job in project failed"
-        self.assert_rescheduled_jobs("failed_7663_r03743_10_prod00013766_11x1.json", ["188623842"])
+        self.assert_rescheduled_jobs("failed_7663_r03743_10_prod00013766_11x1.json", ["188623842", "188625261"])
 
     def test_reschedule_jobs_running(self):
         "Test gbasf2 project status dict where several jobs are either running or waiting"
