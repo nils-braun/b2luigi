@@ -83,8 +83,8 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
             return json.load(job_status_json_file)
 
     def _reschedule_jobs(self, job_ids):
-        joblist_tmpfile_path = os.path.join(os.path.dirname(self.gb2_mock_process.task.get_output_file_name("test.txt")),
-                                            self.joblist_tmpfile_name)
+        joblist_tmpfile_path = os.path.join(self.test_dir, self.joblist_tmpfile_name)
+        print("TEST FILE:",joblist_tmpfile_path)
         joblist_tmpfile = open(joblist_tmpfile_path, 'w')
         joblist_tmpfile.write("\n".join(job_ids))
         joblist_tmpfile.close()
@@ -97,11 +97,11 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
 
                 Gbasf2Process._reschedule_failed_jobs(self.gb2_mock_process)
 
-                joblist_tmpfile_path = os.path.join(os.path.dirname(self.gb2_mock_process.task.get_output_file_name("test.txt")),
-                                                    self.joblist_tmpfile_name)
+                joblist_tmpfile_path = os.path.join(self.test_dir, self.joblist_tmpfile_name)
 
                 jobs_to_be_rescheduled = []
                 if os.path.isfile(joblist_tmpfile_path):
+                    print("TEST FILE EXISTS")
                     joblist_tmpfile = open(joblist_tmpfile_path, 'r')
                     jobs_to_be_rescheduled = sorted([line.strip() for line in joblist_tmpfile.readlines()])
                     joblist_tmpfile.close()
