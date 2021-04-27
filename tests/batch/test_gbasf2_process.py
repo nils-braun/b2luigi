@@ -94,7 +94,7 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
 
                 self.assertEqual(sorted(self.gb2_mock_process.n_retries_by_job.keys()), sorted(expected_jobs_to_be_rescheduled))
                 for jobid in self.gb2_mock_process.n_retries_by_job.keys():
-                    self.assertEqual(jobid, self.gb2_mock_process.n_retries_by_job[jobid], 1)
+                    self.assertEqual(self.gb2_mock_process.n_retries_by_job[jobid], 1)
 
     def test_reschedule_jobs_all_done(self):
         "Test gbasf2 project rescheduling with dict where all jobs are done"
