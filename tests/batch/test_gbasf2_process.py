@@ -93,7 +93,7 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
             with patch("b2luigi.batch.processes.gbasf2.Gbasf2Process._reschedule_jobs",
                        new=self._reschedule_jobs):
 
-                Gbasf2Process._reschedule_failed_jobs(self.gb2_mock_process)
+                Gbasf2Process._reschedule_failed_jobs(self.gb2_mock_process.task)
 
                 joblist_tmpfile_path = os.path.join(os.path.dirname(self.gb2_mock_process.task.get_output_file_name("test.txt")),
                                                     self.joblist_tmpfile_name)
