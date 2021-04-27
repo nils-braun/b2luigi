@@ -84,7 +84,7 @@ class TestGbasf2RescheduleJobs(B2LuigiTestCase):
 
     def _reschedule_jobs(self, job_ids):
         joblist_tmpfile_path = os.path.join(self.test_dir, self.joblist_tmpfile_name)
-        print("TEST FILE:",joblist_tmpfile_path)
+        print("TEST FILE:", joblist_tmpfile_path)
         joblist_tmpfile = open(joblist_tmpfile_path, 'w')
         joblist_tmpfile.write("\n".join(job_ids))
         joblist_tmpfile.close()
