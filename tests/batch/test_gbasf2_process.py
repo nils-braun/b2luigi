@@ -1,20 +1,159 @@
+import json
 import os
+import tempfile
 from typing import List
-from unittest.mock import Mock
+from collections import Counter
+from unittest.mock import MagicMock, Mock, patch
 
 import b2luigi
-from b2luigi.batch.processes.gbasf2 import Gbasf2Process, get_unique_project_name
+from b2luigi.batch.processes.gbasf2 import Gbasf2Process, JobStatus, get_unique_project_name
 
 from ..helpers import B2LuigiTestCase
 from .batch_task_1 import MyTask
-import tempfile
 
 
 class MyGbasf2Task(MyTask):
     gbasf2_project_name_prefix = "my_gb2_task_"
 
 
-class testBuildGbasf2SubmitCommand(B2LuigiTestCase):
+class TestGbasf2FailedFilesDownload(B2LuigiTestCase):
+
+    download_stdouts_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "_gbasf2_project_download_stdouts")
+
+    def setUp(self):
+        super().setUp()
+        self.gb2_mock_process = Mock()
+        self.gb2_mock_process.task = MyGbasf2Task("some_parameter")
+        self.gb2_mock_process.dirac_user = "username"
+        self.gb2_mock_process.gbasf2_project_name = get_unique_project_name(self.gb2_mock_process.task)
+        self.gb2_mock_process.max_retries = 0
+        b2luigi.set_setting("gbasf2_print_status_updates", False)
+
+    def _get_download_stdout(self, download_stdout_name):
+        with open(os.path.join(self.download_stdouts_dir, download_stdout_name)) as download_stdout_file:
+            return download_stdout_file.read()
+
+    def assert_failed_files(self, download_stdout_name, expected_number_of_failed_files):
+        failed_files = Gbasf2Process._failed_files_from_dataset_download(self.gb2_mock_process,
+                                                                         self._get_download_stdout(download_stdout_name))
+        self.assertEqual(len(failed_files), expected_number_of_failed_files)
+
+    def test_failed_files_all_successful(self):
+        "Test gbasf2 project download output where all downloads are successful"
+        self.assert_failed_files("all_successful.txt", 0)
+
+    def test_failed_files_all_successful_and_duplicate(self):
+        "Test gbasf2 project download output where all downloads are successful, and duplicates available"
+        self.assert_failed_files("all_successful_and_duplicate.txt", 0)
+
+    def test_failed_files_failed_and_successful_and_duplicate(self):
+        "Test gbasf2 project download output where downloads are failed, successful, and duplicates available"
+        self.assert_failed_files("failed_and_successful_and_duplicate.txt", 2)
+
+    def test_failed_files_failed_and_successful(self):
+        "Test gbasf2 project download output where downloads are failed and successful"
+        self.assert_failed_files("failed_and_successful.txt", 2)
+
+    def test_failed_files_all_failed(self):
+        "Test gbasf2 project download output where all downloads are failed"
+        self.assert_failed_files("all_failed.txt", 3)
+
+    def test_failed_files_all_failed_and_duplicate(self):
+        "Test gbasf2 project download output where all downloads are failed"
+        self.assert_failed_files("all_failed_and_duplicate.txt", 3)
+
+
+class TestGbasf2RescheduleJobs(B2LuigiTestCase):
+
+    job_statuses_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "_gbasf2_project_statuses")
+    joblist_tmpfile_name = "jobs_to_be_rescheduled.txt"
+
+    def setUp(self):
+        super().setUp()
+        self.gb2_mock_process = MagicMock()
+        self.gb2_mock_process.task = MyGbasf2Task("some_parameter")
+        self.gb2_mock_process.dirac_user = "username"
+        self.gb2_mock_process.gbasf2_project_name = get_unique_project_name(self.gb2_mock_process.task)
+        self.gb2_mock_process.n_retries_by_job = Counter()
+        self.gb2_mock_process.max_retries = 1
+        b2luigi.set_setting("gbasf2_print_status_updates", False)
+
+    def _get_job_status_dict(self, job_status_fname):
+        with open(os.path.join(self.job_statuses_dir, job_status_fname)) as job_status_json_file:
+            return json.load(job_status_json_file)
+
+    def _reschedule_jobs(self, job_ids):
+        pass
+
+    def assert_rescheduled_jobs(self, job_status_fname, expected_jobs_to_be_rescheduled):
+        with patch("b2luigi.batch.processes.gbasf2.get_gbasf2_project_job_status_dict",
+                   MagicMock(return_value=self._get_job_status_dict(job_status_fname))):
+            with patch("b2luigi.batch.processes.gbasf2.Gbasf2Process._reschedule_jobs", new=self._reschedule_jobs):
+
+                Gbasf2Process._reschedule_failed_jobs(self.gb2_mock_process)
+
+                self.assertCountEqual(list(self.gb2_mock_process.n_retries_by_job.keys()), expected_jobs_to_be_rescheduled)
+                for jobid in self.gb2_mock_process.n_retries_by_job.keys():
+                    self.assertEqual(self.gb2_mock_process.n_retries_by_job[jobid], 1)
+
+    def test_reschedule_jobs_all_done(self):
+        "Test gbasf2 project rescheduling with dict where all jobs are done"
+        self.assert_rescheduled_jobs("done_testjbucket1357828d80b3.json", [])
+
+    def test_reschedule_jobs_one_failed(self):
+        "Test gbasf2 project rescheduling with dict where one job in project failed"
+        self.assert_rescheduled_jobs("failed_7663_r03743_10_prod00013766_11x1.json", ["188623842", "188625261"])
+
+    def test_reschedule_jobs_running(self):
+        "Test gbasf2 project rescheduling with dict where several jobs are either running or waiting"
+        self.assert_rescheduled_jobs("running_TrainingFEI_17-04-2021a10a957289.json", [])
+
+    def test_reschedule_jobs_major_status_done_but_minor_status_not(self):
+        "Test gbasf2 project rescheduling with dict where major job status is all done but application status is not ``DONE``"
+        self.assert_rescheduled_jobs("all_done_but_application_error.json", ["187522107"])
+
+
+class TestGbasf2GetJobStatus(B2LuigiTestCase):
+
+    job_statuses_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "_gbasf2_project_statuses")
+
+    def setUp(self):
+        super().setUp()
+        self.gb2_mock_process = Mock()
+        self.gb2_mock_process.task = MyGbasf2Task("some_parameter")
+        self.gb2_mock_process.dirac_user = "username"
+        self.gb2_mock_process.gbasf2_project_name = get_unique_project_name(self.gb2_mock_process.task)
+        self.gb2_mock_process.max_retries = 0
+        b2luigi.set_setting("gbasf2_print_status_updates", False)
+
+    def _get_job_status_dict(self, job_status_fname):
+        with open(os.path.join(self.job_statuses_dir, job_status_fname)) as job_status_json_file:
+            return json.load(job_status_json_file)
+
+    def assert_job_status(self, job_status_fname, expected_job_status):
+        with patch("b2luigi.batch.processes.gbasf2.get_gbasf2_project_job_status_dict",
+                   MagicMock(return_value=self._get_job_status_dict(job_status_fname))):
+            job_status = Gbasf2Process.get_job_status(self.gb2_mock_process)
+            self.assertEqual(job_status, expected_job_status)
+
+    def test_get_job_status_all_done(self):
+        "Test gbasf2 project status dict where all jobs are done"
+        self.assert_job_status("done_testjbucket1357828d80b3.json", JobStatus.successful)
+
+    def test_get_job_status_one_failed(self):
+        "Test gbasf2 project status dict where one job in project failed"
+        self.assert_job_status("failed_7663_r03743_10_prod00013766_11x1.json", JobStatus.aborted)
+
+    def test_get_job_status_running(self):
+        "Test gbasf2 project status dict where several jobs are either running or waiting"
+        self.assert_job_status("running_TrainingFEI_17-04-2021a10a957289.json", JobStatus.running)
+
+    def test_get_job_status_major_status_done_but_minor_status_not(self):
+        "Test gbasf2 project status dict where major job status is all done but application status is not ``DONE``"
+        self.assert_job_status("all_done_but_application_error.json", JobStatus.aborted)
+
+
+class TestBuildGbasf2SubmitCommand(B2LuigiTestCase):
     dummy_lfn = "/grid/path/to/dataset"
 
     def setUp(self):

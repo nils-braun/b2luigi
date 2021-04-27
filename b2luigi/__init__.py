@@ -1,5 +1,5 @@
 """Task scheduling and batch running for basf2 jobs made simple"""
-__version__ = "0.6.2"
+__version__ = "0.6.3"
 
 from luigi import *
 from luigi.util import inherits, copies

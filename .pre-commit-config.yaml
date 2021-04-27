@@ -6,6 +6,7 @@
   - id: check-json
   - id: check-toml
   - id: end-of-file-fixer
+    exclude: ^tests/batch/_gbasf2_project_download_stdouts/
   - id: trailing-whitespace
   - id: check-added-large-files
   - id: check-symlinks

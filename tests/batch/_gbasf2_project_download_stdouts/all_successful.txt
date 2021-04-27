@@ -1,0 +1,12 @@
+/local/dir/sub00 already exists
+
+Download 1 files from SE
+Trying to download srm://srm-storage-element:8443/srm/managerv2?SFN=/pnfs/to/output/sub00/output_000001_job1234567890_00.root to /local/dir/sub00/output_000001_job1234567890_00.root
+
+Successfully downloaded files:
+/output/sub00/output_000001_job1234567890_00.root in /ceph/akhmet/test_fei_gbasf2_example_input/sub00/output_000001_job1234567890_00.root
+
+
+Failed files:
+
+
