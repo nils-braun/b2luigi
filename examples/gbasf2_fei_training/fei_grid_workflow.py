@@ -223,7 +223,6 @@ class MergeOutputsTask(luigi.Task):
             outputs = json.load(jsonfile)
 
         for inname in fei_analysis_outputs[self.stage]:
-            # for some reason, only a one-element list: self.get_input_file_names(inname)
             cmds.append(f"analysis-fei-mergefiles {self.get_output_file_name(inname)} " +
                         " ".join(outputs[inname]))
 
