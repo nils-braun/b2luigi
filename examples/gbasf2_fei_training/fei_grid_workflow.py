@@ -1,5 +1,6 @@
 from multiprocessing import Pool
 import os
+import errno
 import glob
 import shlex
 import pickle
@@ -14,6 +15,15 @@ from b2luigi.batch.processes.gbasf2 import run_with_gbasf2
 
 from B_generic_train import create_fei_path, get_particles
 import fei
+
+
+def force_symlink(source, target):
+    try:
+        os.symlink(source, target)
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            os.remove(target)
+            os.symlink(source, target)
 
 
 def shell_command(cmd):
@@ -168,12 +178,10 @@ class FEIAnalysisTask(Basf2PathTask):
 
             # create symlinks to files, which are needed for current FEI analysis stage
             for key in self.get_input_file_names():
-                if key.endswith(".xml"):
+                if key == "mcParticlesCount.root" or key.endswith(".xml"):
                     filepath = '"' + self.get_input_file_names(key)[0] + '"'
                     adjusted_key = '"' + key + '"'
-                    os.system(f"ln -sf {filepath} {adjusted_key}")
-            # need extra line for mcParticlesCount.root symlink, since removed otherwise
-            os.system(f"ln -sf {self.get_input_file_names('mcParticlesCount.root')[0]} mcParticlesCount.root")
+                    force_symlink(filepath, adjusted_key)
 
         path = create_fei_path(filelist=[], cache=self.cache, monitor=self.monitor)
 
@@ -313,7 +321,7 @@ class FEITrainingTask(luigi.Task):
                 if key == "mcParticlesCount.root" or key == "training_input.root" or "Monitor" in key or key.endswith(".xml"):
                     filepath = '"' + self.get_input_file_names(key)[0] + '"'
                     adjusted_key = '"' + key + '"'
-                    os.system(f"ln -sf {filepath} {adjusted_key}")
+                    force_symlink(filepath, adjusted_key)
 
             if self.stage < 6:
                 # load path to perform training
