@@ -1,5 +1,6 @@
 from multiprocessing import Pool
 import os
+import shutil
 import errno
 import glob
 import shlex
@@ -357,10 +358,10 @@ class FEITrainingTask(luigi.Task):
 
             if self.stage < 6:
                 # move *.xml and *.log files to output directory
-                if len(glob.glob("*.xml")) > 0:
-                    os.system(f'mv *.xml {outputdir}')
-                if len(glob.glob("*.log")) > 0:
-                    os.system(f'mv *.log {outputdir}')
+                for fpath in glob.glob("*.xml"):
+                    shutil.move(fpath, outputdir)
+                for fpath in glob.glob("*.log"):
+                    shutil.move(fpath, outputdir)
 
 
 class PrepareInputsTask(luigi.Task):
