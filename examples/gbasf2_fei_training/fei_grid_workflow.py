@@ -27,10 +27,6 @@ def force_symlink(source, target):
             os.symlink(source, target)
 
 
-def shell_command(cmd):
-    os.system(cmd)
-
-
 # ballpark CPU times for the FEI stages executed on grid. Format: <stage-number> : <minutes>
 grid_cpu_time = {
     -1: 10,
@@ -231,7 +227,7 @@ class MergeOutputsTask(luigi.Task):
                         " ".join(outputs[inname]))
 
         p = Pool(self.ncpus)
-        p.map(shell_command, cmds)
+        p.map(subprocess.check_call, [shlex.split(cmd) for cmd in cmds])
 
 
 class FEITrainingTask(luigi.Task):
