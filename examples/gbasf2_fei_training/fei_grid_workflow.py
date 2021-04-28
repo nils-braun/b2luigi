@@ -182,8 +182,9 @@ class FEIAnalysisTask(Basf2PathTask):
             for key in self.get_input_file_names():
                 if key == "mcParticlesCount.root" or key.endswith(".xml"):
                     adjusted_key = '"' + key + '"'
-                    os.system(f"rm {adjusted_key}")
-            os.system("rm -f Summary.pickle*")
+                    os.remove(adjusted_key)
+            for summary_file in glob.glob("Summary.pickle*"):
+                os.remove(summary_file)
         return path
 
 
@@ -317,7 +318,8 @@ class FEITrainingTask(luigi.Task):
             if self.stage < 6:
                 # load path to perform training
                 monitor = True if self.stage == 6 else False
-                os.system("rm -f Summary.pickle*")
+                for summary_file in glob.glob("Summary.pickle*"):
+                    os.remove(summary_file)
                 if not os.path.exists('Summary.pickle'):
                     create_fei_path(filelist=[], cache=0, monitor=monitor)
                 particles, configuration = pickle.load(open('Summary.pickle', 'rb'))
@@ -341,8 +343,9 @@ class FEITrainingTask(luigi.Task):
             for key in self.get_input_file_names():
                 if key == "mcParticlesCount.root" or key == "training_input.root" or "Monitor" in key or key.endswith(".xml"):
                     adjusted_key = '"' + key + '"'
-                    os.system(f"rm {adjusted_key}")
-            os.system("rm -f Summary.pickle*")
+                    os.remove(adjusted_key)
+            for summary_file in glob.glob("Summary.pickle*"):
+                os.remove(summary_file)
 
             if self.stage < 6:
                 # move *.xml and *.log files to output directory
