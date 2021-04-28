@@ -431,7 +431,6 @@ class PrepareInputsTask(luigi.Task):
         if sum([proc.returncode for proc in completed_replicas + [completed_copy]]) == 0:
             with open(f"{self.get_output_file_name('successfull_input_upload.txt')}", "w") as timestampfile:
                 timestampfile.write(timestamp)
-                timestampfile.close()
 
 
 class ProduceStatisticsTask(luigi.WrapperTask):
