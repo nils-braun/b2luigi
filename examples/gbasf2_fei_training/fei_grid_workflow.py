@@ -408,7 +408,7 @@ class PrepareInputsTask(luigi.Task):
         outputs = [outs[0] for outs in self.get_input_file_names().values()
                    if outs[0].endswith('.root') or outs[0].endswith('.xml')]
         taroutname = self.get_output_file_name("fei_analysis_inputs.tar.gz")
-        taroutdir = os.path.basename(taroutname)
+        taroutdir = os.path.dirname(taroutname)
 
         if os.path.isfile(self.get_output_file_name('successfull_input_upload.txt')):
             os.remove(self.get_output_file_name('successfull_input_upload.txt'))
