@@ -180,9 +180,7 @@ class FEIAnalysisTask(Basf2PathTask):
             # create symlinks to files, which are needed for current FEI analysis stage
             for key in self.get_input_file_names():
                 if key == "mcParticlesCount.root" or key.endswith(".xml"):
-                    filepath = '"' + self.get_input_file_names(key)[0] + '"'
-                    adjusted_key = '"' + key + '"'
-                    force_symlink(filepath, adjusted_key)
+                    force_symlink(self.get_input_file_names(key)[0], key)
 
         path = create_fei_path(filelist=[], cache=self.cache, monitor=self.monitor)
 
@@ -190,8 +188,7 @@ class FEIAnalysisTask(Basf2PathTask):
             # remove symlinks and not needed Summary.pickle files
             for key in self.get_input_file_names():
                 if key == "mcParticlesCount.root" or key.endswith(".xml"):
-                    adjusted_key = '"' + key + '"'
-                    os.remove(adjusted_key)
+                    os.remove(key)
             for summary_file in glob.glob("Summary.pickle*"):
                 os.remove(summary_file)
         return path
@@ -320,9 +317,7 @@ class FEITrainingTask(luigi.Task):
             # create symlinks to files, which are needed for current FEI analysis stage
             for key in self.get_input_file_names():
                 if key == "mcParticlesCount.root" or key == "training_input.root" or "Monitor" in key or key.endswith(".xml"):
-                    filepath = '"' + self.get_input_file_names(key)[0] + '"'
-                    adjusted_key = '"' + key + '"'
-                    force_symlink(filepath, adjusted_key)
+                    force_symlink(self.get_input_file_names(key)[0], key)
 
             if self.stage < 6:
                 # load path to perform training
@@ -351,8 +346,7 @@ class FEITrainingTask(luigi.Task):
             # remove symlinks and not needed Summary.pickle files
             for key in self.get_input_file_names():
                 if key == "mcParticlesCount.root" or key == "training_input.root" or "Monitor" in key or key.endswith(".xml"):
-                    adjusted_key = '"' + key + '"'
-                    os.remove(adjusted_key)
+                    os.remove(key)
             for summary_file in glob.glob("Summary.pickle*"):
                 os.remove(summary_file)
 
