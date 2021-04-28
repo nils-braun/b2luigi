@@ -8,6 +8,7 @@ import pickle
 import json
 import datetime
 import subprocess
+import tarfile
 
 import b2luigi as luigi
 from b2luigi.basf2_helper.tasks import Basf2PathTask
@@ -407,15 +408,15 @@ class PrepareInputsTask(luigi.Task):
         outputs = [outs[0] for outs in self.get_input_file_names().values()
                    if outs[0].endswith('.root') or outs[0].endswith('.xml')]
         taroutname = self.get_output_file_name("fei_analysis_inputs.tar.gz")
-        taroutdir = os.path.dirname(taroutname)
-        outputsstring = ' '.join(['"'+o+'"' for o in outputs])
-        tarcmd = f"rm -f {self.get_output_file_name('successfull_input_upload.txt')}; "
-        tarcmd += f"cp {outputsstring} {taroutdir}; "
-        tarcmd += f"pushd {taroutdir}; "
-        baseoutputsstring = ' '.join(['"'+os.path.basename(o)+'"' for o in outputs])
-        tarcmd += f"tar -vczf {taroutname} {baseoutputsstring}; "
-        tarcmd += f"rm -f {baseoutputsstring}; popd"
-        os.system(tarcmd)
+        taroutdir = os.path.basename(taroutname)
+
+        if os.path.isfile(self.get_output_file_name('successfull_input_upload.txt')):
+            os.remove(self.get_output_file_name('successfull_input_upload.txt'))
+
+        tar = tarfile.open(taroutname, "w:gz")
+        for output in outputs:
+            tar.add(output, arcname=os.path.basename(output))
+        tar.close()
 
         # upload tarball to initial storage element
         timestamp = datetime.datetime.now().strftime("_%b-%d-%Y_%H-%M-%S")
