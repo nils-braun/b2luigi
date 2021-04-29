@@ -65,7 +65,7 @@ Entering ``b2luigi``, which tries to solve all this (but was heavily inspired by
     In the future, there will even be an automatic discovery of the batch system to use.
 
 
-It this the only thing I can do with b2luigi?
+Is this the only thing I can do with b2luigi?
 ---------------------------------------------
 
 As ``b2luigi`` should help you with large luigi projects, we have also included some helper functionalities for
