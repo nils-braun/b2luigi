@@ -1,8 +1,10 @@
 """Task scheduling and batch running for basf2 jobs made simple"""
-__version__ = "0.6.3"
-
 from luigi import *
 from luigi.util import inherits, copies
+
+# version must be defined after importing the luigi namespace, 
+# otherwise the b2luigi.__version__ gets overwritten by the one from luigi
+__version__ = "0.6.3"
 
 from b2luigi.core.parameter import wrap_parameter, BoolParameter
 
