@@ -560,7 +560,7 @@ class Gbasf2Process(BatchProcess):
             f"/belle/user/{self.dirac_user}/{self.gbasf2_project_name}/sub00/{output_file_stem}_*{output_file_ext}"
         return dataset_query_string
 
-    def _local_gb2_dataset_is_complete(self, output_file_name: str, check_temp_dir: bool = False, verbose: bool = False) -> bool:
+    def _local_gb2_dataset_is_complete(self, output_file_name: str, check_temp_dir: bool = False) -> bool:
         """
         Helper method that returns ``True`` if the download of the gbasf2
         dataset for the output ``output_file_name`` is complete.
@@ -572,7 +572,6 @@ class Gbasf2Process(BatchProcess):
             check_temp_dir: Instead of checking the final output path, check whether the download into the
                 temporary ("partial") directory is complete. This function is usually called with this
                 argument set to ``True``, to check whether the dataset can be moved to its final output path.
-            verbose: If true, print filenames in datasets.
         """
         # first get the local set of files in the dataset for `output_file_name`
         task_output_dict = flatten_to_dict(self.task.output())
@@ -595,16 +594,11 @@ class Gbasf2Process(BatchProcess):
         if set(output_dataset_basenames) == set(downloaded_dataset_basenames):
             return True
         missing_files = list(set(output_dataset_basenames).difference(downloaded_dataset_basenames))
-        additional_files = list(set(downloaded_dataset_basenames).difference(output_dataset_basenames))
-        if verbose:
-            print(
-                "\nDownloaded files:\n{}".format("\n".join(downloaded_dataset_basenames)) +
-                "\nFiles on the grid:\n{}".format("\n".join(output_dataset_basenames))
-            )
-            if missing_files:
-                print("\nFiles not downloaded:\n{}".format("\n".join(missing_files)))
-            if additional_files:
-                print("\nNot needed downloads:\n{}".format("\n".join(additional_files)))
+        superfluous_files = list(set(downloaded_dataset_basenames).difference(output_dataset_basenames))
+        if missing_files:
+            print("\nFiles missing in download:\n{}".format("\n".join(missing_files)))
+        if superfluous_files:
+            print("\nFiles superfluous in download:\n{}".format("\n".join(superfluous_files)))
         return False
 
     def _failed_files_from_dataset_download(self, stdout):
@@ -677,7 +671,7 @@ class Gbasf2Process(BatchProcess):
                         raise  # re-raise exception if a different error occurred
 
             tmp_output_dir = os.path.join(tmp_output_dir_path, self.gbasf2_project_name, 'sub00')
-            if not self._local_gb2_dataset_is_complete(output_file_name, check_temp_dir=True, verbose=True):
+            if not self._local_gb2_dataset_is_complete(output_file_name, check_temp_dir=True):
                 raise RuntimeError(
                     f"Download incomplete. The downloaded set of files in {tmp_output_dir} is not equal to the " +
                     f"list of dataset files on the grid for project {self.gbasf2_project_name}.",
