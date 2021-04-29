@@ -1,7 +1,11 @@
 /local/dir/sub00 already exists
 
+Found valid local file for output/sub00/output_000001_job1234567890_01.root [Checksum matched: 23477d90]
+Skip to download the file...
+
 Download 1 files from SE
 Trying to download srm://srm-storage-element:8443/srm/managerv2?SFN=/pnfs/to/output/sub00/output_000001_job1234567890_00.root to /local/dir/sub00/output_000001_job1234567890_00.root
+
 
 Successfully downloaded files:
 /output/sub00/output_000001_job1234567890_00.root in /local/dir/sub00/output_000001_job1234567890_00.root
@@ -9,4 +13,5 @@ Successfully downloaded files:
 
 Failed files:
 
+Skip 1 existing files in /local/dir/sub00/
 
