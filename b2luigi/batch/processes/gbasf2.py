@@ -649,7 +649,8 @@ class Gbasf2Process(BatchProcess):
 
             # Any further time is based on the list of files from failed downloads
             else:
-                ds_get_command = shlex.split(f"gb2_ds_get --force --input_dslist {monitoring_failed_downloads_file}")
+                ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string} "
+                                             f"--input_dslist {monitoring_failed_downloads_file}")
                 print("Downloading remaining files from dataset with command ", " ".join(ds_get_command))
 
             stdout = run_with_gbasf2(ds_get_command, cwd=tmp_output_dir_path, capture_output=True).stdout
