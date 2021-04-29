@@ -596,9 +596,9 @@ class Gbasf2Process(BatchProcess):
         missing_files = list(set(output_dataset_basenames).difference(downloaded_dataset_basenames))
         superfluous_files = list(set(downloaded_dataset_basenames).difference(output_dataset_basenames))
         if missing_files:
-            print("\nFiles missing in download:\n{}".format("\n".join(missing_files)))
+            warnings.warn("\nFiles missing in download:\n{}".format("\n".join(missing_files)), RuntimeWarning)
         if superfluous_files:
-            print("\nFiles superfluous in download:\n{}".format("\n".join(superfluous_files)))
+            warnings.warn("\nFiles superfluous in download:\n{}".format("\n".join(superfluous_files)), RuntimeWarning)
         return False
 
     def _failed_files_from_dataset_download(self, stdout):
