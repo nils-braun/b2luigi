@@ -42,6 +42,10 @@ class TestGbasf2FailedFilesDownload(B2LuigiTestCase):
         "Test gbasf2 project download output where all downloads are successful"
         self.assert_failed_files("all_successful.txt", 0)
 
+    def test_failed_files_all_successful_and_skipped(self):
+        "Test gbasf2 project download output where all downloads are successful, and some skiped due to local copy"
+        self.assert_failed_files("all_successful_and_skipped.txt", 0)
+
     def test_failed_files_all_successful_and_duplicate(self):
         "Test gbasf2 project download output where all downloads are successful, and duplicates available"
         self.assert_failed_files("all_successful_and_duplicate.txt", 0)

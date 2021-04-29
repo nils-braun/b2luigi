@@ -606,7 +606,8 @@ class Gbasf2Process(BatchProcess):
         Parse stdout from gb2_ds_get dataset download command to extract LFN's of failed file downloads.
         """
         failed_files = stdout.split('Failed files:')[-1].\
-            split("Files with duplicated jobID, not downloaded:")[0].strip().split('\n')
+            split("Files with duplicated jobID, not downloaded:")[0].\
+            split("Skip ")[0].strip().split('\n')
         failed_files = [line for line in failed_files if len(line.strip()) > 0]
         return failed_files
 
