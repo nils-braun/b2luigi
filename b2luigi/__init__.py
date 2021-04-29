@@ -2,7 +2,7 @@
 from luigi import *
 from luigi.util import inherits, copies
 
-# version must be defined after importing the luigi namespace, 
+# version must be defined after importing the luigi namespace,
 # otherwise the b2luigi.__version__ gets overwritten by the one from luigi
 __version__ = "0.6.4"
 
