@@ -65,7 +65,7 @@ Entering ``b2luigi``, which tries to solve all this (but was heavily inspired by
     In the future, there will even be an automatic discovery of the batch system to use.
 
 
-It this the only thing I can do with b2luigi?
+Is this the only thing I can do with b2luigi?
 ---------------------------------------------
 
 As ``b2luigi`` should help you with large luigi projects, we have also included some helper functionalities for
@@ -130,6 +130,7 @@ Features, fixing, help and testing
     * Kilian Lieret (`klieret`_)
     * Sviatoslav Bilokin (`bilokin`_)
     * Phil Grace (`philiptgrace`_)
+    * Anselm Bauer (`anselmbaur`_)
 
 Stolen ideas
     * Implementation of SGE batch system (`sge`_).
@@ -147,6 +148,7 @@ Stolen ideas
 .. _`klieret`: https://github.com/klieret
 .. _`bilokin`: https://github.com/bilokin
 .. _`philiptgrace`: https://github.com/philiptgrace
+.. _`anselmbaur`: https://github.com/anselm-baur
 .. _`sge`: https://github.com/spotify/luigi/blob/master/luigi/contrib/sge.py
 .. _`lsf`: https://github.com/spotify/luigi/pull/2373/files
 
