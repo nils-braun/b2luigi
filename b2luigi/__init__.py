@@ -2,7 +2,8 @@
 from luigi import *
 from luigi.util import inherits, copies
 
-# version mast be defined importing luigi namespace, otherwise b2luigi.__version__ gives luigi version
+# version must be defined after importing the luigi namespace, 
+# otherwise the b2luigi.__version__ gets overwritten by the one from luigi
 __version__ = "0.6.3"
 
 from b2luigi.core.parameter import wrap_parameter, BoolParameter
