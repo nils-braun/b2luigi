@@ -594,11 +594,17 @@ class Gbasf2Process(BatchProcess):
         # check if local and remote datasets are equal
         if set(output_dataset_basenames) == set(downloaded_dataset_basenames):
             return True
+        missing_files = list(set(output_dataset_basenames).difference(downloaded_dataset_basenames))
+        additional_files = list(set(downloaded_dataset_basenames).difference(output_dataset_basenames))
         if verbose:
             print(
                 "\nDownloaded files:\n{}".format("\n".join(downloaded_dataset_basenames)) +
                 "\nFiles on the grid:\n{}".format("\n".join(output_dataset_basenames))
             )
+            if missing_files:
+                print("\nFiles not downloaded:\n{}".format("\n".join(missing_files)))
+            if additional_files:
+                print("\nNot needed downloads:\n{}".format("\n".join(additional_files)))
         return False
 
     def _failed_files_from_dataset_download(self, stdout):
