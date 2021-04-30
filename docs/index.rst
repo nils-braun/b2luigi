@@ -130,7 +130,7 @@ Features, fixing, help and testing
     * Kilian Lieret (`klieret`_)
     * Sviatoslav Bilokin (`bilokin`_)
     * Phil Grace (`philiptgrace`_)
-    * Anselm Bauer (`anselmbaur`_)
+    * Anselm Baur (`anselmbaur`_)
 
 Stolen ideas
     * Implementation of SGE batch system (`sge`_).
