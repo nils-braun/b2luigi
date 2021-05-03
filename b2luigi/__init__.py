@@ -7,7 +7,7 @@ from luigi.util import inherits, copies
 __version__ = "0.6.6"
 
 from b2luigi.core.parameter import wrap_parameter, BoolParameter
-from typing import Union, Optional, Union
+from typing import Optional, Union, List
 
 wrap_parameter()
 
@@ -73,7 +73,6 @@ class requires(object):
 
 class inherits_without(object):
 
-
     def __init__(self, *tasks_to_inherit, without: Optional[Union[List, str]] = None):
         super(inherits_without, self).__init__()
         if not tasks_to_inherit:
@@ -85,7 +84,7 @@ class inherits_without(object):
         elif without is None:
             self.without = []
         else:
-            self.without =  without
+            self.without = without
 
     def __call__(self, task_that_inherits):
         # Get all parameter objects from each of the underlying tasks
