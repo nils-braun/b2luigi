@@ -772,7 +772,7 @@ def check_dataset_exists_on_grid(gbasf2_project_name, dirac_user=None):
     return True
 
 
-def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
+def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None, n_retries=5):
     """
     Returns a dictionary for all jobs in the project with a structure like the
     following, which I have taken and adapted from an example output::
@@ -810,8 +810,18 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
             "Probably there was an error during the project submission when running the gbasf2 command.\n"
         )
     job_status_json_string = proc.stdout
-    job_status_dict = json.loads(job_status_json_string)
-    return job_status_dict
+    try:
+        job_status_dict = json.loads(job_status_json_string)
+        return job_status_dict
+    except json.decoder.JSONDecodeError as err:
+        warnings.warn(
+            " Failed to decode job status json string: \n" +
+            job_status_json_string
+        )
+        if n_retries > 0:
+            print(f"Trying to get new job status ({n_retries - 1} retries left)")
+            return get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user, n_retries=n_retries - 1)
+        raise err
 
 
 def check_project_exists(gbasf2_project_name, dirac_user=None):
