@@ -76,6 +76,31 @@ class Task(luigi.Task):
             return file_paths[key]
         return file_paths
 
+    @staticmethod
+    def _transform_output(output_generator, key=None):
+        output_list = utils.flatten_to_list_of_dicts(output_generator)
+        file_paths = utils.flatten_to_file_paths(output_list)
+
+        if key is not None:
+            return file_paths[key]
+        return file_paths
+
+    def get_all_output_file_names(self):
+        """
+        Return all file paths created by this task
+        """
+        for file_name_key in self._transform_output(self.output()):
+            for file_name in self._transform_output(file_name_key):
+                yield self.get_output_file_name(file_name)
+
+    def get_all_input_file_names(self):
+        """
+        Return all file paths requiered by this task
+        """
+        for file_name_key in self.get_input_file_names():
+            for file_name in self.get_input_file_names(file_name_key):
+                yield file_name
+
     def get_input_file_names(self, key=None):
         """
         Get a dictionary of input file names of the tasks, which are defined in our requirements.
