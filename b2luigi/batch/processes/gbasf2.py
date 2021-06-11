@@ -402,6 +402,8 @@ class Gbasf2Process(BatchProcess):
         # copies it into the same directory in the grid input sandbox as the
         # steering file.
         pickle_file_symlink_destination = os.path.basename(self.pickle_file_path)
+        if os.path.islink(pickle_file_symlink_destination):
+            os.remove(pickle_file_symlink_destination)
         try:
             os.symlink(self.pickle_file_path, pickle_file_symlink_destination, target_is_directory=False)
             run_with_gbasf2(gbasf2_command)
