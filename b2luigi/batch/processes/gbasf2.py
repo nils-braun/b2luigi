@@ -283,12 +283,6 @@ class Gbasf2Process(BatchProcess):
         n_failed = n_jobs_by_status["Failed"]
         n_in_final_state = n_done + n_failed
 
-        # try updating progressbar for central scheduler web view
-        try:
-            self.task.set_progress_percentage(n_done / n_jobs * 100)
-        except AttributeError:
-            pass
-
         # The gbasf2 project is considered as failed if any of the jobs in it failed.
         # However, we first try to reschedule thos jobs and only declare it as failed if the maximum number of retries
         # for reschedulinhas been reached
