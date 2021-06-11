@@ -46,10 +46,11 @@ class Gbasf2Process(BatchProcess):
           task with the same project name is running, this b2luigi gbasf2 wrapper will recognize that
           and instead of resubmitting a new project, continue monitoring the running project.
 
-          Tipp: The outputs of gbasf2 tasks can be a bit overwhelming, so I recommend using the
-            :ref`Start a Central Scheduler <central scheduler>`
-            which features a nice overview in the browser, including progress bars showing how many jobs in each
-            project are already done.
+          .. hint::
+            The outputs of gbasf2 tasks can be a bit overwhelming, so I recommend using the
+            :ref:`central scheduler <central-scheduler-label>`
+            which provides a nice overview of all tasks in the browser, including a status/progress
+            indicator how many jobs in a gbasf2 project are already done.
 
         - **Automatic download of datasets and logs**
 
