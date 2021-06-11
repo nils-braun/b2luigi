@@ -46,6 +46,12 @@ class Gbasf2Process(BatchProcess):
           task with the same project name is running, this b2luigi gbasf2 wrapper will recognize that
           and instead of resubmitting a new project, continue monitoring the running project.
 
+          .. hint::
+            The outputs of gbasf2 tasks can be a bit overwhelming, so I recommend using the
+            :ref:`central scheduler <central-scheduler-label>`
+            which provides a nice overview of all tasks in the browser, including a status/progress
+            indicator how many jobs in a gbasf2 project are already done.
+
         - **Automatic download of datasets and logs**
 
           If all jobs had been successful, it automatically downloads the output dataset and
@@ -292,7 +298,15 @@ class Gbasf2Process(BatchProcess):
                 return JobStatus.running
             return JobStatus.aborted
 
+        # task is running
         if n_in_final_state < n_jobs:
+            # try updating progressbar for central scheduler web view
+            percentage = n_done / n_jobs * 100
+            self._scheduler.set_task_progress_percentage(self.task.task_id, percentage)
+
+            status_message = "\n".join(f"{status}: {n_jobs}" for status, n_jobs in n_jobs_by_status.items())
+            self._scheduler.set_task_status_message(self.task.task_id, status_message)
+
             return JobStatus.running
 
         # Require all jobs to be done for project success, any job failure results in a failed project

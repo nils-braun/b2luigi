@@ -51,6 +51,7 @@ Additional console arguments:
 *   **--scheduler-host** and **--scheduler-port**: If you have set up a central scheduler, you can pass this information
     here easily. This works for batch or non-batch submission but is turned of for the test mode.
 
+.. _central-scheduler-label:
 
 Start a Central Scheduler
 -------------------------
