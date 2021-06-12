@@ -2,7 +2,7 @@ from ..helpers import B2LuigiTestCase
 
 import b2luigi
 from b2luigi.core.utils import get_filled_params
-from pathlib import Path
+
 
 class TaskTestCase(B2LuigiTestCase):
     def test_file_path_usage(self):
@@ -39,7 +39,7 @@ class TaskTestCase(B2LuigiTestCase):
                 yield self.add_to_output("file_b")
 
         task = TaskB(some_parameter=42)
-       
+
         self.assertEqual(get_filled_params(task), {"some_parameter": 42})
         self.assertEqual(len(task._get_input_targets("file_a")), 1)
         self.assertEqual(len(task.get_input_file_names("file_a")), 1)
@@ -48,9 +48,9 @@ class TaskTestCase(B2LuigiTestCase):
         self.assertEqual(task._get_output_target("file_b").path, task.get_output_file_name("file_b"))
         self.assertIn("file_b", task.get_output_file_name("file_b"))
         self.assertIn("some_parameter=42", task.get_output_file_name("file_b"))
-        self.assertIn("some_parameter=42/file_a",list(task.get_all_input_file_names())[0])
-        self.assertIn("some_parameter=42/file_b",list(task.get_all_output_file_names())[0])
- 
+        self.assertIn("some_parameter=42/file_a", list(task.get_all_input_file_names())[0])
+        self.assertIn("some_parameter=42/file_b", list(task.get_all_output_file_names())[0])
+
     def test_many_dependencies(self):
         class TaskA(b2luigi.Task):
             some_parameter = b2luigi.IntParameter()
@@ -78,4 +78,3 @@ class TaskTestCase(B2LuigiTestCase):
 
         for i in range(100):
             self.assertIn(f"results/some_parameter={i}/file_a", input_file_names)
-
