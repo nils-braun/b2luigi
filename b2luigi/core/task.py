@@ -84,7 +84,7 @@ class Task(luigi.Task):
                     for name in self.get_all_output_file_names():
                         print(f"\t\toutput:\t{name}")
         """
-        for file_name_key, file_names in self._transform_input(self.input()).items():
+        for file_names in self._transform_input(self.input()).values():
             for file_name in file_names:
                 yield file_name
 
@@ -171,7 +171,7 @@ class Task(luigi.Task):
                     for name in self.get_all_output_file_names():
                         print(f"\t\toutput:\t{name}")
         """
-        for file_name_key, file_names in self._transform_output(self.output()).items():
+        for file_names in self._transform_output(self.output()).values():
             for file_name in file_names:
                 yield file_name
 
