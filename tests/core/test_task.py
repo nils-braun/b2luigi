@@ -48,6 +48,8 @@ class TaskTestCase(B2LuigiTestCase):
         self.assertEqual(task._get_output_target("file_b").path, task.get_output_file_name("file_b"))
         self.assertIn("file_b", task.get_output_file_name("file_b"))
         self.assertIn("some_parameter=42", task.get_output_file_name("file_b"))
+        self.assertEqual(len(list(task.get_all_input_file_names())), 1)
+        self.assertEqual(len(list(task.get_all_output_file_names())), 1)
         self.assertIn("some_parameter=42/file_a", list(task.get_all_input_file_names())[0])
         self.assertIn("some_parameter=42/file_b", list(task.get_all_output_file_names())[0])
 
