@@ -74,7 +74,7 @@ class requires(object):
 class inherits(object):
 
     """
-    Similar to `b2luigi.requires`, this copies the luigi.inherits functionality but allows specifying parameters you
+    This copies the luigi.inherits functionality but allows specifying parameters you
     don't want to inherit.
 
     It can e.g. be used in tasks that merge the output of the tasks they require. These merger tasks don't need
@@ -107,6 +107,8 @@ class inherits(object):
 
     Parameters:
         without: Either a string or a collection of strings
+
+    See also: `b2luigi.requires` which extends ``luigi.requires``.
 
     """
 
