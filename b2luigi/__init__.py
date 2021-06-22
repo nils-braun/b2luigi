@@ -138,7 +138,7 @@ class inherits(object):
                     self.without.remove(param_name)
 
         # Make sure we're only removing parameters that exist
-        assert len(self.without) == 0, f"You're trying to remove parameter(s) {self.without} which do(es) not exist."
+        assert not self.without, f"You're trying to remove parameter(s) {self.without} which do(es) not exist."
 
         # Modify task_that_inherits by adding methods
         def clone_parent(_self, **kwargs):
