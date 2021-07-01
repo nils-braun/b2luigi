@@ -624,7 +624,12 @@ class Gbasf2Process(BatchProcess):
         failed_files = stdout.split('Failed files:')[-1].\
             split("Files with duplicated jobID, not downloaded:")[0].\
             split("Skip ")[0].strip().split('\n')
-        failed_files = [line for line in failed_files if len(line.strip()) > 0]
+        failed_files = [line.split('.root')[0] + '.root' for line in failed_files if len(line.strip()) > 0]
+
+        # Make consistency check, that all lines contain paths to ROOT files
+        for entry in failed_files:
+            if not entry.endswith('.root'):
+                return None
         return failed_files
 
     def _download_dataset(self):
@@ -680,6 +685,14 @@ class Gbasf2Process(BatchProcess):
                 with open(monitoring_failed_downloads_file, 'w') as ffs:
                     ffs.write("\n".join(failed_files))
             else:
+                if failed_files is None:
+                    stdout_file = os.path.join(tmp_output_dir_path, "download_stdout.txt")
+                    print("WARNING: Failed to create a valid .txt file with ROOT files from failed downloads as entries.")
+                    print(f"Passing all stdout from the download command to {stdout_file}.")
+                    print("Please send it to b2luigi developers for debugging.")
+                    print("After restarting, the workflow will proceed with default download behaviour.")
+                    with open(stdout_file, 'w') as sof:
+                        sof.write(stdout)
                 try:
                     os.remove(monitoring_failed_downloads_file)
                 except OSError as e:
