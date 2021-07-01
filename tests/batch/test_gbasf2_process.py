@@ -58,6 +58,10 @@ class TestGbasf2FailedFilesDownload(B2LuigiTestCase):
         "Test gbasf2 project download output where downloads are failed and successful"
         self.assert_failed_files("failed_and_successful.txt", 2)
 
+    def test_failed_files_failed_and_successful_new_syntax(self):
+        "Test gbasf2 project download output where downloads are failed and successful"
+        self.assert_failed_files("failed_and_successful_new_syntax.txt", 2)
+
     def test_failed_files_all_failed(self):
         "Test gbasf2 project download output where all downloads are failed"
         self.assert_failed_files("all_failed.txt", 3)

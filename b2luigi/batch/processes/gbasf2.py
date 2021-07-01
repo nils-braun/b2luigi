@@ -624,7 +624,8 @@ class Gbasf2Process(BatchProcess):
         failed_files = stdout.split('Failed files:')[-1].\
             split("Files with duplicated jobID, not downloaded:")[0].\
             split("Skip ")[0].strip().split('\n')
-        failed_files = [line.split('.root')[0] + '.root' for line in failed_files if len(line.strip()) > 0]
+        failed_files = [line.split('.root')[0] + '.root' for line in failed_files
+                        if len(line.strip()) > 0 and len(line.split('.root')) > 1]
 
         # Make consistency check, that all lines contain paths to ROOT files
         for entry in failed_files:

@@ -1,0 +1,15 @@
+
+Download 3 files from SE
+Trying to download srm://srm-storage-element:8443/srm/managerv2?SFN=/pnfs/to/output/sub00/output_000001_job1234567890_00.root to /local/dir/sub00/output_000001_job1234567890_00.root
+Trying to download srm://srm-storage-element:8443/srm/managerv2?SFN=/pnfs/to/output/sub00/output_000002_job1234567891_00.root to /local/dir/sub00/output_000002_job1234567891_00.root
+Trying to download srm://srm-storage-element:8443/srm/managerv2?SFN=/pnfs/to/output/sub00/output_000003_job1234567892_00.root to /local/dir/sub00/output_000003_job1234567892_00.root
+
+Successfully downloaded files:
+/output/sub00/output_000001_job1234567890_00.root in /local/dir/sub00/output_000001_job1234567890_00.root
+
+
+Failed files:
+/output/sub00/output_000002_job1234567891_00.root to /local/dir/sub00/
+/output/sub00/output_000003_job1234567892_00.root to /local/dir/sub00/
+
+
