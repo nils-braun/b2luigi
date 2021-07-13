@@ -10,7 +10,7 @@ def get_alias_dict_from_variable_manager():
     Extracts a dictionary with the alias names as keys and their values from the
     internal state of the variable manager and returns it.
     """
-    alias_dictionary = {alias_name: vm.getVariable(alias_name).name for alias_name in list(vm.getAliasNames())}
+    alias_dictionary = {str(alias_name): vm.getVariable(str(alias_name)).name for alias_name in vm.getAliasNames()}
     return alias_dictionary
 
 
