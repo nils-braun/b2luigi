@@ -62,8 +62,6 @@ class Task(luigi.Task):
             output_file_name (:obj:`str`): the file name of the output file.
                 Refer to this file name as a key when using :obj:`get_input_file_names`,
                 :obj:`get_output_file_names` or :obj:`get_output_file`.
-
-
         """
         return {output_file_name: self._get_output_file_target(output_file_name)}
 
@@ -75,6 +73,20 @@ class Task(luigi.Task):
         if key is not None:
             return file_paths[key]
         return file_paths
+
+    def get_all_input_file_names(self):
+        """
+        Return all file paths required by this task.
+
+        Example:
+            class TheSuperFancyTask(b2luigi.Task):
+                def dry_run(self):
+                    for name in self.get_all_output_file_names():
+                        print(f"\t\toutput:\t{name}")
+        """
+        for file_names in self._transform_input(self.input()).values():
+            for file_name in file_names:
+                yield file_name
 
     def get_input_file_names(self, key=None):
         """
@@ -139,6 +151,29 @@ class Task(luigi.Task):
             Else, returns only the list of file paths for this given key.
         """
         return self._transform_input(self.input()[requirement_key], key)
+
+    @staticmethod
+    def _transform_output(output_generator, key=None):
+        output_list = utils.flatten_to_list_of_dicts(output_generator)
+        file_paths = utils.flatten_to_file_paths(output_list)
+
+        if key is not None:
+            return file_paths[key]
+        return file_paths
+
+    def get_all_output_file_names(self):
+        """
+        Return all file paths created by this task.
+
+        Example:
+            class TheSuperFancyTask(b2luigi.Task):
+                def dry_run(self):
+                    for name in self.get_all_output_file_names():
+                        print(f"\t\toutput:\t{name}")
+        """
+        for file_names in self._transform_output(self.output()).values():
+            for file_name in file_names:
+                yield file_name
 
     def get_output_file_name(self, key):
         """
