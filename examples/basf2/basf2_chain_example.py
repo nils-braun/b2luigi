@@ -97,7 +97,7 @@ class AnalysisTask(Basf2PathTask):
         yield self.add_to_output("B_n_tuple.root")
 
 
-class MasterTask(Basf2nTupleMergeTask):
+class MainTask(Basf2nTupleMergeTask):
     n_events = luigi.IntParameter()
 
     def requires(self):
@@ -106,4 +106,4 @@ class MasterTask(Basf2nTupleMergeTask):
 
 
 if __name__ == "__main__":
-    luigi.process(MasterTask(n_events=1), workers=4)
+    luigi.process(MainTask(n_events=1), workers=4)
