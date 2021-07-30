@@ -279,8 +279,8 @@ def map_folder(input_folder):
         raise type(ex)(
             "Could not determine the current script location. "
             "If you are running in an interactive shell (such as jupyter notebook) "
-            "make sure to only provide absolute paths in your settings.\nMore Info:\n" +
-            ex.message
+            "make sure to only provide absolute paths in your settings. "
+            f"More Info:\n{ex}"
         ).with_traceback(sys.exc_info()[2])
 
     filepath = os.path.dirname(filename)
