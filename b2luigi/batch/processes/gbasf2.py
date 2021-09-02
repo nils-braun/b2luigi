@@ -915,31 +915,44 @@ def get_gbasf2_env(gbasf2_install_directory=None):
     return gbasf2_env
 
 
+def get_proxy_info():
+    """Run ``gbasf2_proxy_info.py`` to retrieve a dict of the proxy status."""
+    proxy_info_script_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "gbasf2_utils/gbasf2_proxy_info.py"
+    )
+
+    # Setting ``initalize_proxy=False`` is vital here, otherwise we get an infinite loop
+    try:
+        proc = run_with_gbasf2(
+            [proxy_info_script_path],
+            capture_output=True,
+            ensure_proxy_initialized=False,
+        )
+    except subprocess.CalledProcessError:
+        return {}
+
+    return json.loads(proc.stdout)
+
+
 def get_dirac_user():
     """Get dirac user name"""
-    proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
-    for line in proxy_info_str.splitlines():
-        if line.startswith("username"):
-            dirac_user = line.split(":", 1)[1].strip()
-            return dirac_user
-    raise RuntimeError("Could not obtain dirac user name from `gb2_proxy_init` output.")
+    try:
+        return get_proxy_info()["username"]
+    except KeyError as e:
+        raise RuntimeError(
+            "Could not obtain dirac user name from `gb2_proxy_init` output."
+        ) from e
 
 
 def setup_dirac_proxy():
     """
     Runs ``gb2_proxy_init -g belle`` if there's no active dirac proxy. If there is, do nothing.
     """
-    check_proxy_initizalized_script_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "gbasf2_utils/check_if_dirac_proxy_is_initialized.py"
-    )
     # first run script to check if proxy is already alive or needs to be initalized
-    # setting ``initalize_proxy=False`` is vital here, otherwise we get an infinite loop
-    proc = run_with_gbasf2([check_proxy_initizalized_script_path], ensure_proxy_initialized=False, check=False)
-    # if returncode of the script is 0, that means that proxy is already alive
-    if not proc.returncode:
+    if get_proxy_info().get("secondsLeft", 0) > 0:
         return
-    # initiallize proxy
+    # initialize proxy
     run_with_gbasf2(shlex.split("gb2_proxy_init -g belle"), ensure_proxy_initialized=False)
 
 
