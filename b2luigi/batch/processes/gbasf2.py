@@ -601,8 +601,7 @@ class Gbasf2Process(BatchProcess):
 
         # not get the remote set of grid file names for the gbasf2 project output matching output_file_name
         ds_query_string = self._get_gbasf2_dataset_query(output_file_name)
-        ds_list_command = shlex.split(f"gb2_ds_list {ds_query_string}")
-        output_dataset_grid_filepaths = run_with_gbasf2(ds_list_command, capture_output=True).stdout.splitlines()
+        output_dataset_grid_filepaths = query_lpns(ds_query_string)
         output_dataset_basenames = [os.path.basename(grid_path) for grid_path in output_dataset_grid_filepaths]
         # remove duplicate LFNs that gb2_ds_list returns for outputs from rescheduled jobs
         output_dataset_basenames = get_unique_lfns(output_dataset_basenames)
@@ -771,21 +770,8 @@ def check_dataset_exists_on_grid(gbasf2_project_name, dirac_user=None):
     """
     Use ``gb2_ds_list`` command to see if an output dataset exists for the gbasf2 project
     """
-    if dirac_user is None:
-        dirac_user = get_dirac_user()
-    ds_list_command = shlex.split(f"gb2_ds_list --user {dirac_user} {gbasf2_project_name}")
-    output_dataset_str = run_with_gbasf2(ds_list_command, capture_output=True).stdout
-    if "No datasets" in output_dataset_str:
-        return False
-    output_lines_are_paths = all(os.path.abspath(line) for line in output_dataset_str.strip().splitlines())
-    if not output_lines_are_paths:
-        warnings.warn(
-            "The output of ``{' '.join(ds_list_command)}`` contains lines that are not grid paths:\n" +
-            output_dataset_str,
-            category=RuntimeWarning
-        )
-        return False
-    return True
+    lpns = query_lpns(gbasf2_project_name, dirac_user=dirac_user)
+    return len(lpns) > 0
 
 
 def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None, n_retries=5):
@@ -915,32 +901,67 @@ def get_gbasf2_env(gbasf2_install_directory=None):
     return gbasf2_env
 
 
+def get_proxy_info():
+    """Run ``gbasf2_proxy_info.py`` to retrieve a dict of the proxy status."""
+    proxy_info_script_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "gbasf2_utils/gbasf2_proxy_info.py"
+    )
+
+    # Setting ``initalize_proxy=False`` is vital here, otherwise we get an infinite loop
+    try:
+        proc = run_with_gbasf2(
+            [proxy_info_script_path],
+            capture_output=True,
+            ensure_proxy_initialized=False,
+        )
+    except subprocess.CalledProcessError:
+        return {}
+
+    return json.loads(proc.stdout)
+
+
 def get_dirac_user():
     """Get dirac user name"""
-    proxy_info_str = run_with_gbasf2(["gb2_proxy_info"], capture_output=True).stdout
-    for line in proxy_info_str.splitlines():
-        if line.startswith("username"):
-            dirac_user = line.split(":", 1)[1].strip()
-            return dirac_user
-    raise RuntimeError("Could not obtain dirac user name from `gb2_proxy_init` output.")
+    try:
+        return get_proxy_info()["username"]
+    except KeyError as e:
+        raise RuntimeError(
+            "Could not obtain dirac user name from `gb2_proxy_init` output."
+        ) from e
 
 
 def setup_dirac_proxy():
     """
     Runs ``gb2_proxy_init -g belle`` if there's no active dirac proxy. If there is, do nothing.
     """
-    check_proxy_initizalized_script_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "gbasf2_utils/check_if_dirac_proxy_is_initialized.py"
-    )
     # first run script to check if proxy is already alive or needs to be initalized
-    # setting ``initalize_proxy=False`` is vital here, otherwise we get an infinite loop
-    proc = run_with_gbasf2([check_proxy_initizalized_script_path], ensure_proxy_initialized=False, check=False)
-    # if returncode of the script is 0, that means that proxy is already alive
-    if not proc.returncode:
+    if get_proxy_info().get("secondsLeft", 0) > 0:
         return
-    # initiallize proxy
+    # initialize proxy
     run_with_gbasf2(shlex.split("gb2_proxy_init -g belle"), ensure_proxy_initialized=False)
+
+
+def query_lpns(ds_query, dirac_user=None):
+    """
+    Query DIRAC for LPNs matching query, and return them as a list.
+
+    This function exists to avoid manual string parsing of ``gb2_ds_list``.
+    """
+    if dirac_user is None:
+        dirac_user = get_dirac_user()
+
+    ds_list_script_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "gbasf2_utils/gbasf2_ds_list.py"
+    )
+
+    proc = run_with_gbasf2(
+        [ds_list_script_path, "--dataset", ds_query, "--user", dirac_user],
+        capture_output=True,
+        ensure_proxy_initialized=True,
+    )
+
+    return json.loads(proc.stdout)
 
 
 def get_unique_project_name(task):
