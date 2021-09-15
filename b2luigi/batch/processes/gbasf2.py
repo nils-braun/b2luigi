@@ -574,7 +574,7 @@ class Gbasf2Process(BatchProcess):
                 "but gbasf2 batch only supports root outputs"
             )
         dataset_query_string = \
-            f"/belle/user/{self.dirac_user}/{self.gbasf2_project_name}/*/{output_file_stem}_*{output_file_ext}"
+            f"/belle/user/{self.dirac_user}/{self.gbasf2_project_name}/sub*/{output_file_stem}_*{output_file_ext}"
         return dataset_query_string
 
     def _local_gb2_dataset_is_complete(self, output_file_name: str, check_temp_dir: bool = False) -> bool:
