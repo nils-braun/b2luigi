@@ -5,6 +5,7 @@ analysis path be imported from gbasf2_example.py
 """
 
 import basf2
+import ROOT
 import modularAnalysis as mA
 import vertex as vx
 from stdCharged import stdK, stdPi
