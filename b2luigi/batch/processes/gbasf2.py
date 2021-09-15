@@ -594,20 +594,21 @@ class Gbasf2Process(BatchProcess):
         task_output_dict = flatten_to_dict(self.task.output())
         output_target = task_output_dict[output_file_name]
         output_dir_path = output_target.path
-        if not os.path.isdir(output_dir_path):
-            raise FileNotFoundError(errno.ENOTDIR, os.strerror(errno.ENOTDIR), output_dir_path)
         if check_temp_dir:
             # files in the temporary download directory
-            downloaded_dataset_basenames = glob(os.path.join(output_dir_path, ".partial", self.gbasf2_project_name, "sub*"))
+            glob_expression = os.path.join(f"{output_dir_path}.partial", self.gbasf2_project_name, "sub*", "*.root")
+            downloaded_dataset_basenames = [os.path.basename(fpath) for fpath in glob(glob_expression)]
         else:
             # file in the final output directory
             downloaded_dataset_basenames = os.listdir(output_dir_path)
+        if not downloaded_dataset_basenames:
+            return False
 
         # get the remote set of grid file names for the gbasf2 project output matching output_file_name
         ds_query_string = self._get_gbasf2_dataset_query(output_file_name)
         ds_list_command = shlex.split(f"gb2_ds_list {ds_query_string}")
         output_dataset_grid_filepaths = run_with_gbasf2(ds_list_command, capture_output=True).stdout.splitlines()
-        output_dataset_basenames = [os.path.basename(grid_path) for grid_path in output_dataset_grid_filepaths]
+        output_dataset_basenames = [os.path.basename(lfn) for lfn in output_dataset_grid_filepaths]
         # remove duplicate LFNs that gb2_ds_list returns for outputs from rescheduled jobs
         output_dataset_basenames = get_unique_lfns(output_dataset_basenames)
         # check if local and remote datasets are equal
