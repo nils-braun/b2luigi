@@ -890,10 +890,10 @@ def get_gbasf2_env(gbasf2_install_directory=None):
         )
         gbasf2_install_directory = get_setting("gbasf2_install_directory", default=default_gbasf2_install_directory)
     gbasf2_setup_path = os.path.join(gbasf2_install_directory, "BelleDIRAC/gbasf2/tools/setup")
-    if not os.path.isfile(os.path.expanduser(gbasf2_setup_path)):
+    if not os.path.isfile(gbasf2_setup_path):
         raise FileNotFoundError(
-            f"Could not find gbasf2 setup files in ``{gbasf2_install_directory}``.\n" +
-            "Make sure to that gbasf2 is installed at that location."
+            f"Could not find gbasf2 setup file at:\n{gbasf2_setup_path}.\n"
+            f"Make sure that `gbasf2_install_directory` is set correctly. Current setting:\n{gbasf2_install_directory}.\n"
         )
     # complete bash command to set up the gbasf2 environment
     # piping output to /dev/null, because we want that our final script only prints the ``env`` output
