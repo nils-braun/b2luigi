@@ -134,8 +134,8 @@ class Gbasf2Process(BatchProcess):
 
         Other not required, but noteworthy settings are:
 
-        - ``gbasf2_install_directory``: Defaults to ``~/gbasf2KEK``. If you installed gbasf2 into another
-          location, you have to change that setting accordingly.
+        - ``gbasf2_install_directory``: Directory where gbasf2 is installed.
+            Defaults to ``/cvmfs/belle.kek.jp/grid/gbasf2/pro/../..``, which should point to the latest gbasf2 release.
         - ``gbasf2_release``: Defaults to the release of your currently set up basf2 release.
           Set this if you want the jobs to use another release on the grid.
         - ``gbasf2_print_status_updates``: Defaults to ``True``. By setting it to ``False`` you can turn off the
@@ -374,9 +374,9 @@ class Gbasf2Process(BatchProcess):
 
         if jobs_hitting_max_n_retries:
             warnings.warn(
-               f"Reached maximum number of rescheduling tries ({self.max_retries}) for following jobs:\n\t" +
-               "\n\t".join(str(j) for j in jobs_hitting_max_n_retries) + "\n",
-               RuntimeWarning
+                f"Reached maximum number of rescheduling tries ({self.max_retries}) for following jobs:\n\t" +
+                "\n\t".join(str(j) for j in jobs_hitting_max_n_retries) + "\n",
+                RuntimeWarning
             )
             return False
 
@@ -892,12 +892,18 @@ def get_gbasf2_env(gbasf2_install_directory=None):
     :return: Dictionary containing the  environment that you get from sourcing the gbasf2 setup script.
     """
     if gbasf2_install_directory is None:
-        gbasf2_install_directory = get_setting("gbasf2_install_directory", default="~/gbasf2KEK")
+        # Use the latest gbasf2 release on CVMFS as the default gbasf2 install directory.
+        # To get the directory of the latest release, take the parent of the "pro"
+        # symlink which points to a sub-directory of the latest release.
+        default_gbasf2_install_directory = os.path.realpath(
+            os.path.join("/cvmfs/belle.kek.jp/grid/gbasf2/pro", os.pardir, os.pardir)
+        )
+        gbasf2_install_directory = get_setting("gbasf2_install_directory", default=default_gbasf2_install_directory)
     gbasf2_setup_path = os.path.join(gbasf2_install_directory, "BelleDIRAC/gbasf2/tools/setup")
-    if not os.path.isfile(os.path.expanduser(gbasf2_setup_path)):
+    if not os.path.isfile(gbasf2_setup_path):
         raise FileNotFoundError(
-            f"Could not find gbasf2 setup files in ``{gbasf2_install_directory}``.\n" +
-            "Make sure to that gbasf2 is installed at that location."
+            f"Could not find gbasf2 setup file at:\n{gbasf2_setup_path}.\n"
+            f"Make sure that `gbasf2_install_directory` is set correctly. Current setting:\n{gbasf2_install_directory}.\n"
         )
     # complete bash command to set up the gbasf2 environment
     # piping output to /dev/null, because we want that our final script only prints the ``env`` output
