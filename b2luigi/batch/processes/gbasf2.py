@@ -954,7 +954,10 @@ def setup_dirac_proxy():
     if get_proxy_info().get("secondsLeft", 0) > 3600 * get_setting("gbasf2_min_proxy_lifetime", default=0):
         return
     # initialize proxy
-    hours = int(get_setting("gbasf2_proxy_lifetime", default=24))
+    lifetime = get_setting("gbasf2_proxy_lifetime", default=24)
+    if not isinstance(lifetime, int) or lifetime <= 0:
+        warnings.warn("Setting 'gbasf2_proxy_lifetime' should be a positive integer.", RuntimeWarning)
+    hours = int(lifetime)
     run_with_gbasf2(shlex.split(f"gb2_proxy_init -g belle -v {hours}:00"), ensure_proxy_initialized=False)
 
 
