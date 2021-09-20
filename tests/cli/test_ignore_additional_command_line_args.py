@@ -1,3 +1,4 @@
+from subprocess import CalledProcessError
 from ..helpers import B2LuigiTestCase
 
 
@@ -9,5 +10,17 @@ class TestIgnoreAdditionalCommandLineArgs(B2LuigiTestCase):
         should be ignore by ``b2luigi.process``.
         """
         self.call_file(
-            "cli/process_with_user_args_ignored_by_b2luigi.py", cli_args=["--hello", "world", "1", "2"]
+            "cli/process_with_user_args_ignored_by_b2luigi.py",
+            cli_args=["--hello", "world", "1", "2"],
         )
+
+    def test_user_args_when_not_ignored_raises_error(self):
+        """
+        Check that we can't use undefined CLI args in scripts if
+        ``ignore_additional_command_line_args=False`` in ``b2luigi.process.
+        """
+        with self.assertRaises(CalledProcessError):
+            self.call_file(
+                "cli/process_with_user_args_not_ignored_by_b2luigi.py",
+                cli_args=["--hello", "world"],
+            )
