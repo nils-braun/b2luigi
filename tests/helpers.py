@@ -21,10 +21,12 @@ class B2LuigiTestCase(TestCase):
         os.chdir(self.cwd)
         shutil.rmtree(self.test_dir)
 
-    def call_file(self, file_name, cwd=None, **kwargs):
+    def call_file(self, file_name, cwd=None, cli_args=None, **kwargs):
         if not cwd:
             cwd = self.test_dir
+        if not cli_args:
+            cli_args = []
         test_file_name = os.path.join(os.path.dirname(__file__), file_name)
         tmp_file_name = os.path.join(self.test_dir, os.path.basename(file_name))
         shutil.copy(test_file_name, tmp_file_name)
-        return subprocess.check_output([sys.executable, tmp_file_name], cwd=cwd, **kwargs)
+        return subprocess.check_output([sys.executable, tmp_file_name, *cli_args], cwd=cwd, **kwargs)
