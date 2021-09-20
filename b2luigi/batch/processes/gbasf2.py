@@ -138,6 +138,11 @@ class Gbasf2Process(BatchProcess):
             Defaults to ``/cvmfs/belle.kek.jp/grid/gbasf2/pro/../..``, which should point to the latest gbasf2 release.
         - ``gbasf2_release``: Defaults to the release of your currently set up basf2 release.
           Set this if you want the jobs to use another release on the grid.
+        - ``gbasf2_proxy_lifetime``: Defaults to 24. When initializing a proxy, set the
+          lifetime to this number of hours.
+        - ``gbasf2_min_proxy_lifetime``: Defaults to 0. During processing, prompt user
+          to reinitialize proxy if remaining proxy lifetime drops below this number of
+          hours.
         - ``gbasf2_print_status_updates``: Defaults to ``True``. By setting it to ``False`` you can turn off the
           printing of of the job summaries, that is the number of jobs in different states in a gbasf2 project.
         - ``gbasf2_max_retries``: Default to 0. Maximum number of times that each job in the project can be automatically
@@ -952,10 +957,14 @@ def setup_dirac_proxy():
     Runs ``gb2_proxy_init -g belle`` if there's no active dirac proxy. If there is, do nothing.
     """
     # first run script to check if proxy is already alive or needs to be initalized
-    if get_proxy_info().get("secondsLeft", 0) > 0:
+    if get_proxy_info().get("secondsLeft", 0) > 3600 * get_setting("gbasf2_min_proxy_lifetime", default=0):
         return
     # initialize proxy
-    run_with_gbasf2(shlex.split("gb2_proxy_init -g belle"), ensure_proxy_initialized=False)
+    lifetime = get_setting("gbasf2_proxy_lifetime", default=24)
+    if not isinstance(lifetime, int) or lifetime <= 0:
+        warnings.warn("Setting 'gbasf2_proxy_lifetime' should be a positive integer.", RuntimeWarning)
+    hours = int(lifetime)
+    run_with_gbasf2(shlex.split(f"gb2_proxy_init -g belle -v {hours}:00"), ensure_proxy_initialized=False)
 
 
 def query_lpns(ds_query, dirac_user=None):
