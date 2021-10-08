@@ -16,61 +16,6 @@ class MyGbasf2Task(MyTask):
     gbasf2_project_name_prefix = "my_gb2_task_"
 
 
-class TestGbasf2FailedFilesDownload(B2LuigiTestCase):
-
-    download_stdouts_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "_gbasf2_project_download_stdouts")
-
-    def setUp(self):
-        super().setUp()
-        self.gb2_mock_process = Mock()
-        self.gb2_mock_process.task = MyGbasf2Task("some_parameter")
-        self.gb2_mock_process.dirac_user = "username"
-        self.gb2_mock_process.gbasf2_project_name = get_unique_project_name(self.gb2_mock_process.task)
-        self.gb2_mock_process.max_retries = 0
-        b2luigi.set_setting("gbasf2_print_status_updates", False)
-
-    def _get_download_stdout(self, download_stdout_name):
-        with open(os.path.join(self.download_stdouts_dir, download_stdout_name)) as download_stdout_file:
-            return download_stdout_file.read()
-
-    def assert_failed_files(self, download_stdout_name, expected_number_of_failed_files):
-        failed_files = Gbasf2Process._failed_files_from_dataset_download(self.gb2_mock_process,
-                                                                         self._get_download_stdout(download_stdout_name))
-        self.assertEqual(len(failed_files), expected_number_of_failed_files)
-
-    def test_failed_files_all_successful(self):
-        "Test gbasf2 project download output where all downloads are successful"
-        self.assert_failed_files("all_successful.txt", 0)
-
-    def test_failed_files_all_successful_and_skipped(self):
-        "Test gbasf2 project download output where all downloads are successful, and some skiped due to local copy"
-        self.assert_failed_files("all_successful_and_skipped.txt", 0)
-
-    def test_failed_files_all_successful_and_duplicate(self):
-        "Test gbasf2 project download output where all downloads are successful, and duplicates available"
-        self.assert_failed_files("all_successful_and_duplicate.txt", 0)
-
-    def test_failed_files_failed_and_successful_and_duplicate(self):
-        "Test gbasf2 project download output where downloads are failed, successful, and duplicates available"
-        self.assert_failed_files("failed_and_successful_and_duplicate.txt", 2)
-
-    def test_failed_files_failed_and_successful(self):
-        "Test gbasf2 project download output where downloads are failed and successful"
-        self.assert_failed_files("failed_and_successful.txt", 2)
-
-    def test_failed_files_failed_and_successful_new_syntax(self):
-        "Test gbasf2 project download output where downloads are failed and successful"
-        self.assert_failed_files("failed_and_successful_new_syntax.txt", 2)
-
-    def test_failed_files_all_failed(self):
-        "Test gbasf2 project download output where all downloads are failed"
-        self.assert_failed_files("all_failed.txt", 3)
-
-    def test_failed_files_all_failed_and_duplicate(self):
-        "Test gbasf2 project download output where all downloads are failed"
-        self.assert_failed_files("all_failed_and_duplicate.txt", 3)
-
-
 class TestGbasf2RescheduleJobs(B2LuigiTestCase):
 
     job_statuses_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "_gbasf2_project_statuses")

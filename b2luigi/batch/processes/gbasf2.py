@@ -664,19 +664,24 @@ class Gbasf2Process(BatchProcess):
             tmp_output_dir_path = f"{output_dir_path}.partial"
             os.makedirs(tmp_output_dir_path, exist_ok=True)
 
-            # Need a file to repeat download for FAILED ones only
+            # Need a set files to repeat download for FAILED ones only
             monitoring_failed_downloads_file = os.path.join(tmp_output_dir_path, "failed_files.txt")
+            old_monitoring_failed_downloads_file = monitoring_failed_downloads_file.replace("failed_files", "failed_files_old")
 
-            # In case of first download, this file does not exist
+            # In case of first download, the file 'monitoring_failed_downloads_file' does not exist
             if not os.path.isfile(monitoring_failed_downloads_file):
 
-                ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string}")
+                ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string} "
+                                             f"--failed_lfns {monitoring_failed_downloads_file}")
                 print("Downloading dataset with command ", " ".join(ds_get_command))
 
             # Any further time is based on the list of files from failed downloads
             else:
+                # Rename current 'monitoring_failed_downloads_file' to reuse the path in case the download fails again
+                os.rename(monitoring_failed_downloads_file, old_monitoring_failed_downloads_file)
                 ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string} "
-                                             f"--input_dslist {monitoring_failed_downloads_file}")
+                                             f"--input_dslist {old_monitoring_failed_downloads_file} "
+                                             f"--failed_lfns {monitoring_failed_downloads_file}")
                 print("Downloading remaining files from dataset with command ", " ".join(ds_get_command))
 
             stdout = run_with_gbasf2(ds_get_command, cwd=tmp_output_dir_path, capture_output=True).stdout
@@ -684,16 +689,18 @@ class Gbasf2Process(BatchProcess):
             if "No file found" in stdout:
                 raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
 
-            failed_files = self._failed_files_from_dataset_download(stdout)
-            if failed_files:
-                with open(monitoring_failed_downloads_file, 'w') as ffs:
-                    ffs.write("\n".join(failed_files))
-            else:
-                try:
+            # Check, whether a file with failed lfns was created
+            failed_files = []
+            if os.path.isfile(monitoring_failed_downloads_file):
+                failed_files = [f.strip() for f in open(monitoring_failed_downloads_file, "r").readlines()]
+
+            if not failed_files:
+                # In case all downloads were successful:
+                # remove 'old_monitoring_failed_downloads_file' and 'monitoring_failed_downloads_file'
+                if os.path.isfile(old_monitoring_failed_downloads_file):
+                    os.remove(old_monitoring_failed_downloads_file)
+                if os.path.isfile(monitoring_failed_downloads_file):
                     os.remove(monitoring_failed_downloads_file)
-                except OSError as e:
-                    if e.errno != errno.ENOENT:  # errno.ENOENT = no such file or directory
-                        raise  # re-raise exception if a different error occurred
 
             tmp_output_dir = os.path.join(tmp_output_dir_path, self.gbasf2_project_name)
             if not self._local_gb2_dataset_is_complete(output_file_name, check_temp_dir=True):
