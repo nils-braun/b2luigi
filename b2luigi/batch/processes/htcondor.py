@@ -10,6 +10,8 @@ from b2luigi.batch.cache import BatchJobStatusCache
 from b2luigi.core.utils import get_log_file_dir, get_task_file_dir
 from b2luigi.core.executable import create_executable_wrapper
 
+from time import sleep
+
 
 class HTCondorJobStatusCache(BatchJobStatusCache):
 
@@ -41,9 +43,18 @@ class HTCondorJobStatusCache(BatchJobStatusCache):
         q_cmd = ["condor_q", "-json", "-attributes", "ClusterId,JobStatus,ExitStatus"]
 
         if job_id:
-            output = subprocess.check_output(q_cmd + [str(job_id)])
-        else:
-            output = subprocess.check_output(q_cmd)
+            q_cmd += [str(job_id)]
+        status_query_tries = 10
+        while True:
+            try:
+                output = subprocess.check_output(q_cmd)
+                break
+            except subprocess.CalledProcessError:
+                if status_query_tries > 0:
+                    status_query_tries -= 1
+                    sleep(5)
+                else:
+                    raise
 
         seen_ids = self._fill_from_output(output)
 
