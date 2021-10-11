@@ -693,7 +693,8 @@ class Gbasf2Process(BatchProcess):
             # Check, whether a file with failed lfns was created
             failed_files = []
             if os.path.isfile(monitoring_failed_downloads_file):
-                failed_files = [f.strip() for f in open(monitoring_failed_downloads_file, "r").readlines()]
+                with open(monitoring_failed_downloads_file, "r") as failed_downloads_fileobj:
+                    failed_files = [f.strip() for f in failed_downloads_fileobj.readlines()]
 
             if not failed_files:
                 # In case all downloads were successful:
