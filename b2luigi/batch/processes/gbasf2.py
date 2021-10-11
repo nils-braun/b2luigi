@@ -21,6 +21,8 @@ from b2luigi.core.settings import get_setting
 from b2luigi.core.utils import flatten_to_dict, get_log_file_dir, get_task_file_dir
 from jinja2 import Template
 from luigi.target import Target
+from rich.table import Table
+from rich.console import Console
 
 
 class Gbasf2Process(BatchProcess):
@@ -346,11 +348,18 @@ class Gbasf2Process(BatchProcess):
         Things to do after the project failed
         """
         job_status_dict = get_gbasf2_project_job_status_dict(self.gbasf2_project_name, dirac_user=self.dirac_user)
-        failed_job_dict = {job_id: job_info for job_id, job_info in job_status_dict.items()
-                           if job_info["Status"] == "Failed" or
-                           (job_info["Status"] == "Done" and job_info["ApplicationStatus"] != "Done")}
-        n_failed = len(failed_job_dict)
-        print(f"{n_failed} failed jobs:\n{failed_job_dict}")
+        failed_job_status_dict = {
+            job_id: job_info
+            for job_id, job_info in job_status_dict.items()
+            if job_info["Status"] == "Failed" or
+            (job_info["Status"] == "Done" and job_info["ApplicationStatus"] != "Done")
+        }
+        n_failed = len(failed_job_status_dict)
+        failed_job_table = create_rich_job_table(
+            failed_job_status_dict,
+            title=f"{n_failed} failed jobs for gbasf2 project `{self.gbasf2_project_name}`:"
+        )
+        Console(stderr=True).print(failed_job_table)
         if get_setting("gbasf2_download_logs", default=True, task=self.task):
             self._download_logs()
 
@@ -1087,3 +1096,13 @@ def get_unique_lfns(lfns: Iterable[str]) -> Set[str]:
     # reschedule number and return list of maximums of each group
     lfns = sorted(lfns, key=_get_lfn_upto_reschedule_number)
     return {max(lfn_group) for _, lfn_group in groupby(lfns, key=_get_lfn_upto_reschedule_number)}
+
+
+def create_rich_job_table(job_status_dict: dict, title=None) -> Table:
+    job_table = Table(title=title)
+    job_table.add_column("Job ID", min_width=9)
+    for status_column in list(job_status_dict.values())[0].keys():
+        job_table.add_column(status_column, overflow="fold")
+    for job_id, job_status in job_status_dict.items():
+        job_table.add_row(job_id, *job_status.values())
+        return job_table
