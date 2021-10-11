@@ -666,7 +666,8 @@ class Gbasf2Process(BatchProcess):
 
             # Need a set files to repeat download for FAILED ones only
             monitoring_failed_downloads_file = os.path.join(tmp_output_dir_path, "failed_files.txt")
-            old_monitoring_failed_downloads_file = monitoring_failed_downloads_file.replace("failed_files", "failed_files_old")
+            monitoring_download_file_stem, monitoring_downloads_file_ext = os.path.splitext(monitoring_failed_downloads_file)
+            old_monitoring_failed_downloads_file = f"{monitoring_download_file_stem}_old{monitoring_downloads_file_ext}"
 
             # In case of first download, the file 'monitoring_failed_downloads_file' does not exist
             if not os.path.isfile(monitoring_failed_downloads_file):
