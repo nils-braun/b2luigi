@@ -131,6 +131,7 @@ Features, fixing, help and testing
     * Sviatoslav Bilokin (`bilokin`_)
     * Phil Grace (`philiptgrace`_)
     * Anselm Baur (`anselmbaur`_)
+    * Moritz Bauer (`sognetic`_)
 
 Stolen ideas
     * Implementation of SGE batch system (`sge`_).
@@ -149,6 +150,7 @@ Stolen ideas
 .. _`bilokin`: https://github.com/bilokin
 .. _`philiptgrace`: https://github.com/philiptgrace
 .. _`anselmbaur`: https://github.com/anselm-baur
+.. _`sognetic`: https://github.com/sognetic
 .. _`sge`: https://github.com/spotify/luigi/blob/master/luigi/contrib/sge.py
 .. _`lsf`: https://github.com/spotify/luigi/pull/2373/files
 
