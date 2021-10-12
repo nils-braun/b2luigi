@@ -132,6 +132,7 @@ Features, fixing, help and testing
     * Phil Grace (`philiptgrace`_)
     * Anselm Baur (`anselmbaur`_)
     * Moritz Bauer (`sognetic`_)
+    * Artur Gottmann (`ArturAkh`_)
 
 Stolen ideas
     * Implementation of SGE batch system (`sge`_).
@@ -151,6 +152,7 @@ Stolen ideas
 .. _`philiptgrace`: https://github.com/philiptgrace
 .. _`anselmbaur`: https://github.com/anselm-baur
 .. _`sognetic`: https://github.com/sognetic
+.. _`ArturAkh`: https://github.com/ArturAkh
 .. _`sge`: https://github.com/spotify/luigi/blob/master/luigi/contrib/sge.py
 .. _`lsf`: https://github.com/spotify/luigi/pull/2373/files
 
