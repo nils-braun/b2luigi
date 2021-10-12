@@ -502,7 +502,7 @@ class Gbasf2Process(BatchProcess):
         # gbasf2 job priority
         priority = get_setting("gbasf2_priority", default=False, task=self.task)
         if priority is not False:
-            if not (0 <= priority <= 10):
+            if not 0 <= priority <= 10:
                 raise ValueError("Priority should be integer between 0 and 10.")
             gbasf2_command_str += f" --priority {priority} "
 
@@ -625,16 +625,6 @@ class Gbasf2Process(BatchProcess):
         if superfluous_files:
             warnings.warn("\nFiles superfluous in download:\n{}".format("\n".join(superfluous_files)), RuntimeWarning)
         return False
-
-    def _failed_files_from_dataset_download(self, stdout):
-        """
-        Parse stdout from gb2_ds_get dataset download command to extract LFN's of failed file downloads.
-        """
-        failed_files = stdout.split('Failed files:')[-1].\
-            split("Files with duplicated jobID, not downloaded:")[0].\
-            split("Skip ")[0].strip().split('\n')
-        failed_files = [line.split('.root')[0].strip() + '.root' for line in failed_files if line.split('.root')[0].strip()]
-        return failed_files
 
     def _download_dataset(self):
         """
@@ -955,10 +945,10 @@ def get_dirac_user():
     """Get dirac user name"""
     try:
         return get_proxy_info()["username"]
-    except KeyError as e:
+    except KeyError as err:
         raise RuntimeError(
             "Could not obtain dirac user name from `gb2_proxy_init` output."
-        ) from e
+        ) from err
 
 
 def setup_dirac_proxy():
