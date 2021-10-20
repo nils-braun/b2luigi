@@ -928,6 +928,10 @@ def get_gbasf2_env(gbasf2_install_directory=None):
         echo_gbasf2_env_command, check=True, stdout=subprocess.PIPE, encoding="utf-8"
     ).stdout
     gbasf2_env = dict(line.split("=", 1) for line in gbasf2_env_string.splitlines())
+    # The gbasf2 setup script on sets HOME to /ext/home/ueda if it's unset,
+    # which later causes problems in the gb2_proxy_init subprocess. Therefore,
+    # reset it to the caller's HOME.
+    gbasf2_env["HOME"] = os.getenv("HOME")
     return gbasf2_env
 
 
