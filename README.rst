@@ -26,3 +26,9 @@ the `luigi documentation <https://luigi.readthedocs.io/en/latest/>`_.
 If you find any bugs or want to add a feature or improve the documentation, please send me a pull request!
 
 This project is in still beta. Please be extra cautious when using in production mode.
+
+To get notified about new features, (potentiall breaking) changes, bugs and
+their fixes, I recommend using the ``watch`` button on github to get
+notifications for new releases and/or issues or to subscribe the `releases feed
+<https://github.com/nils-braun/b2luigi/releases.atom>`_ (requires no github
+account, just a `feed reader <https://en.wikipedia.org/wiki/Web_feed>`_.
