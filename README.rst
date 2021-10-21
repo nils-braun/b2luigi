@@ -16,7 +16,7 @@ b2luigi
 ``b2luigi`` is a helper package constructed around ``luigi``, that helps you schedule working packages (so called tasks)
 locally or on the batch system.
 Apart from the very powerful dependency management system by ``luigi``, ``b2luigi`` extends the user interface
-and has a build-in support for the queue systems, e.g. LSF.
+and has a build-in support for the queue systems, e.g. LSF and HTCondor.
 
 You can find more information in the `documentation <https://b2luigi.readthedocs.io/en/stable/>`_.
 
