@@ -6,6 +6,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import sys
 import tempfile
 import warnings
 from collections import Counter
@@ -946,7 +947,7 @@ def get_proxy_info():
 
 
 def get_dirac_user():
-    """Get dirac user name"""
+    """Get dirac user name."""
     try:
         return get_proxy_info()["username"]
     except KeyError as err:
@@ -956,9 +957,7 @@ def get_dirac_user():
 
 
 def setup_dirac_proxy():
-    """
-    Runs ``gb2_proxy_init -g belle`` if there's no active dirac proxy. If there is, do nothing.
-    """
+    """Run ``gb2_proxy_init -g belle`` if there's no active dirac proxy. If there is, do nothing."""
     # first run script to check if proxy is already alive or needs to be initalized
     if get_proxy_info().get("secondsLeft", 0) > 3600 * get_setting("gbasf2_min_proxy_lifetime", default=0):
         return
@@ -967,7 +966,33 @@ def setup_dirac_proxy():
     if not isinstance(lifetime, int) or lifetime <= 0:
         warnings.warn("Setting 'gbasf2_proxy_lifetime' should be a positive integer.", RuntimeWarning)
     hours = int(lifetime)
-    run_with_gbasf2(shlex.split(f"gb2_proxy_init -g belle -v {hours}:00"), ensure_proxy_initialized=False)
+    proxy_init_cmd = shlex.split(f"gb2_proxy_init -g belle -v {hours}:00")
+
+    while True:
+        proc = run_with_gbasf2(proxy_init_cmd, ensure_proxy_initialized=False, capture_output=True, check=True)
+
+        # Check if there were any errors, since gb2_proxy_init often still exits without errorcode and sends messages to stdout
+        out, err = proc.stdout, proc.stderr
+        all_output = out + err  # gb2_proxy_init errors are usually in stdout, but for future-proofing also check stderr
+
+        # if wrong password, retry password entry
+        # usually the output then contains "Bad passphrase", but for future-proofing we check "bad pass"
+        if "bad pass" in all_output.lower():
+            print("Wrong certificate password, please try again.", file=sys.stderr)
+            continue
+
+        # for all other errors, raise an exception and abort
+        # Usually for errors, the output contains the line: "Error: Operation not permitted ( 1 : )"
+        if "error" in all_output.lower():
+            raise subprocess.CalledProcessError(
+                returncode=errno.EPERM,
+                cmd=proxy_init_cmd,
+                output=("There seems to be an error in the output of gb2_proxy_init."
+                        f"\nCommand output:\n{out}"),
+                stderr=()
+            )
+        # if no  wrong password and no other errors, stop loop and return
+        return
 
 
 def query_lpns(ds_query, dirac_user=None):
