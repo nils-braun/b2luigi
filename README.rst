@@ -28,7 +28,7 @@ If you find any bugs or want to add a feature or improve the documentation, plea
 This project is in still beta. Please be extra cautious when using in production mode.
 
 To get notified about new features, (potentiall breaking) changes, bugs and
-their fixes, I recommend using the ``watch`` button on github to get
+their fixes, I recommend using the ``Watch`` button on github to get
 notifications for new releases and/or issues or to subscribe the `releases feed
 <https://github.com/nils-braun/b2luigi/releases.atom>`_ (requires no github
 account, just a feed reader).
