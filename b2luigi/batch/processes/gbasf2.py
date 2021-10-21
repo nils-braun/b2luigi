@@ -934,15 +934,11 @@ def get_proxy_info():
     )
 
     # Setting ``initalize_proxy=False`` is vital here, otherwise we get an infinite loop
-    try:
-        proc = run_with_gbasf2(
-            [proxy_info_script_path],
-            capture_output=True,
-            ensure_proxy_initialized=False,
-        )
-    except subprocess.CalledProcessError:
-        return {}
-
+    proc = run_with_gbasf2(
+        [proxy_info_script_path],
+        capture_output=True,
+        ensure_proxy_initialized=False,
+    )
     return json.loads(proc.stdout)
 
 
@@ -959,8 +955,13 @@ def get_dirac_user():
 def setup_dirac_proxy():
     """Run ``gb2_proxy_init -g belle`` if there's no active dirac proxy. If there is, do nothing."""
     # first run script to check if proxy is already alive or needs to be initalized
-    if get_proxy_info().get("secondsLeft", 0) > 3600 * get_setting("gbasf2_min_proxy_lifetime", default=0):
-        return
+    try:
+        if get_proxy_info()["secondsLeft"] > 3600 * get_setting("gbasf2_min_proxy_lifetime", default=0):
+            return
+    #  error is raised if proxy hasn't been initialized yet, in that case also process with initialization
+    except subprocess.CalledProcessError:
+        pass
+
     # initialize proxy
     lifetime = get_setting("gbasf2_proxy_lifetime", default=24)
     if not isinstance(lifetime, int) or lifetime <= 0:

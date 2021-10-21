@@ -7,11 +7,14 @@ tested in this test case, only the functions that can be run independently.
 
 import unittest
 from collections import namedtuple
+from contextlib import redirect_stderr
+from io import StringIO
+from subprocess import CalledProcessError
 from unittest import mock
 
-from b2luigi.batch.processes.gbasf2 import (_get_lfn_upto_reschedule_number, get_unique_lfns,
+from b2luigi.batch.processes.gbasf2 import (_get_lfn_upto_reschedule_number, get_proxy_info, get_unique_lfns,
                                             lfn_follows_gb2v5_convention, setup_dirac_proxy)
-from subprocess import CalledProcessError
+
 # first test utilities for working with logical file names on the grid
 
 
@@ -156,8 +159,8 @@ class TestSetupDiracProxy(unittest.TestCase):
     @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
     @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
     def test_setup_proxy_when_no_proxy_info(self, mock_get_proxy_info, mock_run_with_gbasf2):
-        # force setting up of new proxy
-        mock_get_proxy_info.return_value = {}
+        # pretend proxy is not initalized yet, then get_proxy_info raises CalledProcessError
+        mock_get_proxy_info.side_effect = CalledProcessError(1, ["gb2_proxy_info", "-g", "belle"])
         mock_run_with_gbasf2.return_value = self.mock_process(self.success_msg, "")
         setup_dirac_proxy()
         self.assertEqual(mock_run_with_gbasf2.call_count, 1)
@@ -176,7 +179,13 @@ class TestSetupDiracProxy(unittest.TestCase):
         ]
         mock_run_with_gbasf2.side_effect = return_processes
 
-        setup_dirac_proxy()
+        stderr = StringIO()
+        with redirect_stderr(stderr):
+            setup_dirac_proxy()
+        self.assertListEqual(
+            stderr.getvalue().splitlines(),
+            ['Wrong certificate password, please try again.', 'Wrong certificate password, please try again.'],
+        )
         self.assertEqual(mock_run_with_gbasf2.call_count, len(return_processes))
 
     @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
@@ -187,3 +196,10 @@ class TestSetupDiracProxy(unittest.TestCase):
         mock_run_with_gbasf2.return_value = self.mock_process(self.error_msg, "")
         with self.assertRaises(CalledProcessError):
             setup_dirac_proxy()
+
+    @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
+    def test_get_proxy_info_doesnt_suppress_called_process_error(self, mock_run_with_gbasf2):
+        mock_run_with_gbasf2.side_effect = CalledProcessError(1, ["gb2_proxy_info", "-g", "belle"])
+        with self.assertRaises(CalledProcessError):
+            get_proxy_info()
+        self.assertEqual(mock_run_with_gbasf2.call_count, 1)
