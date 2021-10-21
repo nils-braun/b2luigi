@@ -6,10 +6,12 @@ tested in this test case, only the functions that can be run independently.
 """
 
 import unittest
+from collections import namedtuple
+from unittest import mock
 
 from b2luigi.batch.processes.gbasf2 import (_get_lfn_upto_reschedule_number, get_unique_lfns,
-                                            lfn_follows_gb2v5_convention)
-
+                                            lfn_follows_gb2v5_convention, setup_dirac_proxy)
+from subprocess import CalledProcessError
 # first test utilities for working with logical file names on the grid
 
 
@@ -117,3 +119,71 @@ class TestGetUniqueLFNS(unittest.TestCase):
     def test_sets_equal_underscore_in_file_name_input_as_set(self):
         unique_lfns_snake_case = get_unique_lfns(set(self.lfns_with_duplicates_snake_case))
         self.assertSetEqual(unique_lfns_snake_case, self.unique_lfns_snake_case)
+
+
+class TestSetupDiracProxy(unittest.TestCase):
+
+    # In many of the tests we mock ``run_with_gbasf2``, which is used to run
+    # ``gb2_proxy_init``. Let's define a pseudo process class with stdout and
+    # stderr for that and define some common output messages of gb2_proxy_init
+    mock_process = namedtuple("mock_process", ["stdout", "stderr"])
+
+    success_msg = "Succeed with return value:\n0"
+    error_msg = "Error: Operation not permitted ( 1 : )"
+    wrong_pw_msg = (
+        "Generating proxy..."
+        "Enter Certificate password:"
+        "Bad passphrase"
+    ) + f"\n{error_msg}"
+
+    @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
+    @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
+    def test_dont_setup_when_proxy_alive(self, mock_get_proxy_info, mock_run_with_gbasf2):
+        mock_get_proxy_info.return_value = {"secondsLeft": 999}
+        setup_dirac_proxy()
+        # check that gb2_proxy_init was never called via subprocess
+        self.assertEqual(mock_run_with_gbasf2.call_count, 0)
+
+    @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
+    @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
+    def test_setup_proxy_on_0_seconds(self, mock_get_proxy_info, mock_run_with_gbasf2):
+        # force setting up of new proxy
+        mock_get_proxy_info.return_value = {"secondsLeft": 0}
+        mock_run_with_gbasf2.return_value = self.mock_process(self.success_msg, "")
+        setup_dirac_proxy()
+        self.assertEqual(mock_run_with_gbasf2.call_count, 1)
+
+    @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
+    @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
+    def test_setup_proxy_when_no_proxy_info(self, mock_get_proxy_info, mock_run_with_gbasf2):
+        # force setting up of new proxy
+        mock_get_proxy_info.return_value = {}
+        mock_run_with_gbasf2.return_value = self.mock_process(self.success_msg, "")
+        setup_dirac_proxy()
+        self.assertEqual(mock_run_with_gbasf2.call_count, 1)
+
+    @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
+    @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
+    def test_retry_on_wrong_password(self, mock_get_proxy_info, mock_run_with_gbasf2):
+        # force setting up of new proxy
+        mock_get_proxy_info.return_value = {"secondsLeft": 0}
+
+        # mock run_with_gbasf2 to first return wrong PW message a couple of times, before returning successfully
+        return_processes = [
+            self.mock_process(self.wrong_pw_msg, ""),
+            self.mock_process("", self.wrong_pw_msg),
+            self.mock_process(self.success_msg, "")
+        ]
+        mock_run_with_gbasf2.side_effect = return_processes
+
+        setup_dirac_proxy()
+        self.assertEqual(mock_run_with_gbasf2.call_count, len(return_processes))
+
+    @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
+    @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
+    def test_raises_error_when_errormsg_in_stdout(self, mock_get_proxy_info, mock_run_with_gbasf2):
+        mock_get_proxy_info.return_value = {"secondsLeft": 0}
+        # check that gb2_proxy_init was never called via subprocess
+        mock_run_with_gbasf2.return_value = self.mock_process(self.error_msg, "")
+        with self.assertRaises(CalledProcessError):
+            setup_dirac_proxy()
