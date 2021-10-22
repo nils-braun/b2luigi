@@ -5,6 +5,8 @@ Older entries have been generated from github releases.
 New entries aim to adhere to the format proposed by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
 ## [0.7.3] - 2021-10-21
 Small patch release for the gbasf2 process adding tests and better error checks for subprocess to make future debugging of problems like e.g. #138 easier
 
