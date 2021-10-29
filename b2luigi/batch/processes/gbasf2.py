@@ -14,7 +14,7 @@ from datetime import datetime
 from functools import lru_cache
 from glob import glob
 from itertools import groupby
-from typing import Iterable, Set
+from typing import Iterable, Optional, List, Set
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
@@ -922,7 +922,10 @@ def get_gbasf2_env(gbasf2_install_directory=None):
     # The gbasf2 setup script on sets HOME to /ext/home/ueda if it's unset,
     # which later causes problems in the gb2_proxy_init subprocess. Therefore,
     # reset it to the caller's HOME.
-    gbasf2_env["HOME"] = os.getenv("HOME")
+    try:
+        gbasf2_env["HOME"] = os.environ["HOME"]
+    except KeyError:
+        pass
     return gbasf2_env
 
 
@@ -990,13 +993,12 @@ def setup_dirac_proxy():
                 cmd=proxy_init_cmd,
                 output=("There seems to be an error in the output of gb2_proxy_init."
                         f"\nCommand output:\n{out}"),
-                stderr=()
             )
         # if no  wrong password and no other errors, stop loop and return
         return
 
 
-def query_lpns(ds_query, dirac_user=None):
+def query_lpns(ds_query: str, dirac_user: Optional[str] = None) -> List[str]:
     """
     Query DIRAC for LPNs matching query, and return them as a list.
 
@@ -1009,13 +1011,20 @@ def query_lpns(ds_query, dirac_user=None):
         os.path.dirname(os.path.realpath(__file__)), "gbasf2_utils/gbasf2_ds_list.py"
     )
 
+    query_cmd = [ds_list_script_path, "--dataset", ds_query, "--user", dirac_user]
     proc = run_with_gbasf2(
-        [ds_list_script_path, "--dataset", ds_query, "--user", dirac_user],
+        query_cmd,
         capture_output=True,
         ensure_proxy_initialized=True,
     )
 
-    return json.loads(proc.stdout)
+    lpns = json.loads(proc.stdout)
+    if not isinstance(lpns, list):
+        raise TypeError(
+            f"Expected gbasf2 dataset query to return list, but instead the command\n{query_cmd}\n" +
+            f"returned: {lpns}"
+        )
+    return lpns
 
 
 def get_unique_project_name(task):
@@ -1102,7 +1111,7 @@ def get_unique_lfns(lfns: Iterable[str]) -> Set[str]:
     # if dataset does not follow gbasf2 v5 convention, assume it was produced
     # with old release and does not contain duplicates
     if not all(lfn_follows_gb2v5_convention(lfn) for lfn in lfns):
-        return list(lfns)
+        return set(lfns)
     # if it is of the gbasf v5 form, group the outputs by the substring upto the
     # reschedule number and return list of maximums of each group
     lfns = sorted(lfns, key=_get_lfn_upto_reschedule_number)

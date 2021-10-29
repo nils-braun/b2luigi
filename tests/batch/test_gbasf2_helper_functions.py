@@ -9,11 +9,12 @@ import unittest
 from collections import namedtuple
 from contextlib import redirect_stderr
 from io import StringIO
+from os.path import join
 from subprocess import CalledProcessError
 from unittest import mock
 
 from b2luigi.batch.processes.gbasf2 import (_get_lfn_upto_reschedule_number, get_proxy_info, get_unique_lfns,
-                                            lfn_follows_gb2v5_convention, setup_dirac_proxy)
+                                            lfn_follows_gb2v5_convention, query_lpns, setup_dirac_proxy)
 
 # first test utilities for working with logical file names on the grid
 
@@ -124,12 +125,13 @@ class TestGetUniqueLFNS(unittest.TestCase):
         self.assertSetEqual(unique_lfns_snake_case, self.unique_lfns_snake_case)
 
 
-class TestSetupDiracProxy(unittest.TestCase):
+# In many of the tests we mock ``run_with_gbasf2``, which is used to run
+# ``gb2_proxy_init``. Let's define a pseudo process class with stdout and
+# stderr for that and define some common output messages of gb2_proxy_init
+MockProcess = namedtuple("mock_process", ["stdout", "stderr"])
 
-    # In many of the tests we mock ``run_with_gbasf2``, which is used to run
-    # ``gb2_proxy_init``. Let's define a pseudo process class with stdout and
-    # stderr for that and define some common output messages of gb2_proxy_init
-    mock_process = namedtuple("mock_process", ["stdout", "stderr"])
+
+class TestSetupDiracProxy(unittest.TestCase):
 
     success_msg = "Succeed with return value:\n0"
     error_msg = "Error: Operation not permitted ( 1 : )"
@@ -152,7 +154,7 @@ class TestSetupDiracProxy(unittest.TestCase):
     def test_setup_proxy_on_0_seconds(self, mock_get_proxy_info, mock_run_with_gbasf2):
         # force setting up of new proxy
         mock_get_proxy_info.return_value = {"secondsLeft": 0}
-        mock_run_with_gbasf2.return_value = self.mock_process(self.success_msg, "")
+        mock_run_with_gbasf2.return_value = MockProcess(self.success_msg, "")
         setup_dirac_proxy()
         self.assertEqual(mock_run_with_gbasf2.call_count, 1)
 
@@ -161,7 +163,7 @@ class TestSetupDiracProxy(unittest.TestCase):
     def test_setup_proxy_when_no_proxy_info(self, mock_get_proxy_info, mock_run_with_gbasf2):
         # pretend proxy is not initalized yet, then get_proxy_info raises CalledProcessError
         mock_get_proxy_info.side_effect = CalledProcessError(1, ["gb2_proxy_info", "-g", "belle"])
-        mock_run_with_gbasf2.return_value = self.mock_process(self.success_msg, "")
+        mock_run_with_gbasf2.return_value = MockProcess(self.success_msg, "")
         setup_dirac_proxy()
         self.assertEqual(mock_run_with_gbasf2.call_count, 1)
 
@@ -173,9 +175,9 @@ class TestSetupDiracProxy(unittest.TestCase):
 
         # mock run_with_gbasf2 to first return wrong PW message a couple of times, before returning successfully
         return_processes = [
-            self.mock_process(self.wrong_pw_msg, ""),
-            self.mock_process("", self.wrong_pw_msg),
-            self.mock_process(self.success_msg, "")
+            MockProcess(self.wrong_pw_msg, ""),
+            MockProcess("", self.wrong_pw_msg),
+            MockProcess(self.success_msg, "")
         ]
         mock_run_with_gbasf2.side_effect = return_processes
 
@@ -193,7 +195,7 @@ class TestSetupDiracProxy(unittest.TestCase):
     def test_raises_error_when_errormsg_in_stdout(self, mock_get_proxy_info, mock_run_with_gbasf2):
         mock_get_proxy_info.return_value = {"secondsLeft": 0}
         # check that gb2_proxy_init was never called via subprocess
-        mock_run_with_gbasf2.return_value = self.mock_process(self.error_msg, "")
+        mock_run_with_gbasf2.return_value = MockProcess(self.error_msg, "")
         with self.assertRaises(CalledProcessError):
             setup_dirac_proxy()
 
@@ -203,3 +205,27 @@ class TestSetupDiracProxy(unittest.TestCase):
         with self.assertRaises(CalledProcessError):
             get_proxy_info()
         self.assertEqual(mock_run_with_gbasf2.call_count, 1)
+
+
+class TestQueryLPNs(unittest.TestCase):
+
+    @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
+    def test_single_file_list(self, mock_run_with_gbasf2):
+        output = (
+            '["/belle/Data/release-05-01-24/DB00001454/SkimP12x1/prod00019339/e0008/4S/r02547/'
+            'hadron/11180500/udst/sub00/udst_000001_prod00019339_task72546000001.root"]\n'
+        )
+        mock_run_with_gbasf2.return_value = MockProcess(output, "")
+        lpns = query_lpns("mock query", "mock user")
+        self.assertListEqual(
+            lpns,
+            [join("/belle/Data/release-05-01-24/DB00001454/SkimP12x1/prod00019339/e0008/4S/r02547/",
+                  "hadron/11180500/udst/sub00/udst_000001_prod00019339_task72546000001.root")]
+        )
+
+    @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
+    def test_type_error_when_json_output_not_list(self, mock_run_with_gbasf2):
+        wrong_type_output = '{"hello": "world"}\n'
+        mock_run_with_gbasf2.return_value = MockProcess(wrong_type_output, "")
+        with self.assertRaises(TypeError):
+            query_lpns("mock query", "mock user")
