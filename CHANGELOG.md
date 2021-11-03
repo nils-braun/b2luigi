@@ -7,6 +7,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.7.4] - 2021-11-03
+
+### Added
+* Add a `CHANGELOG.md` file in addition to the release notes on github
+
+### Fixed
+* gbasf2: Fix moving of downloaded datasets with multiple datablocks (subs) #150
+* gbasf2: If an error happens during proxy initialization, there was an error raised, but the `stderr` argument was wrong, which was fixed in #149
+
+### Changed
+* gbasf2: `get_unique_lfns` in some cases returned a set and in some cases a list. Changed it to always return sets.
+
+
 ## [0.7.3] - 2021-10-21
 Small patch release for the gbasf2 process adding tests and better error checks for subprocess to make future debugging of problems like e.g. #138 easier
 
