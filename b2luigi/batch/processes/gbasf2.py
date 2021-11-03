@@ -656,7 +656,7 @@ class Gbasf2Process(BatchProcess):
             os.makedirs(tmp_output_dir_path, exist_ok=True)
 
             # Need a set files to repeat download for FAILED ones only
-            monitoring_failed_downloads_file = os.path.join(tmp_output_dir_path, "failed_files.txt")
+            monitoring_failed_downloads_file = os.path.abspath(os.path.join(tmp_output_dir_path, "failed_files.txt"))
             monitoring_download_file_stem, monitoring_downloads_file_ext = os.path.splitext(monitoring_failed_downloads_file)
             old_monitoring_failed_downloads_file = f"{monitoring_download_file_stem}_old{monitoring_downloads_file_ext}"
 
@@ -665,7 +665,8 @@ class Gbasf2Process(BatchProcess):
 
                 ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string} "
                                              f"--failed_lfns {monitoring_failed_downloads_file}")
-                print("Downloading dataset with command ", " ".join(ds_get_command))
+                print(f"Downloading dataset into\n  {tmp_output_dir_path}\n  with command\n  ",
+                      " ".join(ds_get_command))
 
             # Any further time is based on the list of files from failed downloads
             else:
@@ -674,7 +675,8 @@ class Gbasf2Process(BatchProcess):
                 ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string} "
                                              f"--input_dslist {old_monitoring_failed_downloads_file} "
                                              f"--failed_lfns {monitoring_failed_downloads_file}")
-                print("Downloading remaining files from dataset with command ", " ".join(ds_get_command))
+                print(f"Downloading remaining files into\n  {tmp_output_dir_path}\n  with command\n  ",
+                      " ".join(ds_get_command))
 
             stdout = run_with_gbasf2(ds_get_command, cwd=tmp_output_dir_path, capture_output=True).stdout
             print(stdout)
