@@ -1,5 +1,4 @@
 {
-    "gbasf2_install_directory": "~/gbasf2KEK",
     "gbasf2_print_status_updates": true,
     "gbasf2_max_retries": 0,
     "gbasf2_cputime": 5,
