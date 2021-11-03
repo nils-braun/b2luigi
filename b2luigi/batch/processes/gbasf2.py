@@ -656,7 +656,7 @@ class Gbasf2Process(BatchProcess):
             os.makedirs(tmp_output_dir_path, exist_ok=True)
 
             # Need a set files to repeat download for FAILED ones only
-            monitoring_failed_downloads_file = os.path.join(tmp_output_dir_path, "failed_files.txt")
+            monitoring_failed_downloads_file = os.path.abspath(os.path.join(tmp_output_dir_path, "failed_files.txt"))
             monitoring_download_file_stem, monitoring_downloads_file_ext = os.path.splitext(monitoring_failed_downloads_file)
             old_monitoring_failed_downloads_file = f"{monitoring_download_file_stem}_old{monitoring_downloads_file_ext}"
 
@@ -665,7 +665,8 @@ class Gbasf2Process(BatchProcess):
 
                 ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string} "
                                              f"--failed_lfns {monitoring_failed_downloads_file}")
-                print("Downloading dataset with command ", " ".join(ds_get_command))
+                print(f"Downloading dataset into\n  {tmp_output_dir_path}\n  with command\n  ",
+                      " ".join(ds_get_command))
 
             # Any further time is based on the list of files from failed downloads
             else:
@@ -674,7 +675,8 @@ class Gbasf2Process(BatchProcess):
                 ds_get_command = shlex.split(f"gb2_ds_get --force {dataset_query_string} "
                                              f"--input_dslist {old_monitoring_failed_downloads_file} "
                                              f"--failed_lfns {monitoring_failed_downloads_file}")
-                print("Downloading remaining files from dataset with command ", " ".join(ds_get_command))
+                print(f"Downloading remaining files into\n  {tmp_output_dir_path}\n  with command\n  ",
+                      " ".join(ds_get_command))
 
             stdout = run_with_gbasf2(ds_get_command, cwd=tmp_output_dir_path, capture_output=True).stdout
             print(stdout)
@@ -695,24 +697,20 @@ class Gbasf2Process(BatchProcess):
                 if os.path.isfile(monitoring_failed_downloads_file):
                     os.remove(monitoring_failed_downloads_file)
 
-            tmp_output_dir = os.path.join(tmp_output_dir_path, self.gbasf2_project_name)
+            tmp_project_dir = os.path.join(tmp_output_dir_path, self.gbasf2_project_name)
             if not self._local_gb2_dataset_is_complete(output_file_name, check_temp_dir=True):
                 raise RuntimeError(
-                    f"Download incomplete. The downloaded set of files in {tmp_output_dir} is not equal to the " +
+                    f"Download incomplete. The downloaded set of files in {tmp_project_dir} is not equal to the " +
                     f"list of dataset files on the grid for project {self.gbasf2_project_name}.",
                 )
 
             print(f"Download of {self.gbasf2_project_name} files successful.\n"
                   f"Moving output files to directory: {output_dir_path}")
-            if os.path.exists(output_dir_path):
-                shutil.rmtree(output_dir_path)
             # sub00 and other sub<xy> directories in case of other datasets
-            sub_directories = glob(os.path.join(tmp_output_dir, "sub*"))
-            for sub_dir in sub_directories:
-                if not os.path.isdir(sub_dir):
-                    raise NotADirectoryError(f"{sub_dir} is not a directory.")
-                shutil.move(src=sub_dir, dst=output_dir_path)
-            shutil.rmtree(tmp_output_dir_path)
+            _move_downloaded_dataset_to_output_dir(
+                project_download_path=tmp_project_dir,
+                output_path=output_dir_path
+            )
 
     def _download_logs(self):
         """
@@ -1116,3 +1114,44 @@ def get_unique_lfns(lfns: Iterable[str]) -> Set[str]:
     # reschedule number and return list of maximums of each group
     lfns = sorted(lfns, key=_get_lfn_upto_reschedule_number)
     return {max(lfn_group) for _, lfn_group in groupby(lfns, key=_get_lfn_upto_reschedule_number)}
+
+
+def _move_downloaded_dataset_to_output_dir(project_download_path: str, output_path: str) -> None:
+    """
+    Move files downloaded downloaded to the grid to their final output location.
+
+    In the ``Gbasf2Process``, the outputs are usually downloaded with ``gb2_ds_get`` to
+    a temporary directory (``project_download_path``)  with a structure like
+
+        <result_dir>/B.root.partial/<project_name>
+        ├── sub00/job_name*B.root
+        ├── sub01/job_name*B.root
+        ├── …
+
+    This function moves those files to their final ``output_path`` directory which has
+    the same name as the original root file (e.g. ``B.root``) to fullfill the luigi
+    output definition. This output directory has the structure
+
+        <result_dir>/B.root/job_name*B.root
+
+    :param project_download_path: Directory into which ``gb2_ds_get`` downloaded the
+        grid dataset. The contents should be ``sub<xy>`` datablocks containing root files.
+    :param output_path: Final output directory into which the ROOT files should be copied.
+    """
+    # the download shouldn't happen if the output already exists, but assert that's the case just to be sure
+    if os.path.exists(output_path):
+        raise FileExistsError(f"Output directory {output_path} already exists.")
+    sub_directories = glob(os.path.join(project_download_path, "sub*"))
+    try:
+        os.makedirs(output_path, exist_ok=True)
+        for sub_dir in sub_directories:
+            root_fpaths = glob(os.path.join(sub_dir, "*.root"), recursive=False)
+            if not root_fpaths:
+                raise RuntimeError(f"Cannot find any .root files in {sub_dir}.")
+            for root_fpath in root_fpaths:
+                shutil.move(src=root_fpath, dst=output_path)
+    except BaseException:
+        # In case the moving fails (should never happen), remove output_path to make sure that the
+        # task isn't accidentally marked as complete
+        shutil.rmtree(output_path, ignore_errors=True)
+        raise
