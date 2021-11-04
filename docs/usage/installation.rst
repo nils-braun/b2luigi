@@ -18,7 +18,7 @@ This installation description is for the general user. If you are using the Bell
 
     .. code-block:: bash
 
-        pip3 install b2luigi
+        python -m pip install b2luigi
 
 
     b.  If this fails because you do not have write access to where your virtual environment lives, you can also install
@@ -26,7 +26,7 @@ This installation description is for the general user. If you are using the Bell
 
     .. code-block:: bash
 
-        pip3 install --user b2luigi
+        python -m pip install --user b2luigi
 
     This will automatically also install `luigi` into your current environment.
     Please make sure to always setup your environment correctly before using `b2luigi`.
@@ -57,14 +57,14 @@ b2luigi and Belle II
 
     .. code-block:: bash
 
-        pip3 install b2luigi -U
+        python -m pip install b2luigi --upgrade
 
 
     b.  If you are using an installation from cvmfs, you need to add the ``user`` flag.
 
     .. code-block:: bash
 
-        pip3 install --user b2luigi -U
+        python -m pip install --user b2luigi --upgrade
 
 
 The examples in this documentation are all shown with calling ``python``, but basf2 users need to use ``python3``
