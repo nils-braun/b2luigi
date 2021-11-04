@@ -37,9 +37,6 @@ Now you can go on with the :ref:`quick-start-label`.
 b2luigi and Belle II
 ---------------------
 
-Starting from release 04-00-00, `b2luigi` is already included in the externals.
-Follow this guid, if you want to update to the newest version nevertheless.
-
 1.  Setup your local environment. You can use a local environment (installed on your machine) or a release on cvmfs.
     For example, run:
 
