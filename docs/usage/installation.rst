@@ -67,7 +67,8 @@ b2luigi and Belle II
         python -m pip install --user b2luigi --upgrade
 
 
-The examples in this documentation are all shown with calling ``python``, but basf2 users need to use ``python3``
-instead.
+.. attention::
+    The examples in this documentation are all shown with calling ``python``, but basf2 users need to use ``python3``
+    instead.
 
 Please also have a look into the :ref:`basf2-example-label`.
