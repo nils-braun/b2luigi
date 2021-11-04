@@ -68,7 +68,9 @@ b2luigi and Belle II
 
 
 .. attention::
-    The examples in this documentation are all shown with calling ``python``, but basf2 users need to use ``python3``
-    instead.
+    The examples in this documentation are all shown with calling ``python``,
+    assuming this refers to the *Python 3* executable of their (virtual) environment.
+    In some systems and e.g. basf2 environments, ``python`` refers to Python 2
+    (not supported by b2luigi). Then, ``python3`` should be used instead.
 
 Please also have a look into the :ref:`basf2-example-label`.
