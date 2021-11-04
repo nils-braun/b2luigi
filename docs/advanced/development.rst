@@ -56,7 +56,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
     .. code-block:: bash
 
-        python3 -m unittest
+        python -m unittest
 
    in the root of ``b2luigi`` repository. If you add some functionality, try to add some tests for it.
 

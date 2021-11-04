@@ -159,7 +159,7 @@ Later, we will build the average of those numbers.
 
         .. code-block:: bash
 
-            python3 simple-example.py --show-output
+            python simple-example.py --show-output
 
         More on file systems is described in :ref:`batch-label`, which is also mostly
         true for non-batch calculations.
