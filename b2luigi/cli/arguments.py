@@ -16,7 +16,7 @@ def get_cli_arguments(ignore_additional_command_line_args=False):
                         action="store_true")
     parser.add_argument("--test",
                         help="Run the task list in test mode by printing the log directly to the screen instead"
-                             "of storing it in a file.",
+                             " of storing it in a file.",
                         action="store_true")
     parser.add_argument("--batch",
                         help="Instead of running locally, try to submit the tasks to the batch system.",
