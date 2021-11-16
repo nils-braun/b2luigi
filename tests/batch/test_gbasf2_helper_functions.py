@@ -25,6 +25,7 @@ from b2luigi.batch.processes.gbasf2 import (
     query_lpns,
     setup_dirac_proxy,
     _move_downloaded_dataset_to_output_dir,
+    get_dirac_user,
 )
 
 # first test utilities for working with logical file names on the grid
@@ -322,3 +323,20 @@ class TestMoveDownloadedDatasetToOutputDir(unittest.TestCase):
             _move_downloaded_dataset_to_output_dir(
                 project_path.as_posix(), output_path.as_posix()
             )
+
+
+class TestGetDiracUser(unittest.TestCase):
+
+    @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
+    @mock.patch("b2luigi.batch.processes.gbasf2.setup_dirac_proxy")
+    def test_get_dirac_user_gets_user(self, _, mock_get_proxy_info):
+        mock_get_proxy_info.return_value = {
+            "username": "testuser"}
+        self.assertEqual(get_dirac_user(), "testuser")
+
+    @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
+    @mock.patch("b2luigi.batch.processes.gbasf2.setup_dirac_proxy")
+    def test_get_dirac_user_ensures_proxy_initialized(self, mock_setup_dirac_proxy, mock_get_proxy_info):
+        mock_get_proxy_info.return_value = {"username": "testuser"}
+        get_dirac_user()
+        self.assertEqual(mock_setup_dirac_proxy.call_count, 1)

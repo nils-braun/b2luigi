@@ -934,7 +934,8 @@ def get_proxy_info():
         "gbasf2_utils/gbasf2_proxy_info.py"
     )
 
-    # Setting ``initalize_proxy=False`` is vital here, otherwise we get an infinite loop
+    # Setting ``ensure_proxy_initialized=False`` is vital here, otherwise we get
+    # an infinite loop because run_with_gbasf2 will then check for the proxy info
     proc = run_with_gbasf2(
         [proxy_info_script_path],
         capture_output=True,
@@ -943,8 +944,12 @@ def get_proxy_info():
     return json.loads(proc.stdout)
 
 
+@lru_cache(maxsize=None)
 def get_dirac_user():
     """Get dirac user name."""
+    # ensure proxy is initialized, because get_proxy_info can't do it, otherwise
+    # it causes an infinite loop
+    setup_dirac_proxy()
     try:
         return get_proxy_info()["username"]
     except KeyError as err:
