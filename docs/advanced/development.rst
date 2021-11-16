@@ -15,7 +15,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
     .. code-block:: bash
 
-        pip3 uninstall b2luigi
+        python -m pip uninstall b2luigi
 
 2.  Clone the repository from github
 
@@ -28,7 +28,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
     .. code-block:: bash
 
-        pip3 [ --user ] install flit
+        python -m pip [ --user ] install flit
 
     You can now install ``b2luigi`` from the cloned git repository in development mode:
 
@@ -42,7 +42,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
     .. code-block:: bash
 
-        pip3 [ --user ] install pre-commit
+        python -m pip [ --user ] install pre-commit
         pre-commit install  # install the pre-commit hooks
         pre-commit  # run pre-commit manually, checks all staged ("added") changes
 
@@ -56,7 +56,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
     .. code-block:: bash
 
-        python3 -m unittest
+        python -m unittest
 
    in the root of ``b2luigi`` repository. If you add some functionality, try to add some tests for it.
 
@@ -65,7 +65,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
     .. code-block:: bash
 
-        pip3 [ --user ] install sphinx sphinx-autobuild
+        python -m pip [ --user ] install sphinx sphinx-autobuild
 
     And starting the automatic build process in the projects root folder
 

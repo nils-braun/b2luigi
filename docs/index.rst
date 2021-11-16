@@ -1,10 +1,10 @@
 b2luigi
 =======
 
-``b2luigi`` - bringing batch 2 luigi!
+``b2luigi`` — bringing batch 2 luigi!
 
 
-``b2luigi`` is a helper package for  ``luigi`` for scheduling large luigi workflows on a batch system.
+``b2luigi`` is a helper package for ``luigi`` for scheduling large luigi workflows on a batch system.
 It is as simple as
 
 .. code-block:: python
