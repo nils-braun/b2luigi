@@ -944,6 +944,7 @@ def get_proxy_info():
     return json.loads(proc.stdout)
 
 
+@lru_cache(maxsize=None)
 def get_dirac_user():
     """Get dirac user name."""
     # ensure proxy is initialized, because get_proxy_info can't do it, otherwise
