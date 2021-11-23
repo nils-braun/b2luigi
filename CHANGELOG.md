@@ -7,6 +7,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+* HTCondor: Do up to 3 retries for getting job status with `condor_q`
+
 ## [0.7.4] - 2021-11-03
 
 ### Added

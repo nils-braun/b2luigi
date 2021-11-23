@@ -1,6 +1,5 @@
-from cachetools import TTLCache
-
 import abc
+from cachetools import TTLCache
 
 
 class BatchJobStatusCache(abc.ABC, TTLCache):
@@ -17,7 +16,7 @@ class BatchJobStatusCache(abc.ABC, TTLCache):
     which are not started by this b2luigi instance) does not matter.
     """
     def __init__(self):
-        super(BatchJobStatusCache, self).__init__(maxsize=1000, ttl=20)
+        super().__init__(maxsize=1000, ttl=20)
 
     @abc.abstractmethod
     def _ask_for_job_status(self, job_id=None):
