@@ -79,13 +79,15 @@ class HTCondorJobStatusCache(BatchJobStatusCache):
 
 class HTCondorJobStatus(enum.IntEnum):
     """
-    See https://htcondor.readthedocs.io/en/latest/classad-attributes/job-classad-attributes.htmls
+    See https://htcondor.readthedocs.io/en/latest/classad-attributes/job-classad-attributes.html
     """
     idle = 1
     running = 2
     removed = 3
     completed = 4
     held = 5
+    transferring_output = 6
+    suspended = 7
     failed = 999
 
 
@@ -149,6 +151,7 @@ class HTCondorProcess(BatchProcess):
 
         self._batch_job_id = None
 
+    @property
     def get_job_status(self):
         if not self._batch_job_id:
             return JobStatus.aborted
@@ -160,7 +163,8 @@ class HTCondorProcess(BatchProcess):
 
         if job_status in [HTCondorJobStatus.completed]:
             return JobStatus.successful
-        if job_status in [HTCondorJobStatus.idle, HTCondorJobStatus.running]:
+        if job_status in [HTCondorJobStatus.idle, HTCondorJobStatus.running, HTCondorJobStatus.transferring_output,
+                          HTCondorJobStatus.suspended]:
             return JobStatus.running
         if job_status in [HTCondorJobStatus.removed, HTCondorJobStatus.held, HTCondorJobStatus.failed]:
             return JobStatus.aborted
