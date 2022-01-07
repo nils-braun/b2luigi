@@ -902,7 +902,7 @@ def get_gbasf2_env(gbasf2_install_directory=None):
             os.path.join("/cvmfs/belle.kek.jp/grid/gbasf2/pro", os.pardir, os.pardir)
         )
         gbasf2_install_directory = get_setting("gbasf2_install_directory", default=default_gbasf2_install_directory)
-    gbasf2_setup_path = os.path.join(gbasf2_install_directory, "BelleDIRAC/gbasf2/tools/setup")
+    gbasf2_setup_path = os.path.join(gbasf2_install_directory, "BelleDIRAC/gbasf2/tools/setup.sh")
     if not os.path.isfile(gbasf2_setup_path):
         raise FileNotFoundError(
             f"Could not find gbasf2 setup file at:\n{gbasf2_setup_path}.\n"
