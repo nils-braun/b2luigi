@@ -14,7 +14,7 @@ from datetime import datetime
 from functools import lru_cache
 from glob import glob
 from itertools import groupby
-from typing import Iterable, Optional, List, Set
+from typing import Iterable, List, Optional, Set
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
@@ -22,6 +22,7 @@ from b2luigi.core.settings import get_setting
 from b2luigi.core.utils import flatten_to_dict, get_log_file_dir, get_task_file_dir
 from jinja2 import Template
 from luigi.target import Target
+from retry import retry
 
 
 class Gbasf2Process(BatchProcess):
@@ -787,7 +788,11 @@ def check_dataset_exists_on_grid(gbasf2_project_name, dirac_user=None):
     return len(lpns) > 0
 
 
-def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None, n_retries=5):
+@retry(
+    (json.decoder.JSONDecodeError, subprocess.CalledProcessError),
+    tries=4, delay=2, backoff=3  # retry after 2,6,18,108 s
+)
+def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
     """
     Returns a dictionary for all jobs in the project with a structure like the
     following, which I have taken and adapted from an example output::
@@ -825,18 +830,7 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None, n_r
             "Probably there was an error during the project submission when running the gbasf2 command.\n"
         )
     job_status_json_string = proc.stdout
-    try:
-        job_status_dict = json.loads(job_status_json_string)
-        return job_status_dict
-    except json.decoder.JSONDecodeError as err:
-        warnings.warn(
-            " Failed to decode job status json string: \n" +
-            job_status_json_string
-        )
-        if n_retries > 0:
-            print(f"Trying to get new job status ({n_retries - 1} retries left)")
-            return get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user, n_retries=n_retries - 1)
-        raise err
+    return json.loads(job_status_json_string)
 
 
 def check_project_exists(gbasf2_project_name, dirac_user=None):
