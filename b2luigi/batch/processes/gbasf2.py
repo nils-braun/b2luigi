@@ -138,8 +138,8 @@ class Gbasf2Process(BatchProcess):
 
         Other not required, but noteworthy settings are:
 
-        - ``gbasf2_install_directory``: Directory where gbasf2 is installed.
-            Defaults to ``/cvmfs/belle.kek.jp/grid/gbasf2/pro/../..``, which should point to the latest gbasf2 release.
+        - ``gbasf2_setup_path``: Path to directory where gbasf2 is installed.
+            Defaults to ``"/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh" ``.
         - ``gbasf2_release``: Defaults to the release of your currently set up basf2 release.
           Set this if you want the jobs to use another release on the grid.
         - ``gbasf2_proxy_lifetime``: Defaults to 24. When initializing a proxy, set the
@@ -168,7 +168,7 @@ class Gbasf2Process(BatchProcess):
                 # [...]
                 def output(self):
                     project_name = get_unique_project_name(self)
-                    return Gbasf2GridProjectTarget(project_name, task=self)
+                    return Gbasf2GridProjectTarget(project_name)
 
           This is useful when chaining gbasf2 tasks together,
           as they don't need the output locally but take the grid datasets as input. Also useful when you just want
@@ -231,6 +231,27 @@ class Gbasf2Process(BatchProcess):
         # Setting it via a setting.json file is not supported to make sure users set unique project names
         self.gbasf2_project_name = get_unique_project_name(self.task)
 
+        self.gbasf2_setup_path = get_setting(
+            "gbasf2_setup_path",
+            default=False,
+            task=self.task,
+        )
+        gbasf2_install_directory = get_setting("gbasf2_install_directory", default=False, task=self.task)
+        if gbasf2_install_directory:
+            warnings.warn(
+                "The setting ``gbasf2_install_directory`` will be deprecated in the future. " +
+                "Please use the ``gbasf2_setup_path`` setting to provide a setup script path " +
+                "if you use a custom (non-CVMFS) gbasf2 installation.",
+                PendingDeprecationWarning
+            )
+        if not self.gbasf2_setup_path:
+            if gbasf2_install_directory:
+                self.gbasf2_setup_path = os.path.join(gbasf2_install_directory, "BelleDIRAC/gbasf2/tools/setup.sh")
+            else:
+                # if neither the gbasf2_setup_path nor the gbasf2_install_directory settings are given, use the default
+                # location on CVMFS
+                self.gbasf2_setup_path = "/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh"
+
         #: Output file directory of the task to wrap with gbasf2, where we will
         # store the pickled basf2 path and the created steerinfile to execute
         # that path.
@@ -244,7 +265,7 @@ class Gbasf2Process(BatchProcess):
         self.log_file_dir = get_log_file_dir(self.task)
         os.makedirs(self.log_file_dir, exist_ok=True)
 
-        self.dirac_user = get_dirac_user()
+        self.dirac_user = get_dirac_user(self.gbasf2_setup_path)
         #: Maximum number of times that each job in the project can be rescheduled until the project is declared as failed.
         self.max_retries = get_setting("gbasf2_max_retries", default=0, task=self.task)
 
@@ -280,7 +301,9 @@ class Gbasf2Process(BatchProcess):
         gbasf2 project succeeded.
         """
         job_status_dict = get_gbasf2_project_job_status_dict(
-            self.gbasf2_project_name, dirac_user=self.dirac_user
+            self.gbasf2_project_name,
+            dirac_user=self.dirac_user,
+            gbasf2_setup_path=self.gbasf2_setup_path,
         )
         n_jobs_by_status = Counter()
         for _, job_info in job_status_dict.items():
@@ -390,7 +413,9 @@ class Gbasf2Process(BatchProcess):
         jobs_to_be_rescheduled = []
         jobs_hitting_max_n_retries = []
         job_status_dict = get_gbasf2_project_job_status_dict(
-            self.gbasf2_project_name, dirac_user=self.dirac_user
+            self.gbasf2_project_name,
+            dirac_user=self.dirac_user,
+            gbasf2_setup_path=self.gbasf2_setup_path,
         )
 
         for job_id, job_info in job_status_dict.items():
@@ -435,13 +460,13 @@ class Gbasf2Process(BatchProcess):
         reschedule_command = shlex.split(
             f"gb2_job_reschedule --jobid {' '.join(job_ids)} --force"
         )
-        run_with_gbasf2(reschedule_command)
+        run_with_gbasf2(reschedule_command, gbasf2_setup_path=self.gbasf2_setup_path)
 
     def start_job(self):
-        """
-        Submit new gbasf2 project to grid
-        """
-        if check_project_exists(self.gbasf2_project_name, self.dirac_user):
+        """Submit new gbasf2 project to grid."""
+        if check_project_exists(
+            self.gbasf2_project_name, self.dirac_user, gbasf2_setup_path=self.gbasf2_setup_path
+        ):
             print(
                 f"\nProject with name {self.gbasf2_project_name} already exists on grid, "
                 "therefore not submitting new project. If you want to submit a new project, "
@@ -470,16 +495,16 @@ class Gbasf2Process(BatchProcess):
                 pickle_file_symlink_destination,
                 target_is_directory=False,
             )
-            run_with_gbasf2(gbasf2_command)
+            run_with_gbasf2(gbasf2_command, gbasf2_setup_path=self.gbasf2_setup_path)
         finally:
             os.unlink(pickle_file_symlink_destination)
 
     def kill_job(self):
-        """
-        Kill gbasf2 project
-        """
+        """Kill gbasf2 project."""
         if not check_project_exists(
-            self.gbasf2_project_name, dirac_user=self.dirac_user
+            self.gbasf2_project_name,
+            dirac_user=self.dirac_user,
+            gbasf2_setup_path=self.gbasf2_setup_path
         ):
             return
         # Note: The two commands ``gb2_job_delete`` and ``gb2_job_kill`` differ
@@ -488,7 +513,7 @@ class Gbasf2Process(BatchProcess):
         command = shlex.split(
             f"gb2_job_kill --force --user {self.dirac_user} -p {self.gbasf2_project_name}"
         )
-        run_with_gbasf2(command)
+        run_with_gbasf2(command, gbasf2_setup_path=self.gbasf2_setup_path)
 
     def _build_gbasf2_submit_command(self):
         """
@@ -713,11 +738,17 @@ class Gbasf2Process(BatchProcess):
         if not downloaded_dataset_basenames:
             return False
 
-        # get the remote set of grid file names for the gbasf2 project output matching output_file_name
+        # get the remote set of grid file names for the gbasf2 project output
+        # matching output_file_name
         ds_query_string = self._get_gbasf2_dataset_query(output_file_name)
-        output_dataset_grid_filepaths = query_lpns(ds_query_string)
+        output_dataset_grid_filepaths = query_lpns(
+            ds_query_string,
+            dirac_user=self.dirac_user,
+            gbasf2_setup_path=self.gbasf2_setup_path,
+        )
         output_dataset_basenames = [
-            os.path.basename(grid_path) for grid_path in output_dataset_grid_filepaths
+            os.path.basename(grid_path)
+            for grid_path in output_dataset_grid_filepaths
         ]
         # remove duplicate LFNs that gb2_ds_list returns for outputs from rescheduled jobs
         output_dataset_basenames = get_unique_lfns(output_dataset_basenames)
@@ -755,7 +786,9 @@ class Gbasf2Process(BatchProcess):
         temporary directories.
         """
         if not check_dataset_exists_on_grid(
-            self.gbasf2_project_name, dirac_user=self.dirac_user
+            self.gbasf2_project_name,
+            dirac_user=self.dirac_user,
+            gbasf2_setup_path=self.gbasf2_setup_path
         ):
             raise RuntimeError(
                 f"Not dataset to download under project name {self.gbasf2_project_name}"
@@ -829,7 +862,10 @@ class Gbasf2Process(BatchProcess):
                 )
 
             stdout = run_with_gbasf2(
-                ds_get_command, cwd=tmp_output_dir_path, capture_output=True
+                ds_get_command,
+                cwd=tmp_output_dir_path,
+                capture_output=True,
+                gbasf2_setup_path=self.gbasf2_setup_path,
             ).stdout
             print(stdout)
             if "No file found" in stdout:
@@ -901,7 +937,12 @@ class Gbasf2Process(BatchProcess):
             download_logs_command = shlex.split(
                 f"gb2_job_output --user {self.dirac_user} -p {self.gbasf2_project_name}"
             )
-            run_with_gbasf2(download_logs_command, cwd=tmpdir_path)
+            run_with_gbasf2(
+                download_logs_command,
+                cwd=tmpdir_path,
+                gbasf2_setup_path=self.gbasf2_setup_path,
+            )
+
             tmp_gbasf2_log_path = os.path.join(
                 tmpdir_path, "log", self.gbasf2_project_name
             )
@@ -923,47 +964,60 @@ class Gbasf2GridProjectTarget(Target):
     not being written to, i.e. all jobs that produced the dataset are done.
     """
 
-    def __init__(self, project_name, dirac_user=None):
+    def __init__(
+        self,
+        project_name,
+        dirac_user=None,
+        gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh",
+    ):
         """
         :param project_name: Name of the gbasf2 grid project that produced the
             dataset and under which the dataset is stored
         :param dirac_user: Dirac user, who produced the output dataset.  When
             ``None``, the current user is used.
+        :param gbasf2_setup_path: Path to the gbasf2 setup file.
         """
         self.project_name = project_name
         self.dirac_user = dirac_user
+        self.gbasf2_setup_path = gbasf2_setup_path
 
     def exists(self):
         if not check_dataset_exists_on_grid(
-            self.project_name, dirac_user=self.dirac_user
+            self.project_name,
+            dirac_user=self.dirac_user,
+            gbasf2_setup_path=self.gbasf2_setup_path
         ):
             # there's no dataset associated with that name on the grid
             return False
-        if check_project_exists(self.project_name, dirac_user=self.dirac_user):
+        if check_project_exists(
+            self.project_name, dirac_user=self.dirac_user, gbasf2_setup_path=self.gbasf2_setup_path
+        ):
             # if there's data named after that project on the grid, ensure there are no jobs writig to it
             project_status_dict = get_gbasf2_project_job_status_dict(
-                self.project_name, self.dirac_user
+                gbasf2_project_name=self.project_name,
+                dirac_user=self.dirac_user,
+                gbasf2_setup_path=self.gbasf2_setup_path,
             )
-            all_jobs_done = all(
-                job_info["Status"] == "Done" and job_info["ApplicationStatus"] == "Done"
-                for job_info in project_status_dict.values()
-            )
+            all_jobs_done = all(job_info["Status"] == "Done" and
+                                job_info["ApplicationStatus"] == "Done" for job_info in project_status_dict.values())
             if not all_jobs_done:
                 return False
         return True
 
 
-def check_dataset_exists_on_grid(gbasf2_project_name, dirac_user=None):
-    """
-    Check if an output dataset exists for the gbasf2 project
-    """
+def check_dataset_exists_on_grid(
+    gbasf2_project_name,
+    dirac_user=None,
+    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh",
+):
+    """Check if an output dataset exists for the gbasf2 project."""
     output_lpn_dir = gbasf2_project_name
     group_name = get_setting("gbasf2_proxy_group", default="belle")
     if group_name != "belle":
         output_lpn_dir = (
             get_setting("gbasf2_project_lpn_path") + f"/{gbasf2_project_name}"
         )
-    lpns = query_lpns(output_lpn_dir, dirac_user=dirac_user)
+    lpns = query_lpns(output_lpn_dir, dirac_user=dirac_user,  gbasf2_setup_path=gbasf2_setup_path)
     return len(lpns) > 0
 
 
@@ -973,7 +1027,11 @@ def check_dataset_exists_on_grid(gbasf2_project_name, dirac_user=None):
     delay=2,
     backoff=3,  # retry after 2,6,18,108 s
 )
-def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
+def get_gbasf2_project_job_status_dict(
+    gbasf2_project_name,
+    dirac_user=None,
+    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh",
+):
     """
     Returns a dictionary for all jobs in the project with a structure like the
     following, which I have taken and adapted from an example output::
@@ -999,7 +1057,7 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
     subprocess.  The job status dictionary is passed to this function via json.
     """
     if dirac_user is None:
-        dirac_user = get_dirac_user()
+        dirac_user = get_dirac_user(gbasf2_setup_path=gbasf2_setup_path)
     job_status_script_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "gbasf2_utils/gbasf2_job_status.py"
     )
@@ -1010,7 +1068,12 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
     job_status_command = shlex.split(
         f"{job_status_script_path} -p {gbasf2_project_name} --user {dirac_user}{group_arg}"
     )
-    proc = run_with_gbasf2(job_status_command, capture_output=True, check=False)
+    proc = run_with_gbasf2(
+        job_status_command,
+        capture_output=True,
+        check=False,
+        gbasf2_setup_path=gbasf2_setup_path,
+    )
     # FIXME: use enum or similar to define my own return codes
     if proc.returncode == 3:  # return code 3 means project does not exist yet
         raise RuntimeError(
@@ -1021,12 +1084,18 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
     return json.loads(job_status_json_string)
 
 
-def check_project_exists(gbasf2_project_name, dirac_user=None):
-    """
-    Check if we can find the gbasf2 project on the grid with ``gb2_job_status``.
-    """
+def check_project_exists(
+    gbasf2_project_name,
+    dirac_user=None,
+    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh",
+):
+    """Check if we can find the gbasf2 project on the grid with ``gb2_job_status``."""
     try:
-        return bool(get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user))
+        return bool(
+            get_gbasf2_project_job_status_dict(
+                gbasf2_project_name, dirac_user=dirac_user, gbasf2_setup_path=gbasf2_setup_path
+            )
+        )
     except RuntimeError:
         return False
 
@@ -1038,7 +1107,8 @@ def run_with_gbasf2(
     check=True,
     encoding="utf-8",
     capture_output=False,
-    **kwargs,
+    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh",
+    **kwargs
 ):
     """
     Call ``cmd`` in a subprocess with the gbasf2 environment.
@@ -1055,6 +1125,7 @@ def run_with_gbasf2(
                      Different from normal subprocess commands, it by default assumes "utf-8". In that case, the returned
                      ``stdout`` and ``stderr`` are strings and not byte-strings and the user doesn't have to decode them
                      manually.
+    :param gbasf2_setup_path: Path to the gbasf2 setup file.
     :return: ``CompletedProcess`` instance
     """
     if capture_output:
@@ -1064,9 +1135,12 @@ def run_with_gbasf2(
             )
         kwargs["stdout"] = subprocess.PIPE
         kwargs["stderr"] = subprocess.PIPE
-    gbasf2_env = get_gbasf2_env()
+
+    gbasf2_env = get_gbasf2_env(gbasf2_setup_path)
+
     if ensure_proxy_initialized:
-        setup_dirac_proxy()
+        setup_dirac_proxy(gbasf2_setup_path=gbasf2_setup_path)
+
     proc = subprocess.run(
         cmd, *args, check=check, encoding=encoding, env=gbasf2_env, **kwargs
     )
@@ -1074,34 +1148,15 @@ def run_with_gbasf2(
 
 
 @lru_cache(maxsize=None)
-def get_gbasf2_env(gbasf2_install_directory=None):
+def get_gbasf2_env(gbasf2_setup_path):
     """
     Return the gbasf2 environment dict which can be used to run gbasf2 commands.
 
-    :param gbasf2_install_directory: Directory into which gbasf2 has been
-        installed.  When set to the default value ``None``, it looks for the
-        value of the ``gbasf2_install_directory`` setting and when that is not
-        set, it uses the default of most installation instructions, which is
-        ``~/gbasf2KEK``.
-    :return: Dictionary containing the  environment that you get from sourcing the gbasf2 setup script.
+    :param gbasf2_setup_path: Path to the gbasf2 setup file.
     """
-    if gbasf2_install_directory is None:
-        # Use the latest gbasf2 release on CVMFS as the default gbasf2 install directory.
-        # To get the directory of the latest release, take the parent of the "pro"
-        # symlink which points to a sub-directory of the latest release.
-        default_gbasf2_install_directory = os.path.realpath(
-            os.path.join("/cvmfs/belle.kek.jp/grid/gbasf2/pro", os.pardir, os.pardir)
-        )
-        gbasf2_install_directory = get_setting(
-            "gbasf2_install_directory", default=default_gbasf2_install_directory
-        )
-    gbasf2_setup_path = os.path.join(
-        gbasf2_install_directory, "BelleDIRAC/gbasf2/tools/setup.sh"
-    )
     if not os.path.isfile(gbasf2_setup_path):
         raise FileNotFoundError(
-            f"Could not find gbasf2 setup file at:\n{gbasf2_setup_path}.\n"
-            f"Make sure that `gbasf2_install_directory` is set correctly. Current setting:\n{gbasf2_install_directory}.\n"
+            errno.ENOENT, os.strerror(errno.ENOENT), gbasf2_setup_path
         )
     # complete bash command to set up the gbasf2 environment
     # piping output to /dev/null, because we want that our final script only prints the ``env`` output
@@ -1124,7 +1179,7 @@ def get_gbasf2_env(gbasf2_install_directory=None):
     return gbasf2_env
 
 
-def get_proxy_info():
+def get_proxy_info(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh"):
     """Run ``gbasf2_proxy_info.py`` to retrieve a dict of the proxy status."""
     proxy_info_script_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "gbasf2_utils/gbasf2_proxy_info.py"
@@ -1136,25 +1191,27 @@ def get_proxy_info():
         [proxy_info_script_path],
         capture_output=True,
         ensure_proxy_initialized=False,
+        gbasf2_setup_path=gbasf2_setup_path,
     )
     return json.loads(proc.stdout)
 
 
 @lru_cache(maxsize=None)
-def get_dirac_user():
+def get_dirac_user(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh"):
     """Get dirac user name."""
     # ensure proxy is initialized, because get_proxy_info can't do it, otherwise
     # it causes an infinite loop
     setup_dirac_proxy()
     try:
-        return get_proxy_info()["username"]
+        proxy_info = get_proxy_info(gbasf2_setup_path)
+        return proxy_info["username"]
     except KeyError as err:
         raise RuntimeError(
             "Could not obtain dirac user name from `gb2_proxy_init` output."
         ) from err
 
 
-def setup_dirac_proxy():
+def setup_dirac_proxy(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh"):
     """Run ``gb2_proxy_init -g belle`` if there's no active dirac proxy. If there is, do nothing."""
     # first run script to check if proxy is already alive or needs to be initalized
     try:
@@ -1188,6 +1245,7 @@ def setup_dirac_proxy():
                 ensure_proxy_initialized=False,
                 capture_output=True,
                 check=True,
+                gbasf2_setup_path=gbasf2_setup_path,
             )
         finally:
             del pwd
@@ -1218,14 +1276,18 @@ def setup_dirac_proxy():
         return
 
 
-def query_lpns(ds_query: str, dirac_user: Optional[str] = None) -> List[str]:
+def query_lpns(
+    ds_query: str,
+    dirac_user: Optional[str] = None,
+    gbasf2_setup_path: str = "/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh",
+) -> List[str]:
     """
     Query DIRAC for LPNs matching query, and return them as a list.
 
     This function exists to avoid manual string parsing of ``gb2_ds_list``.
     """
     if dirac_user is None:
-        dirac_user = get_dirac_user()
+        dirac_user = get_dirac_user(gbasf2_setup_path=gbasf2_setup_path)
 
     ds_list_script_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "gbasf2_utils/gbasf2_ds_list.py"
@@ -1236,6 +1298,7 @@ def query_lpns(ds_query: str, dirac_user: Optional[str] = None) -> List[str]:
         query_cmd,
         capture_output=True,
         ensure_proxy_initialized=True,
+        gbasf2_setup_path=gbasf2_setup_path,
     )
 
     lpns = json.loads(proc.stdout)
