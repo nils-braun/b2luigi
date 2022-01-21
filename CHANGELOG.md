@@ -7,8 +7,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.7.5] - 2022-01-21
+
 ### Added
-* HTCondor: Do up to 3 retries for getting job status with `condor_q`
+* **htcondor**: Do up to 3 retries for getting job status with `condor_q` #155
+* **gbasf2**: Add caching and unit tests to `get_dirac_user` #156
+* Add @mschnepf to [the contributors](https://github.com/nils-braun/b2luigi/blob/main/docs/index.rst#the-team) for #158
+* Some minor documentation improvements #151 and typo fix in help message #153.
+
+### Fixed
+* **gbasf2**: Adapt to new file name for gbasf2 setup file (`setup` → `setup.sh`) #160
+* **gbasf2**: Ensure proxy is initalized before running `get_proxy_info` to get dirac user #156
+* **htcondor**: Don't fail when htcondor job status is `suspended` or `transferring_output` #158. Thanks to @mschnepf 🙇.
+
+### Changed
+* **gbasf2**: Use `retry2` package for retrying getting of gbasf2 project status instead of my own recursive loop #161
+
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.7.4...v0.7.5
 
 ## [0.7.4] - 2021-11-03
 
