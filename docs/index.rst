@@ -153,6 +153,7 @@ Stolen ideas
 .. _`anselmbaur`: https://github.com/anselm-baur
 .. _`sognetic`: https://github.com/sognetic
 .. _`ArturAkh`: https://github.com/ArturAkh
+.. _`mschnepf`: https://github.com/mschnepf
 .. _`sge`: https://github.com/spotify/luigi/blob/master/luigi/contrib/sge.py
 .. _`lsf`: https://github.com/spotify/luigi/pull/2373/files
 
