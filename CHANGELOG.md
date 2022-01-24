@@ -7,6 +7,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.7.6] - 2022-01-22
+
+### Fixed
+* **htcondor**: Make `HTCondorProcess.get_job_status` a method again instead. It was turned into a property accidentally in #158. See issue #164 @eckerpatrick and PR @165 @mschnepf.
+
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.7.5...v0.7.6
+
 ## [0.7.5] - 2022-01-21
 
 ### Added
