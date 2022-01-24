@@ -151,7 +151,6 @@ class HTCondorProcess(BatchProcess):
 
         self._batch_job_id = None
 
-    @property
     def get_job_status(self):
         if not self._batch_job_id:
             return JobStatus.aborted
