@@ -210,7 +210,7 @@ class HTCondorProcess(BatchProcess):
         submit_file_content.append(f"executable = {os.path.basename(executable_file)}")
 
         # Specify additional settings
-        general_settings = get_setting("htcondor_settings", dict())
+        general_settings = get_setting("htcondor_settings", default={}, task=self.task)
         try:
             general_settings.update(self.task.htcondor_settings)
         except AttributeError:
