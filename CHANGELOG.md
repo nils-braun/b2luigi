@@ -7,6 +7,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+* [#166](https://github.com/nils-braun/b2luigi/pull/166): add automatic need-changelog PR labeller as github workflow
+
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.7.6...main
+
 ## [0.7.6] - 2022-01-22
 
 ### Fixed
@@ -57,7 +62,6 @@ Small patch release for the gbasf2 process adding tests and better error checks 
 * Add unit tests for `setup_dirac_proxy` and `get_proxy_info` by mocking possible outputs of `gb2_proxy_info` and `gb2_proxy_init`.
 
 **Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.7.2...v0.7.3
----
 
 ## [0.7.2] - 2021-10-20
 ### Added
@@ -72,7 +76,6 @@ Small patch release for the gbasf2 process adding tests and better error checks 
 
 
 **Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.7.1...v0.7.2
----
 
 ## [0.7.1] - 2021-10-11
 ### Added
@@ -97,12 +100,10 @@ Small patch release for the gbasf2 process adding tests and better error checks 
 * @sognetic made their first contribution in https://github.com/nils-braun/b2luigi/pull/106
 
 **Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.6.7...v0.7.1
----
 
 ## [0.6.6] - 2021-07-14
 #### Added
 - Improved gbasf2 download from grid. In particular, when re-trying a download, only re-download files which have previously failed. Store failed files in a `failed_files.txt`. The downside is that this relies on command output parsing which might break between releases. If errors occur, this can be worked around by removing the `failed_files.txt`, triggering a full re-download.
----
 
 ## [0.6.7] - 2021-07-14
 #### Added
@@ -112,19 +113,15 @@ showing what percentage of jobs in the project is done and display the total num
 #### Changed
 - Fix gbasf2 download retry issues for new gbasf2 releases
 - Fix in gbasf2 batch for memory error caused by changes in the ROOT from basf2 externals v10 (affects latest light releases).
----
 
 ## [0.6.5] - 2021-04-29
 ###  Fixed
 #97 Gbasf2 Bugfix: Fix download for failed files
 
----
-
 ## [0.6.4] - 2021-04-29
 ### Fixed
 #95 Fix to show correct version number for `b2luigi.__version__ `
 Minor patch release but I decided to release this early so that users can use the version number to validate that they are using the latest release.
----
 
 ## [0.6.3] - 2021-04-27
 This release features small quality-of-life improvements and fixes for the gbasf2 batch, so I decide to make it a minor release.
@@ -146,11 +143,9 @@ Since we're still major release 0, instead of SemVer I think I will be creating 
 
 ### Meta
 - #92 Fix CI shield on github
----
 
 ## [0.6.2] - 2021-03-31
 - #88 Bugfix gbasf2 dataset download where failed download raises runtime error instead of intended warning, thanks to @philiptgrace for finding and fixing this.
----
 
 ## [0.6.1] - 2021-03-24
 Upps, release v0.6.0 was mistakenly missing two PR's, #79 and #81, since I added the tag at the HEAD of the last branch that I merged and that branch didn't contain those PR's yet. into that release (#79), but that branch wasn't rebased to the head of main and didn't contain the LSF bugfix PR #81 and the gbasf2 feature PR #77 for supporting global tags. So this patch release includes those PRs and also it includes a fix to our PyPi publishing workflow (#82).
@@ -163,7 +158,6 @@ Upps, release v0.6.0 was mistakenly missing two PR's, #79 and #81, since I added
 ### Added
 
 - #77: the global tags have been also added to the sub-set of the basf2-state that is pickled and send to the grid. Remember, the gbasf2 batch wrapper just pickle the basf2 path and sends this to grid, so everything that is saved in the basf2 state is not transferred. In the previous release we already added pickling the basf2 variable aliases  separately, now the global tags have also been added. If you have ideas how to handle this more generally, feel free to contribute via issue #35
----
 
 ## [0.6.0] - 2021-03-22
 
@@ -199,7 +193,6 @@ Upps, release v0.6.0 was mistakenly missing two PR's, #79 and #81, since I added
   - **downloaded datasets persist after failure** #67: If a download fails, the partially downloaded dataset remains in a directory with the `.partial` ending next to the expected output directory. On the one hand this ensures that b2luigi doesn't prematurely mark a task as completed until all job outputs in a gbasf2 project downloaded completely. The `.partial` directory is only renamed to the final output directory, which b2luigi uses as a completeness target, once all jobs have been downloaded. On the other hand, keeping the partial downloads means that the download doesn't have to start from scratch everytime that you re-run a failed task. So, if a gbasf2 task failed downloading, you can just re-run the task and it will re-run the download of the missing outputs in your `.partial directory`
 
   - #62: Option to disable automatic log download from gird via `gbasf2_download_logs` setting. Logs are useful for debugging and reproducibility and I think they should always be stored in addition to the data itself. However, for gbasf2 it can take quite a while to download logs, so sometimes if in a hurry it can be useful disabling them and just looking them up online with the dirac web app if you need them.
----
 
 ## [0.5.1] - 2021-03-22
 
@@ -221,7 +214,6 @@ Upps, release v0.6.0 was mistakenly missing two PR's, #79 and #81, since I added
 ### Changed
 - default branch is now `main` #39
 
----
 
 ## [0.5.0] - 2020-05-23
 ### Deprecated
@@ -235,19 +227,16 @@ Upps, release v0.6.0 was mistakenly missing two PR's, #79 and #81, since I added
 * Warning if forward slash in parameter (#27)
 * change link to documentaion from latest to stable (#29)
 * additional requirements structure (#30)
----
 
 ## [0.4.4] - 2019-10-29
 Features in this release:
 * small bugfixes with envs and basf2 tasks (@nils-braun)
----
 
 ## [0.4.3] - 2019-10-28
 Features in this release:
 
 * Added documentation
 * Re-add an old feature for log files, will soon be deprecated.
----
 
 ## [0.4.2] - 2019-10-28
 Features in this release:
@@ -255,7 +244,6 @@ Features in this release:
 * Fixed a problem with basf2 module importing (@nils-braun)
 * Better handling for filesystems (#21) (@nils-braun)
   Started supporting file copy mechanisms in htcondor, do only create folders when needed, better relative path handling.
----
 
 ## [0.4.1] - 2019-10-25
 Features in this release:
@@ -263,13 +251,11 @@ Features in this release:
  * Added relevant authors in docu (Nils Braun)
  * Fixed travis config (Nils Braun)
 
----
 
 ## [0.3.2] - 2019-10-25
 Features in this release:
 
 * Fixed required versions of packages (#15) (@nils-braun)
----
 
 ## [0.4.0] - 2019-10-25
 Features in this release:
