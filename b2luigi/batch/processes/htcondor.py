@@ -182,16 +182,16 @@ class HTCondorProcess(BatchProcess):
         with dataset.connect(self._job_cache_uri) as job_db:
             existing_job = job_db["htcondor_jobs"].find_one(task_id=self.task.task_id)
 
-            if existing_job and "htcondor_id" in existing_job:
-                self._batch_job_id = existing_job["htcondor_id"]
+        if existing_job and "htcondor_id" in existing_job:
+            self._batch_job_id = existing_job["htcondor_id"]
 
-                # If the existing job is running, abort submission and continue monitoring existing job
-                if self.get_job_status() == JobStatus.running:
-                    return
+            # If the existing job is running, abort submission and continue monitoring existing job
+            if self.get_job_status() == JobStatus.running:
+                return
 
-                # if htcondor job is not successful, remove htcondor job id from local cache
-                with dataset.connect(self._job_cache_uri) as job_db:
-                    job_db["htcondor_jobs"].delete(task_id=self.task.task_id)
+            # else if htcondor job is not successful, remove htcondor job id from local cache
+            with dataset.connect(self._job_cache_uri) as job_db:
+                job_db["htcondor_jobs"].delete(task_id=self.task.task_id)
 
         submit_file = self._create_htcondor_submit_file()
 
