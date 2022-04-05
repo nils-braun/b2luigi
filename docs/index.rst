@@ -132,6 +132,7 @@ Features, fixing, help and testing
     * Phil Grace (`philiptgrace`_)
     * Anselm Baur (`anselmbaur`_)
     * Moritz Bauer (`sognetic`_)
+    * Matthias Schnepf  (`mschnepf`_)
     * Artur Gottmann (`ArturAkh`_)
 
 Stolen ideas
