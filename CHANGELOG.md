@@ -8,6 +8,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 
 ### Added
+* Remember already submitted htcondor jobs ID's and don't re-submit them as long as they are running.
+
+### Added
 * [#166](https://github.com/nils-braun/b2luigi/pull/166): add automatic need-changelog PR labeller as github workflow
 
 **Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.7.6...main
