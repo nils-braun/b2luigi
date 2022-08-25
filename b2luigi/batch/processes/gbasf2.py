@@ -972,8 +972,10 @@ def setup_dirac_proxy():
 
     while True:
         pwd = getpass("Certificate password: ")
-        proc = run_with_gbasf2(proxy_init_cmd, input=pwd, ensure_proxy_initialized=False, capture_output=True, check=True)
-        del pwd
+        try:
+            proc = run_with_gbasf2(proxy_init_cmd, input=pwd, ensure_proxy_initialized=False, capture_output=True, check=True)
+        finally:
+            del pwd
         # Check if there were any errors, since gb2_proxy_init often still exits without errorcode and sends messages to stdout
         out, err = proc.stdout, proc.stderr
         all_output = out + err  # gb2_proxy_init errors are usually in stdout, but for future-proofing also check stderr
