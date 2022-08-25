@@ -971,7 +971,7 @@ def setup_dirac_proxy():
     proxy_init_cmd = shlex.split(f"gb2_proxy_init -g belle -v {hours}:00 --pwstdin")
 
     while True:
-        pwd = getpass('Certificate password: ')
+        pwd = getpass("Certificate password: ")
         proc = run_with_gbasf2(proxy_init_cmd, input=pwd, ensure_proxy_initialized=False, capture_output=True, check=True)
         del pwd
         # Check if there were any errors, since gb2_proxy_init often still exits without errorcode and sends messages to stdout
