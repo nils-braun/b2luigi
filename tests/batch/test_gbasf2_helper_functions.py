@@ -157,6 +157,7 @@ class TestSetupDiracProxy(unittest.TestCase):
     wrong_pw_msg = (
         "Generating proxy..." "Enter Certificate password:" "Bad passphrase"
     ) + f"\n{error_msg}"
+
     @mock.patch("b2luigi.batch.processes.gbasf2.getpass")
     @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
     @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
@@ -168,7 +169,7 @@ class TestSetupDiracProxy(unittest.TestCase):
         # check that gb2_proxy_init was never called via subprocess
         mock_getpass.return_value = 'pwd'
         self.assertEqual(mock_run_with_gbasf2.call_count, 0)
-    
+
     @mock.patch("b2luigi.batch.processes.gbasf2.getpass")
     @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
     @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
