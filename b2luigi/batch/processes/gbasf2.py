@@ -15,6 +15,7 @@ from functools import lru_cache
 from glob import glob
 from itertools import groupby
 from typing import Iterable, List, Optional, Set
+from getpass import getpass
 
 from b2luigi.basf2_helper.utils import get_basf2_git_hash
 from b2luigi.batch.processes import BatchProcess, JobStatus
@@ -967,11 +968,14 @@ def setup_dirac_proxy():
     if not isinstance(lifetime, int) or lifetime <= 0:
         warnings.warn("Setting 'gbasf2_proxy_lifetime' should be a positive integer.", RuntimeWarning)
     hours = int(lifetime)
-    proxy_init_cmd = shlex.split(f"gb2_proxy_init -g belle -v {hours}:00")
+    proxy_init_cmd = shlex.split(f"gb2_proxy_init -g belle -v {hours}:00 --pwstdin")
 
     while True:
-        proc = run_with_gbasf2(proxy_init_cmd, ensure_proxy_initialized=False, capture_output=True, check=True)
-
+        pwd = getpass("Certificate password: ")
+        try:
+            proc = run_with_gbasf2(proxy_init_cmd, input=pwd, ensure_proxy_initialized=False, capture_output=True, check=True)
+        finally:
+            del pwd
         # Check if there were any errors, since gb2_proxy_init often still exits without errorcode and sends messages to stdout
         out, err = proc.stdout, proc.stderr
         all_output = out + err  # gb2_proxy_init errors are usually in stdout, but for future-proofing also check stderr
