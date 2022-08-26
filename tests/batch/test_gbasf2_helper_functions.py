@@ -157,30 +157,34 @@ class TestSetupDiracProxy(unittest.TestCase):
     wrong_pw_msg = (
         "Generating proxy..." "Enter Certificate password:" "Bad passphrase"
     ) + f"\n{error_msg}"
-
+    @mock.patch("b2luigi.batch.processes.gbasf2.getpass")
     @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
     @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
     def test_dont_setup_when_proxy_alive(
-        self, mock_get_proxy_info, mock_run_with_gbasf2
+        self, mock_get_proxy_info, mock_run_with_gbasf2, mock_getpass
     ):
         mock_get_proxy_info.return_value = {"secondsLeft": 999}
         setup_dirac_proxy()
         # check that gb2_proxy_init was never called via subprocess
+        mock_getpass.return_value = 'pwd'
         self.assertEqual(mock_run_with_gbasf2.call_count, 0)
-
+    
+    @mock.patch("b2luigi.batch.processes.gbasf2.getpass")
     @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
     @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
-    def test_setup_proxy_on_0_seconds(self, mock_get_proxy_info, mock_run_with_gbasf2):
+    def test_setup_proxy_on_0_seconds(self, mock_get_proxy_info, mock_run_with_gbasf2, mock_getpass):
         # force setting up of new proxy
         mock_get_proxy_info.return_value = {"secondsLeft": 0}
+        mock_getpass.return_value = 'pwd'
         mock_run_with_gbasf2.return_value = MockProcess(self.success_msg, "")
         setup_dirac_proxy()
         self.assertEqual(mock_run_with_gbasf2.call_count, 1)
 
+    @mock.patch("b2luigi.batch.processes.gbasf2.getpass")
     @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
     @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
     def test_setup_proxy_when_no_proxy_info(
-        self, mock_get_proxy_info, mock_run_with_gbasf2
+        self, mock_get_proxy_info, mock_run_with_gbasf2, mock_getpass
     ):
         # pretend proxy is not initalized yet, then get_proxy_info raises CalledProcessError
         mock_get_proxy_info.side_effect = CalledProcessError(
@@ -190,9 +194,10 @@ class TestSetupDiracProxy(unittest.TestCase):
         setup_dirac_proxy()
         self.assertEqual(mock_run_with_gbasf2.call_count, 1)
 
+    @mock.patch("b2luigi.batch.processes.gbasf2.getpass")
     @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
     @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
-    def test_retry_on_wrong_password(self, mock_get_proxy_info, mock_run_with_gbasf2):
+    def test_retry_on_wrong_password(self, mock_get_proxy_info, mock_run_with_gbasf2, mock_getpass):
         # force setting up of new proxy
         mock_get_proxy_info.return_value = {"secondsLeft": 0}
 
@@ -216,10 +221,11 @@ class TestSetupDiracProxy(unittest.TestCase):
         )
         self.assertEqual(mock_run_with_gbasf2.call_count, len(return_processes))
 
+    @mock.patch("b2luigi.batch.processes.gbasf2.getpass")
     @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
     @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
     def test_raises_error_when_errormsg_in_stdout(
-        self, mock_get_proxy_info, mock_run_with_gbasf2
+        self, mock_get_proxy_info, mock_run_with_gbasf2, mock_getpass
     ):
         mock_get_proxy_info.return_value = {"secondsLeft": 0}
         # check that gb2_proxy_init was never called via subprocess
