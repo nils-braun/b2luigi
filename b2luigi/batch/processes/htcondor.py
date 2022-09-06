@@ -5,6 +5,8 @@ import subprocess
 import enum
 
 from retry import retry
+from xdg import xdg_cache_home
+import dataset
 
 from b2luigi.core.settings import get_setting
 from b2luigi.batch.processes import BatchProcess, JobStatus
@@ -151,6 +153,11 @@ class HTCondorProcess(BatchProcess):
 
         self._batch_job_id = None
 
+        # define path to local cache database that maps b2luigi task ID's to  HTCODO
+        job_db_path = xdg_cache_home() / "b2luigi/batch_job_cache.db"
+        job_db_path.parent.mkdir(parents=True, exist_ok=True)  # create directory if it does not exist
+        self._job_cache_uri = f"sqlite:///{job_db_path}"
+
     def get_job_status(self):
         if not self._batch_job_id:
             return JobStatus.aborted
@@ -170,6 +177,22 @@ class HTCondorProcess(BatchProcess):
         raise ValueError(f"Unknown HTCondor Job status: {job_status}")
 
     def start_job(self):
+        # Check if job with this with task ID is already running on the batch.
+        # For that, we have to first check if there is a job ID stored in the cache.
+        with dataset.connect(self._job_cache_uri) as job_db:
+            existing_job = job_db["htcondor_jobs"].find_one(task_id=self.task.task_id)
+
+        if existing_job and "htcondor_id" in existing_job:
+            self._batch_job_id = existing_job["htcondor_id"]
+
+            # If the existing job is running, abort submission and continue monitoring existing job
+            if self.get_job_status() == JobStatus.running:
+                return
+
+            # else if htcondor job is not successful, remove htcondor job id from local cache
+            with dataset.connect(self._job_cache_uri) as job_db:
+                job_db["htcondor_jobs"].delete(task_id=self.task.task_id)
+
         submit_file = self._create_htcondor_submit_file()
 
         # HTCondor submit needs to be called in the folder of the submit file
@@ -183,11 +206,24 @@ class HTCondorProcess(BatchProcess):
 
         self._batch_job_id = int(match.group(0)[:-1])
 
+        # store htcondor job ids for newly submitted tasks in database
+        with dataset.connect(self._job_cache_uri) as job_db:
+            job_db["htcondor_jobs"].insert(
+                dict(
+                    task_id=self.task.task_id,
+                    htcondor_id=self._batch_job_id
+                )
+            )
+
     def kill_job(self):
         if not self._batch_job_id:
             return
 
         subprocess.run(["condor_rm", str(self._batch_job_id)], stdout=subprocess.DEVNULL)
+
+        # remove task from htcondor job id cache
+        with dataset.connect(self._job_cache_uri) as job_db:
+            job_db["htcondor_jobs"].delete(task_id=self.task.task_id)
 
     def _create_htcondor_submit_file(self):
         submit_file_content = []

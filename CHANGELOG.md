@@ -12,6 +12,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * **gbasf2**: Fix `ioctl` error in `gb2_proxy_init` by reading in password via `b2luigi` and then supplying password to that command directly, instead of letting `gb2_proxy_init` handle the password prompt. #172 @bilokin
 
 ### Added
+* Remember already submitted htcondor jobs ID's and don't re-submit them as long as they are running.
+
+### Added
 * [#166](https://github.com/nils-braun/b2luigi/pull/166): add automatic need-changelog PR labeller as github workflow
 
 **Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.7.6...main
