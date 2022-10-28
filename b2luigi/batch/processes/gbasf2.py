@@ -257,6 +257,9 @@ class Gbasf2Process(BatchProcess):
         # useful for printing job status on change only
         self._n_jobs_by_status = ""
 
+        # Default gbasf2 group name
+        self._default_project_path_dir = "/belle/user"
+
         # Store whether the job had already been successful in a variable b/c
         # there's actions we want to do only the first time that
         # ``get_job_status`` returns a success.
@@ -519,6 +522,11 @@ class Gbasf2Process(BatchProcess):
         if basf2opt is not False:
             gbasf2_command_str += f" --basf2opt='{basf2opt}' "
 
+        # Provide a output_ds parameter if the group is not belle
+        group_name = get_setting("gbasf2_proxy_group", default="belle")
+        if group_name != "belle":
+            output_lpn_dir = get_setting("gbasf2_project_lpn_path")
+            gbasf2_command_str += f" --output_ds {output_lpn_dir}/{self.gbasf2_project_name}"
         # optional string of additional parameters to append to gbasf2 command
         gbasf2_additional_params = get_setting("gbasf2_additional_params", default=False, task=self.task)
         if gbasf2_additional_params is not False:
@@ -581,8 +589,12 @@ class Gbasf2Process(BatchProcess):
                 f"Output file name \"{output_file_name}\" does not end with \".root\", "
                 "but gbasf2 batch only supports root outputs"
             )
+        output_lpn_dir = f"/belle/user/{self.dirac_user}"
+        group_name = get_setting("gbasf2_proxy_group", default="belle")
+        if group_name != "belle":
+            output_lpn_dir = get_setting("gbasf2_project_lpn_path")
         dataset_query_string = \
-            f"/belle/user/{self.dirac_user}/{self.gbasf2_project_name}/sub*/{output_file_stem}_*{output_file_ext}"
+            f"{output_lpn_dir}/{self.gbasf2_project_name}/sub*/{output_file_stem}_*{output_file_ext}"
         return dataset_query_string
 
     def _local_gb2_dataset_is_complete(self, output_file_name: str, check_temp_dir: bool = False) -> bool:
@@ -965,10 +977,11 @@ def setup_dirac_proxy():
 
     # initialize proxy
     lifetime = get_setting("gbasf2_proxy_lifetime", default=24)
+    group_name = get_setting("gbasf2_proxy_group", default="belle")
     if not isinstance(lifetime, int) or lifetime <= 0:
         warnings.warn("Setting 'gbasf2_proxy_lifetime' should be a positive integer.", RuntimeWarning)
     hours = int(lifetime)
-    proxy_init_cmd = shlex.split(f"gb2_proxy_init -g belle -v {hours}:00 --pwstdin")
+    proxy_init_cmd = shlex.split(f"gb2_proxy_init -g {group_name} -v {hours}:00 --pwstdin")
 
     while True:
         pwd = getpass("Certificate password: ")
