@@ -21,7 +21,7 @@ from BelleDIRAC.Client.helpers.auth import userCreds
 
 
 @userCreds
-def get_job_status_dict(project_name, user_name):
+def get_job_status_dict(project_name, user_name, group_name):
     """
     If successful, returns a dictionary for all jobs in the project with a structure like the following,
     which I have taken and adapted from an example output::
@@ -43,7 +43,7 @@ def get_job_status_dict(project_name, user_name):
     """
     if user_name is None:
         user_name = os.getenv("BELLE2_USER")
-    login = [user_name, 'belle']
+    login = [user_name, group_name]
     newer_than = '1970-01-01'
     projects = [project_name]
     info_collector = InformationCollector()
@@ -61,6 +61,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--project', type=str, required=True, help="gbasf2 project name")
     parser.add_argument('-u', '--user', type=str, default=None, help="grid username")
+    parser.add_argument('-g', '--group', type=str, default="belle", help="gbasf2 group name")
     args = parser.parse_args()
-    job_status_dict = get_job_status_dict(args.project, args.user)
+    job_status_dict = get_job_status_dict(args.project, args.user, args.group)
     print(json.dumps(job_status_dict))

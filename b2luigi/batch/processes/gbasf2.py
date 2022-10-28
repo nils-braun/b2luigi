@@ -257,9 +257,6 @@ class Gbasf2Process(BatchProcess):
         # useful for printing job status on change only
         self._n_jobs_by_status = ""
 
-        # Default gbasf2 group name
-        self._default_project_path_dir = "/belle/user"
-
         # Store whether the job had already been successful in a variable b/c
         # there's actions we want to do only the first time that
         # ``get_job_status`` returns a success.
@@ -693,7 +690,6 @@ class Gbasf2Process(BatchProcess):
                       " ".join(ds_get_command))
 
             stdout = run_with_gbasf2(ds_get_command, cwd=tmp_output_dir_path, capture_output=True).stdout
-            print(stdout)
             if "No file found" in stdout:
                 raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
 
@@ -797,7 +793,11 @@ def check_dataset_exists_on_grid(gbasf2_project_name, dirac_user=None):
     """
     Check if an output dataset exists for the gbasf2 project
     """
-    lpns = query_lpns(gbasf2_project_name, dirac_user=dirac_user)
+    output_lpn_dir = gbasf2_project_name
+    group_name = get_setting("gbasf2_proxy_group", default="belle")
+    if group_name != "belle":
+        output_lpn_dir = get_setting("gbasf2_project_lpn_path") + f"/{gbasf2_project_name}"
+    lpns = query_lpns(output_lpn_dir, dirac_user=dirac_user)
     return len(lpns) > 0
 
 
@@ -834,7 +834,11 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
         dirac_user = get_dirac_user()
     job_status_script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                           "gbasf2_utils/gbasf2_job_status.py")
-    job_status_command = shlex.split(f"{job_status_script_path} -p {gbasf2_project_name} --user {dirac_user}")
+    group_arg = ""
+    group_name = get_setting("gbasf2_proxy_group", default="belle")
+    if group_name != "belle":
+        group_arg = f" --group {group_name}"
+    job_status_command = shlex.split(f"{job_status_script_path} -p {gbasf2_project_name} --user {dirac_user}{group_arg}")
     proc = run_with_gbasf2(job_status_command, capture_output=True, check=False)
     # FIXME: use enum or similar to define my own return codes
     if proc.returncode == 3:  # return code 3 means project does not exist yet
