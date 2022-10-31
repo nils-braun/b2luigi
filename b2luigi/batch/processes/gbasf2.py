@@ -694,6 +694,7 @@ class Gbasf2Process(BatchProcess):
                       " ".join(ds_get_command))
 
             stdout = run_with_gbasf2(ds_get_command, cwd=tmp_output_dir_path, capture_output=True).stdout
+            print(stdout)
             if "No file found" in stdout:
                 raise RuntimeError(f"No output data for gbasf2 project {self.gbasf2_project_name} found.")
 
