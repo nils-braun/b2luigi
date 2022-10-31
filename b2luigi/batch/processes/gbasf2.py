@@ -664,6 +664,10 @@ class Gbasf2Process(BatchProcess):
             # If the download had been successful and the local files are identical to the list of files on the grid,
             # we move the downloaded dataset to the location specified by ``output_dir_path``.
             tmp_output_dir_path = f"{output_dir_path}.partial"
+            # if custom group is given we need to append the project name
+            group_name = get_setting("gbasf2_proxy_group", default="belle")
+            if group_name != "belle":
+                tmp_output_dir_path += f"/{self.gbasf2_project_name}"
             os.makedirs(tmp_output_dir_path, exist_ok=True)
 
             # Need a set files to repeat download for FAILED ones only
