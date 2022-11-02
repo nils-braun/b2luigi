@@ -150,6 +150,11 @@ class Gbasf2Process(BatchProcess):
           printing of of the job summaries, that is the number of jobs in different states in a gbasf2 project.
         - ``gbasf2_max_retries``: Default to 0. Maximum number of times that each job in the project can be automatically
           rescheduled until the project is declared as failed.
+        - ``gbasf2_proxy_group``: Default to "belle". If provided, the gbasf2 wrapper will work with the custom gbasf2 group,
+          specified in this parameter. No need to specify this parameter in case of usual physics analysis at Belle II.
+          If specified, one has to provide ``gbasf2_project_lpn_path`` parameter.
+        - ``gbasf2_project_lpn_path``: Path to the LPN folder for a specified gbasf2 group.
+          The parameter has no effect unless the ``gbasf2_proxy_group`` is used with non-default value.
         - ``gbasf2_download_dataset``: Defaults to ``True``. Disable this setting if you don't want to download the
           output dataset from the grid on job success. As you can't use the downloaded dataset as an output target for luigi,
           you should then use the provided ``Gbasf2GridProjectTarget``, as shown in the following example:
