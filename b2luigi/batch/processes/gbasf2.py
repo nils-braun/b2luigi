@@ -150,6 +150,11 @@ class Gbasf2Process(BatchProcess):
           printing of of the job summaries, that is the number of jobs in different states in a gbasf2 project.
         - ``gbasf2_max_retries``: Default to 0. Maximum number of times that each job in the project can be automatically
           rescheduled until the project is declared as failed.
+        - ``gbasf2_proxy_group``: Default to "belle". If provided, the gbasf2 wrapper will work with the custom gbasf2 group,
+          specified in this parameter. No need to specify this parameter in case of usual physics analysis at Belle II.
+          If specified, one has to provide ``gbasf2_project_lpn_path`` parameter.
+        - ``gbasf2_project_lpn_path``: Path to the LPN folder for a specified gbasf2 group.
+          The parameter has no effect unless the ``gbasf2_proxy_group`` is used with non-default value.
         - ``gbasf2_download_dataset``: Defaults to ``True``. Disable this setting if you don't want to download the
           output dataset from the grid on job success. As you can't use the downloaded dataset as an output target for luigi,
           you should then use the provided ``Gbasf2GridProjectTarget``, as shown in the following example:
@@ -519,6 +524,11 @@ class Gbasf2Process(BatchProcess):
         if basf2opt is not False:
             gbasf2_command_str += f" --basf2opt='{basf2opt}' "
 
+        # Provide a output_ds parameter if the group is not belle
+        group_name = get_setting("gbasf2_proxy_group", default="belle")
+        if group_name != "belle":
+            output_lpn_dir = get_setting("gbasf2_project_lpn_path")
+            gbasf2_command_str += f" --output_ds {output_lpn_dir}/{self.gbasf2_project_name}"
         # optional string of additional parameters to append to gbasf2 command
         gbasf2_additional_params = get_setting("gbasf2_additional_params", default=False, task=self.task)
         if gbasf2_additional_params is not False:
@@ -581,8 +591,12 @@ class Gbasf2Process(BatchProcess):
                 f"Output file name \"{output_file_name}\" does not end with \".root\", "
                 "but gbasf2 batch only supports root outputs"
             )
+        output_lpn_dir = f"/belle/user/{self.dirac_user}"
+        group_name = get_setting("gbasf2_proxy_group", default="belle")
+        if group_name != "belle":
+            output_lpn_dir = get_setting("gbasf2_project_lpn_path")
         dataset_query_string = \
-            f"/belle/user/{self.dirac_user}/{self.gbasf2_project_name}/sub*/{output_file_stem}_*{output_file_ext}"
+            f"{output_lpn_dir}/{self.gbasf2_project_name}/sub*/{output_file_stem}_*{output_file_ext}"
         return dataset_query_string
 
     def _local_gb2_dataset_is_complete(self, output_file_name: str, check_temp_dir: bool = False) -> bool:
@@ -655,6 +669,10 @@ class Gbasf2Process(BatchProcess):
             # If the download had been successful and the local files are identical to the list of files on the grid,
             # we move the downloaded dataset to the location specified by ``output_dir_path``.
             tmp_output_dir_path = f"{output_dir_path}.partial"
+            # if custom group is given we need to append the project name
+            group_name = get_setting("gbasf2_proxy_group", default="belle")
+            if group_name != "belle":
+                tmp_output_dir_path += f"/{self.gbasf2_project_name}"
             os.makedirs(tmp_output_dir_path, exist_ok=True)
 
             # Need a set files to repeat download for FAILED ones only
@@ -785,7 +803,11 @@ def check_dataset_exists_on_grid(gbasf2_project_name, dirac_user=None):
     """
     Check if an output dataset exists for the gbasf2 project
     """
-    lpns = query_lpns(gbasf2_project_name, dirac_user=dirac_user)
+    output_lpn_dir = gbasf2_project_name
+    group_name = get_setting("gbasf2_proxy_group", default="belle")
+    if group_name != "belle":
+        output_lpn_dir = get_setting("gbasf2_project_lpn_path") + f"/{gbasf2_project_name}"
+    lpns = query_lpns(output_lpn_dir, dirac_user=dirac_user)
     return len(lpns) > 0
 
 
@@ -822,7 +844,11 @@ def get_gbasf2_project_job_status_dict(gbasf2_project_name, dirac_user=None):
         dirac_user = get_dirac_user()
     job_status_script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                           "gbasf2_utils/gbasf2_job_status.py")
-    job_status_command = shlex.split(f"{job_status_script_path} -p {gbasf2_project_name} --user {dirac_user}")
+    group_arg = ""
+    group_name = get_setting("gbasf2_proxy_group", default="belle")
+    if group_name != "belle":
+        group_arg = f" --group {group_name}"
+    job_status_command = shlex.split(f"{job_status_script_path} -p {gbasf2_project_name} --user {dirac_user}{group_arg}")
     proc = run_with_gbasf2(job_status_command, capture_output=True, check=False)
     # FIXME: use enum or similar to define my own return codes
     if proc.returncode == 3:  # return code 3 means project does not exist yet
@@ -965,10 +991,11 @@ def setup_dirac_proxy():
 
     # initialize proxy
     lifetime = get_setting("gbasf2_proxy_lifetime", default=24)
+    group_name = get_setting("gbasf2_proxy_group", default="belle")
     if not isinstance(lifetime, int) or lifetime <= 0:
         warnings.warn("Setting 'gbasf2_proxy_lifetime' should be a positive integer.", RuntimeWarning)
     hours = int(lifetime)
-    proxy_init_cmd = shlex.split(f"gb2_proxy_init -g belle -v {hours}:00 --pwstdin")
+    proxy_init_cmd = shlex.split(f"gb2_proxy_init -g {group_name} -v {hours}:00 --pwstdin")
 
     while True:
         pwd = getpass("Certificate password: ")

@@ -16,6 +16,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 * [#166](https://github.com/nils-braun/b2luigi/pull/166): add automatic need-changelog PR labeller as github workflow
+* [#175](https://github.com/nils-braun/b2luigi/pull/175): added ``gbasf2_proxy_group`` and ``gbasf2_project_lpn_path`` parameters to switch between gbasf2 groups.
 
 **Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.7.6...main
 
