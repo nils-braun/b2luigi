@@ -11,6 +11,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 * **gbasf2**: Fix `ioctl` error in `gb2_proxy_init` by reading in password via `b2luigi` and then supplying password to that command directly, instead of letting `gb2_proxy_init` handle the password prompt. #172 @bilokin
 
+### Changed
+* Update `pre-commit` hooks. Most notably for the developers, update the `flake8` syntax and style-checker to version 5.0.4, which might change slightly what style is accepted. This should also fix [an issue](https://github.com/python/importlib_metadata/issues/406) with the old flake8 version not being compatible with the latest version of `importlib_meta`, which the pre-commit flake8 hook in the github actions to fail. In the process also migrated the pre-commit config format to the new layout.
+
 ### Added
 * [#166](https://github.com/nils-braun/b2luigi/pull/166): add automatic need-changelog PR labeller as github workflow
 
