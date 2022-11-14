@@ -669,10 +669,12 @@ class Gbasf2Process(BatchProcess):
             # If the download had been successful and the local files are identical to the list of files on the grid,
             # we move the downloaded dataset to the location specified by ``output_dir_path``.
             tmp_output_dir_path = f"{output_dir_path}.partial"
+            tmp_project_dir = os.path.join(tmp_output_dir_path, self.gbasf2_project_name)
             # if custom group is given we need to append the project name
             group_name = get_setting("gbasf2_proxy_group", default="belle")
             if group_name != "belle":
                 tmp_output_dir_path += f"/{self.gbasf2_project_name}"
+                tmp_project_dir = tmp_output_dir_path
             os.makedirs(tmp_output_dir_path, exist_ok=True)
 
             # Need a set files to repeat download for FAILED ones only
@@ -717,7 +719,6 @@ class Gbasf2Process(BatchProcess):
                 if os.path.isfile(monitoring_failed_downloads_file):
                     os.remove(monitoring_failed_downloads_file)
 
-            tmp_project_dir = os.path.join(tmp_output_dir_path, self.gbasf2_project_name)
             if not self._local_gb2_dataset_is_complete(output_file_name, check_temp_dir=True):
                 raise RuntimeError(
                     f"Download incomplete. The downloaded set of files in {tmp_project_dir} is not equal to the " +
