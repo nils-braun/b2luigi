@@ -5,7 +5,7 @@ Older entries have been generated from github releases.
 New entries aim to adhere to the format proposed by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.8.0]  - 2022-11-14
+## [0.8.1]  - 2022-11-14
 
 ### Fixed
 
@@ -18,7 +18,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 * Update `pre-commit` hooks. Most notably for the developers, update the `flake8` syntax and style-checker to version 5.0.4, which might change slightly what style is accepted. This should also fix [an issue](https://github.com/python/importlib_metadata/issues/406) with the old flake8 version not being compatible with the latest version of `importlib_meta`, which the pre-commit flake8 hook in the github actions to fail. In the process also migrated the pre-commit config format to the new layout.
 
-**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.7.6...v0.7.7
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.7.6...v0.8.1
 
 ## [0.7.6] - 2022-01-22
 
