@@ -5,20 +5,20 @@ Older entries have been generated from github releases.
 New entries aim to adhere to the format proposed by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.0]  - 2022-11-14
 
 ### Fixed
 
-* **gbasf2**: Fix `ioctl` error in `gb2_proxy_init` by reading in password via `b2luigi` and then supplying password to that command directly, instead of letting `gb2_proxy_init` handle the password prompt. #172 @bilokin
+* **gbasf2**: Fix `ioctl` error in `gb2_proxy_init` by reading in password via `b2luigi` and then supplying password to that command directly, instead of letting `gb2_proxy_init` handle the password prompt. [#172](https://github.com/nils-braun/b2luigi/pull/172) @bilokin
+
+### Added
+* **gbasf2**: Add ``gbasf2_proxy_group`` and ``gbasf2_project_lpn_path`` parameters to switch between gbasf2 groups. [#175](https://github.com/nils-braun/b2luigi/pull/175) @bilokin
+* add automatic "*needs changelog*" PR labeller as github workflow [#166](https://github.com/nils-braun/b2luigi/pull/166)
 
 ### Changed
 * Update `pre-commit` hooks. Most notably for the developers, update the `flake8` syntax and style-checker to version 5.0.4, which might change slightly what style is accepted. This should also fix [an issue](https://github.com/python/importlib_metadata/issues/406) with the old flake8 version not being compatible with the latest version of `importlib_meta`, which the pre-commit flake8 hook in the github actions to fail. In the process also migrated the pre-commit config format to the new layout.
 
-### Added
-* [#166](https://github.com/nils-braun/b2luigi/pull/166): add automatic need-changelog PR labeller as github workflow
-* [#175](https://github.com/nils-braun/b2luigi/pull/175): added ``gbasf2_proxy_group`` and ``gbasf2_project_lpn_path`` parameters to switch between gbasf2 groups.
-
-**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.7.6...main
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.7.6...v0.7.7
 
 ## [0.7.6] - 2022-01-22
 
