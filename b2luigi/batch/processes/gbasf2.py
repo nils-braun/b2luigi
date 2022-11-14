@@ -150,7 +150,7 @@ class Gbasf2Process(BatchProcess):
           printing of of the job summaries, that is the number of jobs in different states in a gbasf2 project.
         - ``gbasf2_max_retries``: Default to 0. Maximum number of times that each job in the project can be automatically
           rescheduled until the project is declared as failed.
-        - ``gbasf2_proxy_group``: Default to "belle". If provided, the gbasf2 wrapper will work with the custom gbasf2 group,
+        - ``gbasf2_proxy_group``: Default to ``"belle"``. If provided, the gbasf2 wrapper will work with the custom gbasf2 group,
           specified in this parameter. No need to specify this parameter in case of usual physics analysis at Belle II.
           If specified, one has to provide ``gbasf2_project_lpn_path`` parameter.
         - ``gbasf2_project_lpn_path``: Path to the LPN folder for a specified gbasf2 group.
