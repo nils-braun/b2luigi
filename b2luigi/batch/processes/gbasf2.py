@@ -583,20 +583,23 @@ class Gbasf2Process(BatchProcess):
         """
         if output_file_name != os.path.basename(output_file_name):
             raise ValueError(
-                f"For grid projects, the output file name must not be a basename, not a path, but is \"{output_file_name}\""
+                f'For grid projects, the output file name must be a basename, not a path, but is "{output_file_name}"'
             )
-        output_file_stem, output_file_ext = os.path.splitext(output_file_name)
-        if output_file_ext != ".root":
+        # split file basename into stem and all extensions (e.g. ".udst.root")
+        output_file_stem, output_file_extensions = output_file_name.split(
+            ".", maxsplit=1
+        )
+        # make sure that last extension is ".root"
+        if os.path.splitext(output_file_extensions)[-1] != ".root":
             raise ValueError(
-                f"Output file name \"{output_file_name}\" does not end with \".root\", "
+                f'Output file name "{output_file_name}" does not end with ".root", '
                 "but gbasf2 batch only supports root outputs"
             )
         output_lpn_dir = f"/belle/user/{self.dirac_user}"
         group_name = get_setting("gbasf2_proxy_group", default="belle")
         if group_name != "belle":
             output_lpn_dir = get_setting("gbasf2_project_lpn_path")
-        dataset_query_string = \
-            f"{output_lpn_dir}/{self.gbasf2_project_name}/sub*/{output_file_stem}_*{output_file_ext}"
+        dataset_query_string = f"{output_lpn_dir}/{self.gbasf2_project_name}/sub*/{output_file_stem}_*{output_file_extensions}"
         return dataset_query_string
 
     def _local_gb2_dataset_is_complete(self, output_file_name: str, check_temp_dir: bool = False) -> bool:
