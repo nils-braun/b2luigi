@@ -5,6 +5,13 @@ Older entries have been generated from github releases.
 New entries aim to adhere to the format proposed by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Unreleased
+
+### Fixed
+
+* **gbasf2**: Fix gbasf2 glob queries (e.g. for downloading) for basf2 output files with multiple extensions, e.g. `<file>.udst.root` `<file>.mdst.root`. [#180](https://github.com/nils-braun/b2luigi/pull/181). Thanks [@schmitca](https://github.com/schmitca) for reporting.
+
+
 ## [0.8.1]  - 2022-11-14
 
 ### Fixed
