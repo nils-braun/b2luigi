@@ -134,6 +134,7 @@ Features, fixing, help and testing
     * Moritz Bauer (`sognetic`_)
     * Matthias Schnepf  (`mschnepf`_)
     * Artur Gottmann (`ArturAkh`_)
+    * `schmitca`_
 
 Stolen ideas
     * Implementation of SGE batch system (`sge`_).
@@ -155,6 +156,7 @@ Stolen ideas
 .. _`sognetic`: https://github.com/sognetic
 .. _`ArturAkh`: https://github.com/ArturAkh
 .. _`mschnepf`: https://github.com/mschnepf
+.. _`schmitca`: https://github.com/schmitca
 .. _`sge`: https://github.com/spotify/luigi/blob/master/luigi/contrib/sge.py
 .. _`lsf`: https://github.com/spotify/luigi/pull/2373/files
 
