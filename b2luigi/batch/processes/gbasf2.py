@@ -599,7 +599,7 @@ class Gbasf2Process(BatchProcess):
         group_name = get_setting("gbasf2_proxy_group", default="belle")
         if group_name != "belle":
             output_lpn_dir = get_setting("gbasf2_project_lpn_path")
-        dataset_query_string = f"{output_lpn_dir}/{self.gbasf2_project_name}/sub*/{output_file_stem}_*{output_file_extensions}"
+        dataset_query_string = '.'.join([f'{output_lpn_dir}/{self.gbasf2_project_name}/sub*/{output_file_stem}_*', output_file_extensions])
         return dataset_query_string
 
     def _local_gb2_dataset_is_complete(self, output_file_name: str, check_temp_dir: bool = False) -> bool:
