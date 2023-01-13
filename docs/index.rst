@@ -134,7 +134,7 @@ Features, fixing, help and testing
     * Moritz Bauer (`sognetic`_)
     * Matthias Schnepf  (`mschnepf`_)
     * Artur Gottmann (`ArturAkh`_)
-    * `schmitca`_
+    * Caspar Schmitt (`schmitca`_)
 
 Stolen ideas
     * Implementation of SGE batch system (`sge`_).
