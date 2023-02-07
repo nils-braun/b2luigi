@@ -139,11 +139,15 @@ def flatten_to_list_of_dicts(inputs):
     return dict(joined_dict)
 
 
-def task_iterator(task, only_non_complete=False):
+def task_iterator(task, only_non_complete=False, already_seen_tasks = set()):
     if not only_non_complete or not task.complete():
         yield task
         for dep in task.deps():
-            yield from task_iterator(dep, only_non_complete=only_non_complete)
+            if dep.task_id in already_seen_tasks:
+                continue
+            already_seen_tasks.add(dep.task_id) 
+        
+            yield from task_iterator(dep, only_non_complete=only_non_complete, already_seen_tasks)
 
 
 def get_all_output_files_in_tree(root_module, key=None):
