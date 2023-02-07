@@ -13,7 +13,7 @@ from b2luigi.core.utils import create_output_dirs
 def run_as_batch_worker(task_list, cli_args, kwargs):
     found_task = False
     for root_task in task_list:
-        for task in task_iterator(root_task):
+        for task in task_iterator(root_task, only_non_complete=True):
             if task.task_id != cli_args.task_id:
                 continue
 
