@@ -147,7 +147,7 @@ def task_iterator(task, only_non_complete=False, already_seen_tasks = set()):
                 continue
             already_seen_tasks.add(dep.task_id) 
         
-            yield from task_iterator(dep, only_non_complete=only_non_complete, already_seen_tasks)
+            yield from task_iterator(dep, only_non_complete=only_non_complete, already_seen_tasks=already_seen_tasks)
 
 
 def get_all_output_files_in_tree(root_module, key=None):
