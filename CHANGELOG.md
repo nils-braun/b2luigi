@@ -6,6 +6,14 @@ Older entries have been generated from github releases.
 New entries aim to adhere to the format proposed by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleases
+
+### Added
+
+- `task_iterator` now returns a unique list of tasks. The task graph is a DAG which is traversed through recursion in `task_iterator` like a tree. If multiple tasks had the same task as a requirement (i.e. multiple nodes share a child), it was returned multiple times in the task iterator. This results in performance improvements when checking the requirements. [#186](https://github.com/nils-braun/b2luigi/pull/186). Thanks [@MarcelHoh](https://github.com/MarcelHoh) for the initial PR.
+
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.8.2...main
+
 ## [0.8.2] - 2023-01-13
 
 ### Fixed
