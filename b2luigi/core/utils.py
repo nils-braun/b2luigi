@@ -150,11 +150,13 @@ def task_iterator(task, only_non_complete=False):
         if only_non_complete and task.complete():
             return
 
+        yield task
+
         for dep in task.deps():
             if dep.task_id in already_seen_tasks:
                 continue
             already_seen_tasks.add(dep.task_id)
-            yield from _unique_task_iterator(dep, only_non_complete=only_non_complete, already_seen_tasks=already_seen_tasks)
+            yield from _unique_task_iterator(dep, only_non_complete=only_non_complete)
 
     yield from _unique_task_iterator(task, only_non_complete)
 
