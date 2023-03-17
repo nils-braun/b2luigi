@@ -1,6 +1,7 @@
 import os
 from unittest import TestCase, mock
 
+import b2luigi
 from b2luigi.core import utils
 
 
@@ -224,4 +225,42 @@ class MapFolderTestCase(TestCase):
         information to the ``AttributeError`` raised by ``get_filename``
         """
         message = self._get_map_folder_error_mesage()
-        self.assertTrue(message.startswith("Could not determine the current script location. "))
+        self.assertTrue(
+            message.startswith("Could not determine the current script location.")
+        )
+
+
+class TaskIteratorTestCase(TestCase):
+    def test_task_iterator_unique_tasks(self):
+        """
+        Test that even when multiple worker tasks require same common
+        dependency task, it appears only once in task iterator output.
+        """
+
+        class CommonDependencyTask(b2luigi.ExternalTask):
+            def output(self):
+                return b2luigi.LocalTarget("some_dependency")
+
+        @b2luigi.requires(CommonDependencyTask)
+        class WorkerTask(b2luigi.Task):
+            some_parameter = b2luigi.IntParameter()
+
+            def output(self):
+                yield self.add_to_output("output")
+
+        class AggregatorTask(b2luigi.WrapperTask):
+            def requires(self):
+                for param in range(3):
+                    yield self.clone(WorkerTask, some_parameter=param)
+
+        expected_task_str_order = [
+            "AggregatorTask()",
+            "WorkerTask(some_parameter=0)",
+            "CommonDependencyTask()",
+            "WorkerTask(some_parameter=1)",
+            "WorkerTask(some_parameter=2)",
+        ]
+        resulting_task_str_order = [
+            str(t) for t in utils.task_iterator(AggregatorTask())
+        ]
+        self.assertListEqual(expected_task_str_order, resulting_task_str_order)
