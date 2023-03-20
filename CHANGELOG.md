@@ -6,7 +6,11 @@ Older entries have been generated from github releases.
 New entries aim to adhere to the format proposed by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleases
+## Unreleased
+
+### Fixed
+
+- **gbasf2**: Fix bug introduced in [#181](https://github.com/nils-braun/b2luigi/pull/181) when generating basf2 queries with just a simple `.root` extension, raising a wrong false positive errors. Now moved splitting functionality into separate function and added extensive unit tests. Thanks @schmitca for reporting [#184](https://github.com/nils-braun/b2luigi/pull/184).
 
 ### Added
 
@@ -18,7 +22,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- **gbasf2**: Fix gbasf2 glob queries (e.g. for downloading) for basf2 output files with multiple extensions, e.g. `<file>.udst.root` `<file>.mdst.root`. [#180](https://github.com/nils-braun/b2luigi/pull/181). Thanks [@schmitca](https://github.com/schmitca) for reporting, reviewing and testing.
+- **gbasf2**: Fix gbasf2 glob queries (e.g. for downloading) for basf2 output files with multiple extensions, e.g. `<file>.udst.root` `<file>.mdst.root`. [#181](https://github.com/nils-braun/b2luigi/pull/181). Thanks [@schmitca](https://github.com/schmitca) for reporting, reviewing and testing.
 
 **Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.8.1...v0.8.2
 
