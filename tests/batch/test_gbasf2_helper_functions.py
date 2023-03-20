@@ -5,28 +5,22 @@ Utilities that require a running gbasf2 or Dirac environment will not net
 tested in this test case, only the functions that can be run independently.
 """
 
+import os
+import shutil
+import tempfile
 import unittest
 from collections import namedtuple
 from contextlib import redirect_stderr
 from io import StringIO
-from os.path import join
 from pathlib import Path
 from subprocess import CalledProcessError
-from unittest import mock
-import tempfile
 from typing import Iterable
-import shutil
+from unittest import mock
 
 from b2luigi.batch.processes.gbasf2 import (
-    _get_lfn_upto_reschedule_number,
-    get_proxy_info,
-    get_unique_lfns,
-    lfn_follows_gb2v5_convention,
-    query_lpns,
-    setup_dirac_proxy,
-    _move_downloaded_dataset_to_output_dir,
-    get_dirac_user,
-)
+    _get_lfn_upto_reschedule_number, _move_downloaded_dataset_to_output_dir,
+    _split_all_extensions, get_dirac_user, get_proxy_info, get_unique_lfns,
+    lfn_follows_gb2v5_convention, query_lpns, setup_dirac_proxy)
 
 # first test utilities for working with logical file names on the grid
 
@@ -151,7 +145,6 @@ MockProcess = namedtuple("mock_process", ["stdout", "stderr"])
 
 
 class TestSetupDiracProxy(unittest.TestCase):
-
     success_msg = "Succeed with return value:\n0"
     error_msg = "Error: Operation not permitted ( 1 : )"
     wrong_pw_msg = (
@@ -167,16 +160,18 @@ class TestSetupDiracProxy(unittest.TestCase):
         mock_get_proxy_info.return_value = {"secondsLeft": 999}
         setup_dirac_proxy()
         # check that gb2_proxy_init was never called via subprocess
-        mock_getpass.return_value = 'pwd'
+        mock_getpass.return_value = "pwd"
         self.assertEqual(mock_run_with_gbasf2.call_count, 0)
 
     @mock.patch("b2luigi.batch.processes.gbasf2.getpass")
     @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
     @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
-    def test_setup_proxy_on_0_seconds(self, mock_get_proxy_info, mock_run_with_gbasf2, mock_getpass):
+    def test_setup_proxy_on_0_seconds(
+        self, mock_get_proxy_info, mock_run_with_gbasf2, mock_getpass
+    ):
         # force setting up of new proxy
         mock_get_proxy_info.return_value = {"secondsLeft": 0}
-        mock_getpass.return_value = 'pwd'
+        mock_getpass.return_value = "pwd"
         mock_run_with_gbasf2.return_value = MockProcess(self.success_msg, "")
         setup_dirac_proxy()
         self.assertEqual(mock_run_with_gbasf2.call_count, 1)
@@ -198,7 +193,9 @@ class TestSetupDiracProxy(unittest.TestCase):
     @mock.patch("b2luigi.batch.processes.gbasf2.getpass")
     @mock.patch("b2luigi.batch.processes.gbasf2.run_with_gbasf2")
     @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
-    def test_retry_on_wrong_password(self, mock_get_proxy_info, mock_run_with_gbasf2, mock_getpass):
+    def test_retry_on_wrong_password(
+        self, mock_get_proxy_info, mock_run_with_gbasf2, mock_getpass
+    ):
         # force setting up of new proxy
         mock_get_proxy_info.return_value = {"secondsLeft": 0}
 
@@ -258,7 +255,7 @@ class TestQueryLPNs(unittest.TestCase):
         self.assertListEqual(
             lpns,
             [
-                join(
+                os.path.join(
                     "/belle/Data/release-05-01-24/DB00001454/SkimP12x1/prod00019339/e0008/4S/r02547/",
                     "hadron/11180500/udst/sub00/udst_000001_prod00019339_task72546000001.root",
                 )
@@ -333,17 +330,79 @@ class TestMoveDownloadedDatasetToOutputDir(unittest.TestCase):
 
 
 class TestGetDiracUser(unittest.TestCase):
-
     @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
     @mock.patch("b2luigi.batch.processes.gbasf2.setup_dirac_proxy")
     def test_get_dirac_user_gets_user(self, _, mock_get_proxy_info):
-        mock_get_proxy_info.return_value = {
-            "username": "testuser"}
+        mock_get_proxy_info.return_value = {"username": "testuser"}
         self.assertEqual(get_dirac_user(), "testuser")
 
     @mock.patch("b2luigi.batch.processes.gbasf2.get_proxy_info")
     @mock.patch("b2luigi.batch.processes.gbasf2.setup_dirac_proxy")
-    def test_get_dirac_user_ensures_proxy_initialized(self, mock_setup_dirac_proxy, mock_get_proxy_info):
+    def test_get_dirac_user_ensures_proxy_initialized(
+        self, mock_setup_dirac_proxy, mock_get_proxy_info
+    ):
         mock_get_proxy_info.return_value = {"username": "testuser"}
         get_dirac_user()
         self.assertEqual(mock_setup_dirac_proxy.call_count, 1)
+
+
+class TestSplitAllExtensions(unittest.TestCase):
+    def test_single_ext(self):
+        "Test single extension"
+        path = "path.root"
+        # compare against expectation
+        self.assertTupleEqual(_split_all_extensions(path), ("path", ".root"))
+        # for single extensions output should be same as os.path.splitext
+        self.assertTupleEqual(_split_all_extensions(path), os.path.splitext(path))
+
+    def test_single_ext_leading_dot(self):
+        "Test that for a single extensions and leading dot output is the same as for ``os.path.splitext``."
+        path = ".hidden.root"
+        # compare against expectation
+        self.assertTupleEqual(_split_all_extensions(path), (".hidden", ".root"))
+        # for single extensions output should be same as os.path.splitext
+        self.assertTupleEqual(_split_all_extensions(path), os.path.splitext(path))
+
+    def test_single_ext_path_with_slashes_and_leading_dot(self):
+        "Test that for a single extensions and leading dot output is the same as for ``os.path.splitext``."
+        path = "/path/.to/.hidden.root"
+        # compare against expectation
+        self.assertTupleEqual(_split_all_extensions(path), ("/path/.to/.hidden", ".root"))
+        # for single extensions output should be same as os.path.splitext
+        self.assertTupleEqual(_split_all_extensions(path), os.path.splitext(path))
+
+    def test_no_ext(self):
+        "Test no extension, only stem"
+        path = "path"
+        # compare against expectation
+        self.assertTupleEqual(_split_all_extensions(path), ("path", ""))
+        # for single extensions output should be same as os.path.splitext
+        self.assertTupleEqual(_split_all_extensions(path), os.path.splitext(path))
+
+    def test_leading_dots_no_ext(self):
+        "Test no extension, but leading dots"
+        path = "....hidden"
+        # compare against expectation
+        self.assertTupleEqual(_split_all_extensions(path), ("....hidden", ""))
+        # for single extensions output should be same as os.path.splitext
+        self.assertTupleEqual(_split_all_extensions(path), os.path.splitext(path))
+
+    def test_multi_ext(self):
+        "Test multiple extensions."
+        path = "path/to/filename.mdst.root"
+        # compare against expectation
+        self.assertTupleEqual(_split_all_extensions(path), ("path/to/filename", ".mdst.root"))
+
+    def test_multi_ext_leading_dot(self):
+        "Test multiple extensions and but leading dot (like hidden file)"
+        path = "/path/to/.filename.mdst.root.tmp"
+        # compare against expectation
+        self.assertTupleEqual(_split_all_extensions(path), ("/path/to/.filename", ".mdst.root.tmp"))
+
+    def test_trailing_dot(self):
+        "Test file path ending with dot."
+        path = "filename."
+        # compare against expectation
+        self.assertTupleEqual(_split_all_extensions(path), ("filename", "."))
+        # for single extensions output should be same as os.path.splitext
+        self.assertTupleEqual(_split_all_extensions(path), os.path.splitext(path))

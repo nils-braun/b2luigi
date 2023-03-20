@@ -1,12 +1,14 @@
 import json
 import os
 import tempfile
-from typing import List
+import unittest
 from collections import Counter
+from typing import List
 from unittest.mock import MagicMock, Mock, patch
 
 import b2luigi
-from b2luigi.batch.processes.gbasf2 import Gbasf2Process, JobStatus, get_unique_project_name
+from b2luigi.batch.processes.gbasf2 import (Gbasf2Process, JobStatus,
+                                            get_unique_project_name)
 
 from ..helpers import B2LuigiTestCase
 from .batch_task_1 import MyTask
@@ -166,3 +168,68 @@ class TestBuildGbasf2SubmitCommand(B2LuigiTestCase):
             gbasf2_input_dataset = b2luigi.Parameter(default=self.dummy_lfn)
             gbasf2_input_dslist = self.dummy_lfn_file.name
         self.assertRaises(RuntimeError, lambda: self._build_gbasf2_submit_command(MyGbasf2Task("some_parameter")))
+
+
+class TestGetGbasf2DatasetQuery(unittest.TestCase):
+    "Run tests for ``Gbasf2Process._get_gbasf2_dataset_query``."
+
+    def setUp(self):
+        super().setUp()
+        self.gb2_mock_process = Mock()
+        self.gb2_mock_process.gbasf2_project_name = "projectname"
+        self.gb2_mock_process.dirac_user = "username"
+        self.gb2_mock_process.task = MyTask("some_parameter")
+
+    def test_filename_single_root_extension(self):
+        dataset_query = Gbasf2Process._get_gbasf2_dataset_query(
+            self.gb2_mock_process,
+            output_file_name="output.root"
+        )
+        self.assertEqual(
+            dataset_query,
+            "/belle/user/username/projectname/sub*/output_*.root"
+        )
+
+    def test_filename_multi_extension(self):
+        dataset_query = Gbasf2Process._get_gbasf2_dataset_query(
+            self.gb2_mock_process,
+            output_file_name="output.mdst.root"
+        )
+        self.assertEqual(
+            dataset_query,
+            "/belle/user/username/projectname/sub*/output_*.mdst.root"
+        )
+
+    def test_non_root_extension_raises_err(self):
+        "Raise an error if gbasf2 output does not end with .root"
+        with self.assertRaises(ValueError):
+            Gbasf2Process._get_gbasf2_dataset_query(
+                self.gb2_mock_process,
+                output_file_name="output.mdst"
+            )
+
+    def test_non_basename_raises_err(self):
+        """
+        Currently we only support simple basenames as gbasf2 job outputs.
+        LPN is guessed via dirac username for user projects.
+        """
+        with self.assertRaises(ValueError):
+            Gbasf2Process._get_gbasf2_dataset_query(
+                self.gb2_mock_process,
+                output_file_name="/path/to/output.root"
+            )
+
+    def test_filename_single_extension(self):
+        gb2_mock_process = Mock()
+        gb2_mock_process.gbasf2_project_name = "projectname"
+        gb2_mock_process.dirac_user = "username"
+        gb2_mock_process.task = MyTask("some_parameter")
+
+        dataset_query = Gbasf2Process._get_gbasf2_dataset_query(
+            self=gb2_mock_process,
+            output_file_name="output.root"
+        )
+        self.assertEqual(
+            dataset_query,
+            "/belle/user/username/projectname/sub*/output_*.root"
+        )
