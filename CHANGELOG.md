@@ -8,6 +8,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Unreleased
 
+## [0.9.0] - 2023-03-20
+
 ### Fixed
 
 - **gbasf2**: Fix bug introduced in [#181](https://github.com/nils-braun/b2luigi/pull/181) when generating basf2 queries with just a simple `.root` extension, raising a wrong false positive errors. Now moved splitting functionality into separate function and added extensive unit tests. Thanks @schmitca for reporting [#184](https://github.com/nils-braun/b2luigi/pull/184).
@@ -16,7 +18,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - `task_iterator` now returns a unique list of tasks. The task graph is a DAG which is traversed through recursion in `task_iterator` like a tree. If multiple tasks had the same task as a requirement (i.e. multiple nodes share a child), it was returned multiple times in the task iterator. This results in performance improvements when checking the requirements. [#186](https://github.com/nils-braun/b2luigi/pull/186). Thanks [@MarcelHoh](https://github.com/MarcelHoh) for the initial PR.
 
-**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.8.2...main
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.8.2...v0.9.0
 
 ## [0.8.2] - 2023-01-13
 
