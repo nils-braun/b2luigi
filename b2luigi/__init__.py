@@ -2,21 +2,20 @@
 from luigi import *
 from luigi.util import copies
 
-from b2luigi.cli.process import process
-from b2luigi.core.dispatchable_task import DispatchableTask, dispatch
-from b2luigi.core.settings import clear_setting, get_setting, set_setting
-from b2luigi.core.task import ExternalTask, Task, WrapperTask
-from b2luigi.core.temporary_wrapper import on_temporary_files
-
 # version must be defined after importing the luigi namespace,
 # otherwise the b2luigi.__version__ gets overwritten by the one from luigi
 __version__ = "0.9.0"
 
-from typing import Collection, Optional, Union
-
-from b2luigi.core.parameter import BoolParameter, wrap_parameter
+from b2luigi.core.parameter import wrap_parameter, BoolParameter
+from typing import Optional, Union, Collection
 
 wrap_parameter()
+
+from b2luigi.core.task import Task, ExternalTask, WrapperTask
+from b2luigi.core.temporary_wrapper import on_temporary_files
+from b2luigi.core.dispatchable_task import DispatchableTask, dispatch
+from b2luigi.core.settings import get_setting, set_setting, clear_setting
+from b2luigi.cli.process import process
 
 
 class requires(object):

@@ -8,10 +8,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Unreleased
 
+### Fixed
+
+- Fix circular import [#188](https://github.com/nils-braun/b2luigi/issues/188)
+
 ### Added
 
-- Add the ability to pass a custom hashing function to parameters via the `hash_function` keyword argument. [#189](https://github.com/nils-braun/b2luigi/pull/189). The function must take one argument, the value of the parameter. It is up to the user to ensure unique strings are created.
+- Add the ability to pass a custom hashing function to parameters via the `hash_function` keyword argument. The function must take one argument, the value of the parameter. It is up to the user to ensure unique strings are created. [#189](https://github.com/nils-braun/b2luigi/pull/189)
 - **gbasf2**: Switch to the `--new` flag in `gb2_ds_get` which downloads files significantly faster than previously. Gbasf2 release v5r6 (November 2022) is required. [#190](https://github.com/nils-braun/b2luigi/pull/190).
+
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.9.0...main
 
 ## [0.9.0] - 2023-03-20
 
