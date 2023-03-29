@@ -8,6 +8,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Unreleased
 
+## [0.9.1] - 2023-03-20
+
 ### Fixed
 
 - Fix circular import [#188](https://github.com/nils-braun/b2luigi/issues/188)
