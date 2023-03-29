@@ -10,7 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- added the ability to pass a custom hashing function to parameters via the `hash_function` keyword argument. [#189](https://github.com/nils-braun/b2luigi/pull/189). The function must take one argument, the value of the parameter. It is up to the user to ensure unique strings are created.
+- Add the ability to pass a custom hashing function to parameters via the `hash_function` keyword argument. [#189](https://github.com/nils-braun/b2luigi/pull/189). The function must take one argument, the value of the parameter. It is up to the user to ensure unique strings are created.
 
 ## [0.9.0] - 2023-03-20
 
