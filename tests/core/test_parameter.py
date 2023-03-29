@@ -2,8 +2,10 @@ import b2luigi
 
 from ..helpers import B2LuigiTestCase
 
+
 def custom_hash_function(x):
-    return "_".join(x)
+    return "_".join([str(y) for y in x])
+
 
 class HashedParameterTestCase(B2LuigiTestCase):
     def test_hash_consistency(self):
@@ -26,14 +28,13 @@ class HashedParameterTestCase(B2LuigiTestCase):
         self.assertEqual(serialized_first, "hashed_7816c14282fd03e3dc4e398f28aa5a30")
 
         third_parameter = b2luigi.ListParameter(hashed=True, hash_function=custom_hash_function)
-        serialized = third_parameter.serialize_hashed([0,1,2])
+        serialized = third_parameter.serialize_hashed([0, 1, 2])
         self.assertEqual(serialized, "0_1_2")
-
 
     def test_with_task(self):
         class MyTask(b2luigi.Task):
             my_parameter = b2luigi.ListParameter(hashed=True)
-            custom_hashed_parameter = b2luigi.ListParameter(hashed=True, hash_function = custom_hash_function)
+            custom_hashed_parameter = b2luigi.ListParameter(hashed=True, hash_function=custom_hash_function)
 
             def run(self):
                 with open(self.get_output_file_name("test.txt"), "w") as f:
@@ -42,7 +43,8 @@ class HashedParameterTestCase(B2LuigiTestCase):
             def output(self):
                 yield self.add_to_output("test.txt")
 
-        task = MyTask(my_parameter=["Some", "strange", "items", "with", "bad / signs"], custom_hashed_parameter=[0,1,2])
+        task = MyTask(my_parameter=["Some", "strange", "items", "with", "bad / signs"], custom_hashed_parameter=[0, 1, 2])
 
         self.assertTrue(task.get_output_file_name("test.txt")
-                        .endswith("results/my_parameter=hashed_08928069d368e4a0f8ac02a0193e443b/custom_hashed_parameter=0_1_2/test.txt"))
+                        .endswith("results/my_parameter=hashed_08928069d368e4a0f8ac02a0193e443b"
+                                  "/custom_hashed_parameter=0_1_2/test.txt"))

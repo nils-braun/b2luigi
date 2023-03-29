@@ -35,10 +35,10 @@ def wrap_parameter():
     def __init__(self, hashed=False, hash_function=None, *args, **kwargs):
         old_init(self, *args, **kwargs)
 
-        if self.hash_function is not None:
-            n_params = len(signature(hash_function).params)
-            assert  n_params == 1, f"Custom hash function can have only"\
-                " 1 argument, found {n_params}"
+        if hash_function is not None:
+            n_params = len(signature(hash_function).parameters)
+            assert n_params == 1, "Custom hash function can have only"\
+                f" 1 argument, found {n_params}"
 
         self.hash_function = hash_function
 
