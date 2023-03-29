@@ -10,7 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- **gbasf2**: Switched to the `--new` flag in `gb2_ds_get` which downloads files significantly faster than previously. Gbasf2 release v5r6 (November 2022) is required. [#190](https://github.com/nils-braun/b2luigi/pull/190).
+- **gbasf2**: Switch to the `--new` flag in `gb2_ds_get` which downloads files significantly faster than previously. Gbasf2 release v5r6 (November 2022) is required. [#190](https://github.com/nils-braun/b2luigi/pull/190).
 
 ## [0.9.0] - 2023-03-20
 
