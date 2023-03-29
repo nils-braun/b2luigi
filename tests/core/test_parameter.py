@@ -45,6 +45,5 @@ class HashedParameterTestCase(B2LuigiTestCase):
 
         task = MyTask(my_parameter=["Some", "strange", "items", "with", "bad / signs"], custom_hashed_parameter=[0, 1, 2])
 
-        self.assertTrue(task.get_output_file_name("test.txt")
-                        .endswith("results/my_parameter=hashed_08928069d368e4a0f8ac02a0193e443b"
-                                  "/custom_hashed_parameter=0_1_2/test.txt"))
+        expected_path = "results/my_parameter=hashed_08928069d368e4a0f8ac02a0193e443b/custom_hashed_parameter=0_1_2/test.txt"
+        self.assertTrue(task.get_output_file_name("test.txt").endswith(expected_path))
