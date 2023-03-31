@@ -46,21 +46,17 @@ class Basf2PathTask(Basf2Task):
 
         try:
             import basf2
-            import ROOT
         except ImportError:
             raise ImportError("Can not find ROOT or basf2. Can not use the basf2 task.")
 
         if self.num_processes:
             basf2.set_nprocesses(self.num_processes)
 
-        if self.max_event:
-            ROOT.Belle2.Environment.Instance().setNumberEventsOverride(self.max_event)
-
         path = self.create_path()
 
         path.add_module("Progress")
         basf2.print_path(path)
-        basf2.process(path)
+        basf2.process(path=path, max_event=self.max_event if self.max_event else 0)
 
         print(basf2.statistics)
 
