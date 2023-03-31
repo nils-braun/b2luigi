@@ -31,7 +31,7 @@ class SimulationTask(Basf2PathTask):
             find_file_ignore_error = True
             dec_file = basf2.find_file('analysis/examples/tutorials/B2A101-Y4SEventGeneration.dec',
                                        silent=find_file_ignore_error)
-            if dec_file == '':
+            if not dec_file:
                 dec_file = basf2.find_file('analysis/examples/simulations/B2A101-Y4SEventGeneration.dec')
         elif self.event_type == SimulationType.continuum:
             dec_file = basf2.find_file('analysis/examples/simulations/B2A102-ccbarEventGeneration.dec')
