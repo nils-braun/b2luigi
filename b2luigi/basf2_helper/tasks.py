@@ -47,7 +47,7 @@ class Basf2PathTask(Basf2Task):
         try:
             import basf2
         except ImportError:
-            raise ImportError("Can not find ROOT or basf2. Can not use the basf2 task.")
+            raise ImportError("Can not find basf2. Can not use the basf2 task.")
 
         if self.num_processes:
             basf2.set_nprocesses(self.num_processes)
@@ -56,7 +56,8 @@ class Basf2PathTask(Basf2Task):
 
         path.add_module("Progress")
         basf2.print_path(path)
-        basf2.process(path=path, max_event=self.max_event if self.max_event else 0)
+        max_event = self.max_event if self.max_event else 0
+        basf2.process(path=path, max_event=max_event)
 
         print(basf2.statistics)
 
