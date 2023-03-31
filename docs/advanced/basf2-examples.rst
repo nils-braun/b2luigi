@@ -115,7 +115,7 @@ nTuple Generation
             # (parameters just examples)
             input_file_names = ..
 
-            path = basf2.create_path()
+            path = basf2.Path()
             modularAnalysis.inputMdstList('default', input_file_names, path=path)
 
             # Now fill your particle lists, just examples
