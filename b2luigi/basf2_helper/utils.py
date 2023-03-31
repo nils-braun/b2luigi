@@ -1,16 +1,18 @@
 import os
 
-import git
-
 
 def get_basf2_git_hash():
     basf2_release = os.getenv("BELLE2_RELEASE")
 
     if basf2_release == "head" or basf2_release is None:
-        basf2_release_location = os.getenv("BELLE2_LOCAL_DIR")
 
-        if basf2_release_location:
-            return git.Repo(basf2_release_location).head.object.hexsha
-        return "not_set"
+        try:
+            from basf2.version import get_version
+            basf2_hash = get_version
+        except ImportError:
+            from basf2.version import version
+            basf2_hash = version
+
+        basf2_release = basf2_hash()
 
     return basf2_release
