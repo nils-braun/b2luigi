@@ -56,7 +56,8 @@ class Basf2PathTask(Basf2Task):
 
         path.add_module("Progress")
         basf2.print_path(path)
-        basf2.process(path=path, max_event=self.max_event if self.max_event else 0)
+        max_event = self.max_event if self.max_event else 0
+        basf2.process(path=path, max_event=max_event)
 
         print(basf2.statistics)
 
