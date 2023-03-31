@@ -5,7 +5,6 @@ analysis path be imported from gbasf2_example.py
 """
 
 import basf2
-import ROOT  # noqa: F401
 import modularAnalysis as mA
 import vertex as vx
 from stdCharged import stdK, stdPi
@@ -22,7 +21,7 @@ def create_analysis_path(
     parameter, adapted from code in the ``B2T_Basics_3_FirstAnalysis.ipynb``
     notebook from b2 starter kit.
     """
-    path = basf2.create_path()
+    path = basf2.Path()
     # this local inputMdstList will only be used when this steerig file is run locally, gbasf2 overrides it
     local_input_files = ["/group/belle2/dataprod/MC/MC13a/prod00009434/s00/e1003/4S/r00000/mixed/mdst/sub00/mdst_000001_prod00009434_task10020000001.root"]
     mA.inputMdstList(

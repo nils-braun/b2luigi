@@ -10,7 +10,7 @@ import simulation
 import vertex
 import generators
 import reconstruction
-from ROOT import Belle2
+import mdst
 
 
 class SimulationType(Enum):
@@ -23,23 +23,22 @@ class SimulationTask(Basf2PathTask):
     event_type = luigi.EnumParameter(enum=SimulationType)
 
     def create_path(self):
-        path = basf2.create_path()
+        path = basf2.Path()
         modularAnalysis.setupEventInfo(self.n_events, path)
 
         if self.event_type == SimulationType.y4s:
             # in current main branch and release 5 the Y(4S)decay file is moved, so try old and new locations
             find_file_ignore_error = True
-            dec_file = Belle2.FileSystem.findFile('analysis/examples/tutorials/B2A101-Y4SEventGeneration.dec',
-                                                  find_file_ignore_error)
-            if not dec_file:
-                dec_file = Belle2.FileSystem.findFile('analysis/examples/simulations/B2A101-Y4SEventGeneration.dec')
+            dec_file = basf2.find_file('analysis/examples/tutorials/B2A101-Y4SEventGeneration.dec',
+                                       silent=find_file_ignore_error)
+            if dec_file == '':
+                dec_file = basf2.find_file('analysis/examples/simulations/B2A101-Y4SEventGeneration.dec')
         elif self.event_type == SimulationType.continuum:
-            dec_file = Belle2.FileSystem.findFile('analysis/examples/simulations/B2A102-ccbarEventGeneration.dec')
+            dec_file = basf2.find_file('analysis/examples/simulations/B2A102-ccbarEventGeneration.dec')
         else:
             raise ValueError(f"Event type {self.event_type} is not valid. It should be either 'Y(4S)' or 'Continuum'!")
 
         generators.add_evtgen_generator(path, 'signal', dec_file)
-        modularAnalysis.loadGearbox(path)
         simulation.add_simulation(path)
 
         path.add_module('RootOutput', outputFileName=self.get_output_file_name('simulation_full_output.root'))
@@ -56,10 +55,12 @@ class ReconstructionTask(Basf2PathTask):
         path = basf2.create_path()
 
         path.add_module('RootInput', inputFileNames=self.get_input_file_names("simulation_full_output.root"))
-        modularAnalysis.loadGearbox(path)
+
+        path.add_module('Gearbox')
+        path.add_module('Geometry')
         reconstruction.add_reconstruction(path)
 
-        modularAnalysis.outputMdst(self.get_output_file_name("reconstructed_output.root"), path=path)
+        mdst.add_mdst_output(path=path, filename=self.get_output_file_name("reconstructed_output.root"))
 
         return path
 
@@ -70,7 +71,7 @@ class ReconstructionTask(Basf2PathTask):
 @luigi.requires(ReconstructionTask)
 class AnalysisTask(Basf2PathTask):
     def create_path(self):
-        path = basf2.create_path()
+        path = basf2.Path()
         modularAnalysis.inputMdstList('default', self.get_input_file_names("reconstructed_output.root"), path=path)
         modularAnalysis.fillParticleLists([('K+', 'kaonID > 0.1'), ('pi+', 'pionID > 0.1')], path=path)
         modularAnalysis.reconstructDecay('D0 -> K- pi+', '1.7 < M < 1.9', path=path)
