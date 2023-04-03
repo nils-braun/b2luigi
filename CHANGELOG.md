@@ -10,7 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Changed
 
-- For local basf2 versions, change how hash for `basf2_release` Parameter is calculated. Now use basf2 functionality to get the version, to be consistent with the output of `basf2 --version`. The new hash encodes both the local and central basf2 release, the basf2 function [`getCommitID`](https://github.com/belle2/basf2/blob/1c972b2c89ef11f38ee2f5ea8eb562dde0637155/framework/io/include/RootIOUtilities.h#L77-L84). Thanks to @GiacomoXT in [#193](https://github.com/nils-braun/b2luigi/issues/193).
+- For local basf2 versions, change how hash for `basf2_release` Parameter is calculated. Now use basf2 functionality to get the version, to be consistent with the output of `basf2 --version`. The new hash encodes both the local and central basf2 release, the basf2 function [`getCommitID`](https://github.com/belle2/basf2/blob/1c972b2c89ef11f38ee2f5ea8eb562dde0637155/framework/io/include/RootIOUtilities.h#L77-L84). When basf2 is not set up, print warning before returning `"not_set"`. Thanks to @GiacomoXT in [#193](https://github.com/nils-braun/b2luigi/issues/193).
 
   **Warning:** If you use local basf2 versions, that is your `basf2_release` is a git hash, this will change your b2luigi target output paths. This means that tasks that were marked _complete_, might suddenly not be _complete_ anymore after updating to this release. A workaround is to check for the new expected path via `python3 <steering_fname>.py --show_output` and rename the `git_hash=<…>` directory.
 
@@ -20,7 +20,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Fixed
 
-- Fix example `SimulationTask` task in `basf2_chain_example.py`, which probably wasn't warking as it was missing the Geometry module. Also by @GiacomoXT in [#193](https://github.com/nils-braun/b2luigi/issues/193)
+- Fix example `SimulationTask` task in `basf2_chain_example.py`, which probably wasn't working as it was missing the Geometry module. Also by @GiacomoXT in [#193](https://github.com/nils-braun/b2luigi/issues/193)
 
 
 **Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.9.1...main
