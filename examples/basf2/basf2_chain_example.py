@@ -27,10 +27,15 @@ class SimulationTask(Basf2PathTask):
         modularAnalysis.setupEventInfo(self.n_events, path)
 
         if self.event_type == SimulationType.y4s:
-            # in current main branch and release 5 the Y(4S)decay file is moved, so try old and new locations
-            find_file_ignore_error = True
-            dec_file = basf2.find_file('analysis/examples/tutorials/B2A101-Y4SEventGeneration.dec',
-                                       silent=find_file_ignore_error)
+            # In current main branch and release 5 the Y(4S)decay file is moved,
+            # so try old and new locations.
+
+            # With ``silent=True``, ``find_file`` returns empty string if nothing is
+            # found. With ``silent=False``, a ``FileNotFoundError`` exception is
+            # raised.
+            dec_file = basf2.find_file(
+                'analysis/examples/tutorials/B2A101-Y4SEventGeneration.dec', silent=True
+            )
             if not dec_file:
                 dec_file = basf2.find_file('analysis/examples/simulations/B2A101-Y4SEventGeneration.dec')
         elif self.event_type == SimulationType.continuum:
