@@ -1,4 +1,5 @@
 import os
+import warnings
 
 
 def get_basf2_git_hash():
@@ -21,5 +22,9 @@ def get_basf2_git_hash():
         if hasattr(basf2.version, "get_version"):
             return basf2.version.get_version()
         return basf2.version.version
-    except ImportError:
+    except ImportError as err:
+        warnings.warn(
+            f"No basf2 was found. Setting basf2 git hash to \"not_set\": \n {err}",
+            category=ImportWarning,
+        )
         return "not_set"
