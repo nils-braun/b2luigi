@@ -6,7 +6,7 @@ Older entries have been generated from github releases.
 New entries aim to adhere to the format proposed by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.10.0] - 2023-04-03
 
 ## Changed
 
@@ -23,7 +23,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Fix example `SimulationTask` task in `basf2_chain_example.py`, which probably wasn't working as it was missing the Geometry module. Also by @GiacomoXT in [#193](https://github.com/nils-braun/b2luigi/issues/193)
 
 
-**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.9.1...main
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.10.0...main
 
 ## [0.9.1] - 2023-03-20
 
