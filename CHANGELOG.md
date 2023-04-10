@@ -6,9 +6,15 @@ Older entries have been generated from github releases.
 New entries aim to adhere to the format proposed by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+* **gbasf2:** New setting `gbasf2_setup_path` which can be used to customize the path to the gbasf2 setup file directly (default: `"/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh"`). It is a more flexible replacement for the `gbasf2_install_directory` setting, which will be removed in the future, since we can't predict potential name and path changes of the setup script between gbasf2 releases. @meliache #162
+
 ## [0.10.0] - 2023-04-03
 
-## Changed
+### Changed
 
 - For local basf2 versions, change how hash for `basf2_release` Parameter is calculated. Now use basf2 functionality to get the version, to be consistent with the output of `basf2 --version`. The new hash encodes both the local and central basf2 release, the basf2 function [`getCommitID`](https://github.com/belle2/basf2/blob/1c972b2c89ef11f38ee2f5ea8eb562dde0637155/framework/io/include/RootIOUtilities.h#L77-L84). When basf2 is not set up, print warning before returning `"not_set"`. Thanks to @GiacomoXT in [#193](https://github.com/nils-braun/b2luigi/issues/193).
 
@@ -18,7 +24,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - Refactor the basf2 related examples to use more idiomatic, modern basf2 code, e.g. using `basf2.Path()` instead of `basf2.create_path()`. . Also by @GiacomoXT in [#193](https://github.com/nils-braun/b2luigi/issues/193)
 
-## Fixed
+### Fixed
 
 - Fix example `SimulationTask` task in `basf2_chain_example.py`, which probably wasn't working as it was missing the Geometry module. Also by @GiacomoXT in [#193](https://github.com/nils-braun/b2luigi/issues/193)
 
