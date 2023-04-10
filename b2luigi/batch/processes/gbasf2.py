@@ -139,7 +139,7 @@ class Gbasf2Process(BatchProcess):
         Other not required, but noteworthy settings are:
 
         - ``gbasf2_setup_path``: Path to directory where gbasf2 is installed.
-            Defaults to ``"/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh" ``.
+            Defaults to ``"/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh" ``.
         - ``gbasf2_release``: Defaults to the release of your currently set up basf2 release.
           Set this if you want the jobs to use another release on the grid.
         - ``gbasf2_proxy_lifetime``: Defaults to 24. When initializing a proxy, set the
@@ -231,26 +231,42 @@ class Gbasf2Process(BatchProcess):
         # Setting it via a setting.json file is not supported to make sure users set unique project names
         self.gbasf2_project_name = get_unique_project_name(self.task)
 
-        self.gbasf2_setup_path = get_setting(
+        gbasf2_setup_path = get_setting(
             "gbasf2_setup_path",
             default=False,
             task=self.task,
         )
-        gbasf2_install_directory = get_setting("gbasf2_install_directory", default=False, task=self.task)
+        gbasf2_install_directory = get_setting(
+            "gbasf2_install_directory",
+            default=False,
+            task=self.task,
+        )
+        # FIXME: backwards compatibility code to check for the ``gbasf2_install_directory``
+        # setting. Remove this in the future.
         if gbasf2_install_directory:
-            warnings.warn(
-                "The setting ``gbasf2_install_directory`` will be deprecated in the future. " +
-                "Please use the ``gbasf2_setup_path`` setting to provide a setup script path " +
-                "if you use a custom (non-CVMFS) gbasf2 installation.",
-                PendingDeprecationWarning
-            )
-        if not self.gbasf2_setup_path:
-            if gbasf2_install_directory:
-                self.gbasf2_setup_path = os.path.join(gbasf2_install_directory, "BelleDIRAC/gbasf2/tools/setup.sh")
+            if gbasf2_setup_path:
+                warnings.warn(
+                    "Both the ``gbasf2_setup_path`` and ``gbasf2_install_directory`` "
+                    "settings are given. Will use ``gbasf2_setup_path``, "
+                    "because ``gbasf2_install_directory`` will be deprecated in "
+                    "future releases.",
+                    PendingDeprecationWarning
+                )
             else:
-                # if neither the gbasf2_setup_path nor the gbasf2_install_directory settings are given, use the default
-                # location on CVMFS
-                self.gbasf2_setup_path = "/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh"
+                gbasf2_setup_path = os.path.join(
+                    gbasf2_install_directory, "BelleDIRAC/gbasf2/pro/setup.sh"
+                )
+                warnings.warn(
+                    "The setting ``gbasf2_install_directory`` will be deprecated. "
+                    "Please use the ``gbasf2_setup_path`` setting instead."
+                    "because ``gbasf2_install_directory`` will be deprecated in "
+                    "future releases.",
+                    PendingDeprecationWarning
+                )
+        if gbasf2_setup_path:
+            self.gbasf2_setup_path = gbasf2_setup_path
+        else:
+            self.gbasf2_setup_path = "/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh"
 
         #: Output file directory of the task to wrap with gbasf2, where we will
         # store the pickled basf2 path and the created steerinfile to execute
@@ -968,7 +984,7 @@ class Gbasf2GridProjectTarget(Target):
         self,
         project_name,
         dirac_user=None,
-        gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh",
+        gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
     ):
         """
         :param project_name: Name of the gbasf2 grid project that produced the
@@ -1008,7 +1024,7 @@ class Gbasf2GridProjectTarget(Target):
 def check_dataset_exists_on_grid(
     gbasf2_project_name,
     dirac_user=None,
-    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh",
+    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
 ):
     """Check if an output dataset exists for the gbasf2 project."""
     output_lpn_dir = gbasf2_project_name
@@ -1030,7 +1046,7 @@ def check_dataset_exists_on_grid(
 def get_gbasf2_project_job_status_dict(
     gbasf2_project_name,
     dirac_user=None,
-    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh",
+    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
 ):
     """
     Returns a dictionary for all jobs in the project with a structure like the
@@ -1087,7 +1103,7 @@ def get_gbasf2_project_job_status_dict(
 def check_project_exists(
     gbasf2_project_name,
     dirac_user=None,
-    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh",
+    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
 ):
     """Check if we can find the gbasf2 project on the grid with ``gb2_job_status``."""
     try:
@@ -1107,7 +1123,7 @@ def run_with_gbasf2(
     check=True,
     encoding="utf-8",
     capture_output=False,
-    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh",
+    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
     **kwargs
 ):
     """
@@ -1179,7 +1195,7 @@ def get_gbasf2_env(gbasf2_setup_path):
     return gbasf2_env
 
 
-def get_proxy_info(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh"):
+def get_proxy_info(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh"):
     """Run ``gbasf2_proxy_info.py`` to retrieve a dict of the proxy status."""
     proxy_info_script_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "gbasf2_utils/gbasf2_proxy_info.py"
@@ -1197,7 +1213,7 @@ def get_proxy_info(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/
 
 
 @lru_cache(maxsize=None)
-def get_dirac_user(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh"):
+def get_dirac_user(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh"):
     """Get dirac user name."""
     # ensure proxy is initialized, because get_proxy_info can't do it, otherwise
     # it causes an infinite loop
@@ -1211,7 +1227,7 @@ def get_dirac_user(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/
         ) from err
 
 
-def setup_dirac_proxy(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh"):
+def setup_dirac_proxy(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh"):
     """Run ``gb2_proxy_init -g belle`` if there's no active dirac proxy. If there is, do nothing."""
     # first run script to check if proxy is already alive or needs to be initalized
     try:
@@ -1279,7 +1295,7 @@ def setup_dirac_proxy(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/too
 def query_lpns(
     ds_query: str,
     dirac_user: Optional[str] = None,
-    gbasf2_setup_path: str = "/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh",
+    gbasf2_setup_path: str = "/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
 ) -> List[str]:
     """
     Query DIRAC for LPNs matching query, and return them as a list.
