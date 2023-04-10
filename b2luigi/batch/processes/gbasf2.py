@@ -1177,21 +1177,15 @@ def get_gbasf2_env(gbasf2_setup_path):
     # complete bash command to set up the gbasf2 environment
     # piping output to /dev/null, because we want that our final script only prints the ``env`` output
     gbasf2_setup_command_str = f"source {gbasf2_setup_path} > /dev/null"
+    home = os.environ["HOME"]  # I want to run gbasf2 setup from empty env, but HOME is required
     # command to execute the gbasf2 setup command in a fresh shell and output the produced environment
     echo_gbasf2_env_command = shlex.split(
-        f"env -i bash -c '{gbasf2_setup_command_str} > /dev/null && env'"
+        f"env -i HOME='{home}' bash -c '{gbasf2_setup_command_str} > /dev/null && env'"
     )
     gbasf2_env_string = subprocess.run(
         echo_gbasf2_env_command, check=True, stdout=subprocess.PIPE, encoding="utf-8"
     ).stdout
     gbasf2_env = dict(line.split("=", 1) for line in gbasf2_env_string.splitlines())
-    # The gbasf2 setup script on sets HOME to /ext/home/ueda if it's unset,
-    # which later causes problems in the gb2_proxy_init subprocess. Therefore,
-    # reset it to the caller's HOME.
-    try:
-        gbasf2_env["HOME"] = os.environ["HOME"]
-    except KeyError:
-        pass
     return gbasf2_env
 
 
