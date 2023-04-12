@@ -1175,8 +1175,9 @@ def get_gbasf2_env(gbasf2_setup_path):
             errno.ENOENT, os.strerror(errno.ENOENT), gbasf2_setup_path
         )
     # complete bash command to set up the gbasf2 environment
+    group_name = get_setting("gbasf2_proxy_group", default="belle")
     # piping output to /dev/null, because we want that our final script only prints the ``env`` output
-    gbasf2_setup_command_str = f"source {gbasf2_setup_path} > /dev/null"
+    gbasf2_setup_command_str = f"source {gbasf2_setup_path} -g {group_name} > /dev/null"
     home = os.environ["HOME"]  # I want to run gbasf2 setup from empty env, but HOME is required
     # command to execute the gbasf2 setup command in a fresh shell and output the produced environment
     echo_gbasf2_env_command = shlex.split(
