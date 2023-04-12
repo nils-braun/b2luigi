@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 """
 Script to run as subprocess in a gbasf2 environment (with ``run_with_gbasf``) to
@@ -20,10 +20,11 @@ class CertEncoder(json.JSONEncoder):
     """
     JSON encoder for data structures possibly including certificate objects.
     """
-
     def default(self, obj):
         if isinstance(obj, X509Chain):
-            return obj.dumpAllToString()
+            x509_dict = obj.dumpAllToString()
+            x509_dict['Value'] = x509_dict['Value'].decode()
+            return x509_dict
         return json.JSONEncoder.default(self, obj)
 
 
