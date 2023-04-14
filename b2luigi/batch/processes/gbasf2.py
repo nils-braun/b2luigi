@@ -849,10 +849,14 @@ class Gbasf2Process(BatchProcess):
                 f"{monitoring_download_file_stem}_old{monitoring_downloads_file_ext}"
             )
 
+            # gbasf2 uses a different folder structure when using the `--new` flag with a
+            # proxy_group other than `belle`. Therefore don't use the flag in this case for now.
+            new_flag = "--new" if group_name == "belle" else ""
+
             # In case of first download, the file 'monitoring_failed_downloads_file' does not exist
             if not os.path.isfile(monitoring_failed_downloads_file):
                 ds_get_command = shlex.split(
-                    f"gb2_ds_get --new --force {dataset_query_string} "
+                    f"gb2_ds_get {new_flag} --force {dataset_query_string} "
                     f"--failed_lfns {monitoring_failed_downloads_file}"
                 )
                 print(
@@ -868,7 +872,7 @@ class Gbasf2Process(BatchProcess):
                     old_monitoring_failed_downloads_file,
                 )
                 ds_get_command = shlex.split(
-                    f"gb2_ds_get --new --force {dataset_query_string} "
+                    f"gb2_ds_get {new_flag} --force {dataset_query_string} "
                     f"--input_dslist {old_monitoring_failed_downloads_file} "
                     f"--failed_lfns {monitoring_failed_downloads_file}"
                 )
