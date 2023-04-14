@@ -14,7 +14,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- **gbasf2:** Fixed the issues caused by `gbasf2` release `v5r7` [#197](https://github.com/nils-braun/b2luigi/pull/197).
+- **gbasf2:** Fix the issues caused by `gbasf2` release `v5r7` [#197](https://github.com/nils-braun/b2luigi/pull/197).
 
 ## [0.10.0] - 2023-04-03
 

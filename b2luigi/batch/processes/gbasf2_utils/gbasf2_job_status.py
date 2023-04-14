@@ -75,4 +75,4 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--group', type=str, default="belle", help="gbasf2 group name")
     args = parser.parse_args()
     job_status_dict = get_job_status_dict(args.project, args.user, args.group)
-    print(json.dumps(job_status_dict), cls=JobStatusEncoder)
+    print(json.dumps(job_status_dict, cls=JobStatusEncoder))
