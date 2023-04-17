@@ -853,6 +853,9 @@ class Gbasf2Process(BatchProcess):
             # proxy_group other than `belle`. Therefore don't use the flag in this case for now.
             new_flag = "--new" if group_name == "belle" else ""
 
+            # TODO: always use downloads with --new to avoid having to support
+            # two download types and because --new might become the default
+
             # In case of first download, the file 'monitoring_failed_downloads_file' does not exist
             if not os.path.isfile(monitoring_failed_downloads_file):
                 ds_get_command = shlex.split(
