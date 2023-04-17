@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 """
 Script that calls gbasf/Dirac API dictionary with status and other information
@@ -15,9 +15,20 @@ import argparse
 import os
 import json
 import sys
+import datetime
 
 from BelleDIRAC.gbasf2.lib.job.information_collector import InformationCollector
 from BelleDIRAC.Client.helpers.auth import userCreds
+
+
+class JobStatusEncoder(json.JSONEncoder):
+    """
+    JSON encoder for data structures that can be returned by the job status information collector.
+    """
+    def default(self, obj):
+        if isinstance(obj, (datetime.date, datetime.datetime)):
+            return obj.isoformat()
+        return json.JSONEncoder.default(self, obj)
 
 
 @userCreds
@@ -64,4 +75,4 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--group', type=str, default="belle", help="gbasf2 group name")
     args = parser.parse_args()
     job_status_dict = get_job_status_dict(args.project, args.user, args.group)
-    print(json.dumps(job_status_dict))
+    print(json.dumps(job_status_dict, cls=JobStatusEncoder))

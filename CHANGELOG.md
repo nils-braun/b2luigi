@@ -10,7 +10,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-* **gbasf2:** New setting `gbasf2_setup_path` which can be used to customize the path to the gbasf2 setup file directly (default: `"/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh"`). It is a more flexible replacement for the `gbasf2_install_directory` setting, which will be removed in the future, since we can't predict potential name and path changes of the setup script between gbasf2 releases. @meliache #162
+* **gbasf2:** New setting `gbasf2_setup_path` which can be used to customize the path to the gbasf2 setup file directly (default: `"/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh"`). It is a more flexible replacement for the `gbasf2_install_directory` setting, which will be removed in the future, since we can't predict potential name and path changes of the setup script between gbasf2 releases. @meliache [#162](https://github.com/nils-braun/b2luigi/pull/162)
+
+### Fixed
+
+- **gbasf2:** Fix the issues caused by `gbasf2` release `v5r7` [#197](https://github.com/nils-braun/b2luigi/pull/197). Thanks to @MarcelHoh.
+
+- **gbasf2:** [#197](https://github.com/nils-braun/b2luigi/pull/197) also includes the removal of the `--new` flag for `gb2_ds_get` when proxy group is not `belle`, as then the downloaded directory structure is different from what b2luigi expects. This is a hotfix, in the future we should aim to always use the new download style, therefore issue [#200](https://github.com/nils-braun/b2luigi/issues/200) was opened.
+
+- **gbasf2**: Switch to the `--new` flag in `gb2_ds_get` which downloads files significantly faster than previously. Gbasf2 release v5r6 (November 2022) is required. [#190](https://github.com/nils-braun/b2luigi/pull/190).
+
+
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.10.0...main
 
 ## [0.10.0] - 2023-04-03
 
@@ -29,7 +40,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Fix example `SimulationTask` task in `basf2_chain_example.py`, which probably wasn't working as it was missing the Geometry module. Also by @GiacomoXT in [#193](https://github.com/nils-braun/b2luigi/issues/193)
 
 
-**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.10.0...main
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.9.1...v0.10.0
 
 ## [0.9.1] - 2023-03-20
 
@@ -40,6 +51,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - Add the ability to pass a custom hashing function to parameters via the `hash_function` keyword argument. The function must take one argument, the value of the parameter. It is up to the user to ensure unique strings are created. [#189](https://github.com/nils-braun/b2luigi/pull/189)
+
 - **gbasf2**: Switch to the `--new` flag in `gb2_ds_get` which downloads files significantly faster than previously. Gbasf2 release v5r6 (November 2022) is required. [#190](https://github.com/nils-braun/b2luigi/pull/190).
 
 **Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.9.0...v0.9.1

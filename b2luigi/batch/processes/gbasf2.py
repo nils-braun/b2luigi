@@ -849,10 +849,17 @@ class Gbasf2Process(BatchProcess):
                 f"{monitoring_download_file_stem}_old{monitoring_downloads_file_ext}"
             )
 
+            # gbasf2 uses a different folder structure when using the `--new` flag with a
+            # proxy_group other than `belle`. Therefore don't use the flag in this case for now.
+            new_flag = "--new" if group_name == "belle" else ""
+
+            # TODO: always use downloads with --new to avoid having to support
+            # two download types and because --new might become the default
+
             # In case of first download, the file 'monitoring_failed_downloads_file' does not exist
             if not os.path.isfile(monitoring_failed_downloads_file):
                 ds_get_command = shlex.split(
-                    f"gb2_ds_get --new --force {dataset_query_string} "
+                    f"gb2_ds_get {new_flag} --force {dataset_query_string} "
                     f"--failed_lfns {monitoring_failed_downloads_file}"
                 )
                 print(
@@ -868,7 +875,7 @@ class Gbasf2Process(BatchProcess):
                     old_monitoring_failed_downloads_file,
                 )
                 ds_get_command = shlex.split(
-                    f"gb2_ds_get --new --force {dataset_query_string} "
+                    f"gb2_ds_get {new_flag} --force {dataset_query_string} "
                     f"--input_dslist {old_monitoring_failed_downloads_file} "
                     f"--failed_lfns {monitoring_failed_downloads_file}"
                 )
@@ -1175,8 +1182,9 @@ def get_gbasf2_env(gbasf2_setup_path):
             errno.ENOENT, os.strerror(errno.ENOENT), gbasf2_setup_path
         )
     # complete bash command to set up the gbasf2 environment
+    group_name = get_setting("gbasf2_proxy_group", default="belle")
     # piping output to /dev/null, because we want that our final script only prints the ``env`` output
-    gbasf2_setup_command_str = f"source {gbasf2_setup_path} > /dev/null"
+    gbasf2_setup_command_str = f"source {gbasf2_setup_path} -g {group_name} > /dev/null"
     home = os.environ["HOME"]  # I want to run gbasf2 setup from empty env, but HOME is required
     # command to execute the gbasf2 setup command in a fresh shell and output the produced environment
     echo_gbasf2_env_command = shlex.split(
