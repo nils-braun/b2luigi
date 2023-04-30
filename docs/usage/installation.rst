@@ -18,7 +18,7 @@ This installation description is for the general user. If you are using the Bell
 
     .. code-block:: bash
 
-        pip3 install b2luigi
+        python -m pip install b2luigi
 
 
     b.  If this fails because you do not have write access to where your virtual environment lives, you can also install
@@ -26,7 +26,7 @@ This installation description is for the general user. If you are using the Bell
 
     .. code-block:: bash
 
-        pip3 install --user b2luigi
+        python -m pip install --user b2luigi
 
     This will automatically also install `luigi` into your current environment.
     Please make sure to always setup your environment correctly before using `b2luigi`.
@@ -36,9 +36,6 @@ Now you can go on with the :ref:`quick-start-label`.
 
 b2luigi and Belle II
 ---------------------
-
-Starting from release 04-00-00, `b2luigi` is already included in the externals.
-Follow this guid, if you want to update to the newest version nevertheless.
 
 1.  Setup your local environment. You can use a local environment (installed on your machine) or a release on cvmfs.
     For example, run:
@@ -60,17 +57,20 @@ Follow this guid, if you want to update to the newest version nevertheless.
 
     .. code-block:: bash
 
-        pip3 install b2luigi -U
+        python -m pip install b2luigi --upgrade
 
 
     b.  If you are using an installation from cvmfs, you need to add the ``user`` flag.
 
     .. code-block:: bash
 
-        pip3 install --user b2luigi -U
+        python -m pip install --user b2luigi --upgrade
 
 
-The examples in this documentation are all shown with calling ``python``, but basf2 users need to use ``python3``
-instead.
+.. attention::
+    The examples in this documentation are all shown with calling ``python``,
+    assuming this refers to the *Python 3* executable of their (virtual) environment.
+    In some systems and e.g. basf2 environments, ``python`` refers to Python 2
+    (not supported by b2luigi). Then, ``python3`` should be used instead.
 
 Please also have a look into the :ref:`basf2-example-label`.

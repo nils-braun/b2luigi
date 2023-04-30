@@ -1,10 +1,10 @@
 b2luigi
 =======
 
-``b2luigi`` - bringing batch 2 luigi!
+``b2luigi`` — bringing batch 2 luigi!
 
 
-``b2luigi`` is a helper package for  ``luigi`` for scheduling large luigi workflows on a batch system.
+``b2luigi`` is a helper package for ``luigi`` for scheduling large luigi workflows on a batch system.
 It is as simple as
 
 .. code-block:: python
@@ -131,6 +131,12 @@ Features, fixing, help and testing
     * Sviatoslav Bilokin (`bilokin`_)
     * Phil Grace (`philiptgrace`_)
     * Anselm Baur (`anselmbaur`_)
+    * Moritz Bauer (`sognetic`_)
+    * Matthias Schnepf  (`mschnepf`_)
+    * Artur Gottmann (`ArturAkh`_)
+    * Caspar Schmitt (`schmitca`_)
+    * Marcel Hohmann (`MarcelHoh_`)
+    * Giacomo De Pietro (`GiacomoXT_`)
 
 Stolen ideas
     * Implementation of SGE batch system (`sge`_).
@@ -149,6 +155,12 @@ Stolen ideas
 .. _`bilokin`: https://github.com/bilokin
 .. _`philiptgrace`: https://github.com/philiptgrace
 .. _`anselmbaur`: https://github.com/anselm-baur
+.. _`sognetic`: https://github.com/sognetic
+.. _`ArturAkh`: https://github.com/ArturAkh
+.. _`mschnepf`: https://github.com/mschnepf
+.. _`schmitca`: https://github.com/schmitca
+.. _`MarcelHoh`: https://github.com/MarcelHoh
+.. _`GiacomoXT`: https://github.com/GiacomoXT
 .. _`sge`: https://github.com/spotify/luigi/blob/master/luigi/contrib/sge.py
 .. _`lsf`: https://github.com/spotify/luigi/pull/2373/files
 

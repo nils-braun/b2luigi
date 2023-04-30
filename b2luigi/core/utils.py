@@ -140,10 +140,25 @@ def flatten_to_list_of_dicts(inputs):
 
 
 def task_iterator(task, only_non_complete=False):
-    if not only_non_complete or not task.complete():
+    # create cache of already seen tasks, so that when we recurse through the
+    # DAG and multiple nodes have the same child, we don't return
+    # the same child multiple times
+    already_seen_tasks = set()
+
+    # create another private function for recursion that has reference to `already_seen_tasks`
+    def _unique_task_iterator(task, only_non_complete):
+        if only_non_complete and task.complete():
+            return
+
         yield task
+
         for dep in task.deps():
-            yield from task_iterator(dep, only_non_complete=only_non_complete)
+            if dep.task_id in already_seen_tasks:
+                continue
+            already_seen_tasks.add(dep.task_id)
+            yield from _unique_task_iterator(dep, only_non_complete=only_non_complete)
+
+    yield from _unique_task_iterator(task, only_non_complete)
 
 
 def get_all_output_files_in_tree(root_module, key=None):
@@ -279,8 +294,8 @@ def map_folder(input_folder):
         raise type(ex)(
             "Could not determine the current script location. "
             "If you are running in an interactive shell (such as jupyter notebook) "
-            "make sure to only provide absolute paths in your settings.\nMore Info:\n" +
-            ex.message
+            "make sure to only provide absolute paths in your settings. "
+            f"More Info:\n{ex}"
         ).with_traceback(sys.exc_info()[2])
 
     filepath = os.path.dirname(filename)

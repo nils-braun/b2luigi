@@ -15,7 +15,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
     .. code-block:: bash
 
-        pip3 uninstall b2luigi
+        python -m pip uninstall b2luigi
 
 2.  Clone the repository from github
 
@@ -28,7 +28,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
     .. code-block:: bash
 
-        pip3 [ --user ] install flit
+        python -m pip [ --user ] install flit
 
     You can now install ``b2luigi`` from the cloned git repository in development mode:
 
@@ -42,7 +42,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
     .. code-block:: bash
 
-        pip3 [ --user ] install pre-commit
+        python -m pip [ --user ] install pre-commit
         pre-commit install  # install the pre-commit hooks
         pre-commit  # run pre-commit manually, checks all staged ("added") changes
 
@@ -56,7 +56,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
     .. code-block:: bash
 
-        python3 -m unittest
+        python -m unittest
 
    in the root of ``b2luigi`` repository. If you add some functionality, try to add some tests for it.
 
@@ -65,7 +65,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
     .. code-block:: bash
 
-        pip3 [ --user ] install sphinx sphinx-autobuild
+        python -m pip [ --user ] install sphinx sphinx-autobuild
 
     And starting the automatic build process in the projects root folder
 
@@ -77,7 +77,9 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
     the created docs now (most likely http://127.0.0.1:8000).
     Please make sure the documentation looks fine before creating a pull request.
 
-6.  If you are a core developer and want to release a new version:
+7.  Add a summary of your changes to the ``[Unreleased]`` section of the ``CHANGELOG.md``.
+
+8.  If you are a core developer and want to release a new version:
 
     a.  Make sure all changes are committed and merged on main
     b.  Use the `bump2version`_ package to update the version in the python file ``b2luigi/__init__.py`` as well
@@ -94,9 +96,11 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
             git push
             git push --tags
 
-    d.  Create a new `release`_ with a description on github
+    d.  Update the ``CHANGELOG.md`` following the `Keep a Changelog`_ format.
 
-    e. Check that the new release had been published to PyPi, which should happen automatically via
+    e.  Create a new `release`_ on github, with the description copied from the ``CHANGELOG.md``.
+
+    f. Check that the new release had been published to PyPi, which should happen automatically via
        github `actions`_. Alternatively, you can also manually publish a release via
 
         .. code-block:: bash
@@ -120,3 +124,4 @@ welcome, so feel free to pick one, e.g. with the ``good first issue`` or ``help 
 .. _bump2version: https://github.com/c4urself/bump2version
 .. _release: https://github.com/nils-braun/b2luigi/releases
 .. _actions: https://github.com/nils-braun/b2luigi/actions
+.. _Keep a Changelog: https://keepachangelog.com/en/1.0.0/

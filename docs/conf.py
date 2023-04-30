@@ -19,6 +19,8 @@
 
 # -- Project information -----------------------------------------------------
 
+import os
+
 project = 'b2luigi'
 copyright = '2018, Nils Braun'
 author = 'Nils Braun'
@@ -26,7 +28,7 @@ author = 'Nils Braun'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.6.6'
+release = '0.10.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -160,7 +162,6 @@ texinfo_documents = [
 
 # Cheating around read the docs: we need to install our project which is not possible because we
 # have no setup.py. But this should work...
-import os
 
 if os.getenv("READTHEDOCS"):
     import subprocess

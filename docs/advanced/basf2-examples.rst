@@ -115,7 +115,7 @@ nTuple Generation
             # (parameters just examples)
             input_file_names = ..
 
-            path = basf2.create_path()
+            path = basf2.Path()
             modularAnalysis.inputMdstList('default', input_file_names, path=path)
 
             # Now fill your particle lists, just examples
@@ -141,14 +141,14 @@ nTuple Generation
             return path
 
 
-    class MasterTask(luigi.WrapperTask):
+    class AnalysisWrapperTask(luigi.WrapperTask):
         def requires(self):
             # somehow loop over the runs, experiment etc.
                 yield self.clone(AnalysisTask, experiment_number=...)
 
 
     if __name__ == "__main__":
-        luigi.process(MasterTask(), workers=500)
+        luigi.process(AnalysisWrapperTask(), workers=500)
 
 
 Standard Simulation, Reconstruction and some nTuple Generation

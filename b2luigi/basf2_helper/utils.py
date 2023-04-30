@@ -1,16 +1,30 @@
 import os
-
-import git
+import warnings
 
 
 def get_basf2_git_hash():
+    """Return name of basf2 release or if local basf2 is used its version hash.
+
+    The version is equivalent to the version returned by ``basf2 --version``.
+
+    Returns ``\"not set\"``, if no basf2 release is set and basf2 cannot be imported.
+    """
     basf2_release = os.getenv("BELLE2_RELEASE")
 
-    if basf2_release == "head" or basf2_release is None:
-        basf2_release_location = os.getenv("BELLE2_LOCAL_DIR")
-
-        if basf2_release_location:
-            return git.Repo(basf2_release_location).head.object.hexsha
+    if basf2_release not in ("head", None):
+        return basf2_release
+    # else if BASF2_RELEASE environment variable is not set, get version hash of
+    # local basf2
+    try:
+        import basf2.version
+        # try both get_version method and version attribute, one of which
+        # should work depending on basf2 release
+        if hasattr(basf2.version, "get_version"):
+            return basf2.version.get_version()
+        return basf2.version.version
+    except ImportError as err:
+        warnings.warn(
+            f"No basf2 was found. Setting basf2 git hash to \"not_set\": \n {err}",
+            category=ImportWarning,
+        )
         return "not_set"
-
-    return basf2_release
