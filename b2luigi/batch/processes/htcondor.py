@@ -45,18 +45,17 @@ class HTCondorJobStatusCache(BatchJobStatusCache):
         q_cmd = ["condor_q", "-json", "-attributes", "ClusterId,JobStatus,ExitStatus"]
 
         if job_id:
-            output = subprocess.check_output(q_cmd + [str(job_id)])
-        else:
-            try:
-                output = subprocess.check_output(q_cmd)
-            except:
-                # somteimes it seems on naf the htcondor shedd is for a short time not available
-                # first try to overcome this is by just wait a bit an try once again
-                t_retry = 60
-                print(f"check job status failed... try in {t_retry}s once more")
-                time.sleep(t_retry)
-                output = subprocess.check_output(q_cmd)
+            q_cmd = q_cmd + [str(job_id)]
 
+        try:
+            output = subprocess.check_output(q_cmd)
+        except:
+            # somteimes it seems on naf the htcondor shedd is for a short time not available
+            # first try to overcome this is by just wait a bit an try once again
+            t_retry = 60
+            print(f"check job [{job_id}] status failed... try in {t_retry}s once more")
+            time.sleep(t_retry)
+            output = subprocess.check_output(q_cmd)
 
         seen_ids = self._fill_from_output(output)
 
