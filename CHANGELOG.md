@@ -6,6 +6,15 @@ Older entries have been generated from github releases.
 New entries aim to adhere to the format proposed by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+  [#203](https://github.com/nils-braun/b2luigi/pull/203) @AlexanderHeidelbach
+* **gbasf2:** Fix `gbasf2_setup_path` setting not being passed through in some function calls.
+
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.10.1...main
+
 ## [0.10.1] - 2023-04-17
 
 ### Added
