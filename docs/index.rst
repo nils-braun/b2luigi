@@ -137,6 +137,7 @@ Features, fixing, help and testing
     * Caspar Schmitt (`schmitca`_)
     * Marcel Hohmann (`MarcelHoh_`)
     * Giacomo De Pietro (`GiacomoXT_`)
+    * Alex Heidelbach (`AlexanderHeidelbach_`)
 
 Stolen ideas
     * Implementation of SGE batch system (`sge`_).
@@ -161,6 +162,7 @@ Stolen ideas
 .. _`schmitca`: https://github.com/schmitca
 .. _`MarcelHoh`: https://github.com/MarcelHoh
 .. _`GiacomoXT`: https://github.com/GiacomoXT
+.. _`AlexanderHeidelbach`: https://github.com/AlexanderHeidelbach
 .. _`sge`: https://github.com/spotify/luigi/blob/master/luigi/contrib/sge.py
 .. _`lsf`: https://github.com/spotify/luigi/pull/2373/files
 
