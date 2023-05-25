@@ -406,7 +406,7 @@ class Gbasf2Process(BatchProcess):
         Things to do after the project failed
         """
         job_status_dict = get_gbasf2_project_job_status_dict(
-            self.gbasf2_project_name, dirac_user=self.dirac_user
+            self.gbasf2_project_name, dirac_user=self.dirac_user, gbasf2_setup_path=self.gbasf2_setup_path
         )
         failed_job_dict = {
             job_id: job_info
@@ -1219,7 +1219,7 @@ def get_dirac_user(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.
     """Get dirac user name."""
     # ensure proxy is initialized, because get_proxy_info can't do it, otherwise
     # it causes an infinite loop
-    setup_dirac_proxy()
+    setup_dirac_proxy(gbasf2_setup_path)
     try:
         proxy_info = get_proxy_info(gbasf2_setup_path)
         return proxy_info["username"]
@@ -1233,7 +1233,7 @@ def setup_dirac_proxy(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/set
     """Run ``gb2_proxy_init -g belle`` if there's no active dirac proxy. If there is, do nothing."""
     # first run script to check if proxy is already alive or needs to be initalized
     try:
-        if get_proxy_info()["secondsLeft"] > 3600 * get_setting(
+        if get_proxy_info(gbasf2_setup_path)["secondsLeft"] > 3600 * get_setting(
             "gbasf2_min_proxy_lifetime", default=0
         ):
             return
