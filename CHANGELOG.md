@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
   [#203](https://github.com/nils-braun/b2luigi/pull/203) @AlexanderHeidelbach
 * **gbasf2:** Fix `gbasf2_setup_path` setting not being passed through in some function calls.
+* **gbasf2:** Local basf2 log level setting is now passed over to the grid jobs. You can now limit the log size of jobs with many warnings via `basf2.set_log_level(basf2.LogLevel.ERROR)`. This could fix some errors due to too large log sizes. Implemented by pickling local `basf2.logging.log_level`.
 
 **Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.10.1...main
 
