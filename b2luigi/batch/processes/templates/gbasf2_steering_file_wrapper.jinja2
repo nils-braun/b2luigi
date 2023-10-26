@@ -40,6 +40,16 @@ def get_global_tags_from_file(file_path):
     except KeyError:
         pass
 
+def set_log_level_from_file(file_path):
+    """
+    Extract and set global basf2 log level from pickle file.
+    """
+    with open(file_path, 'br') as pickle_file:
+        serialized = pickle.load(pickle_file)
+    try:
+        basf2.set_log_level(serialized["log_level"])
+    except KeyError:
+        pass
 
 pickle_file_path = "{{ pickle_file_path }}"
 if not os.path.isfile(pickle_file_path):
@@ -47,6 +57,8 @@ if not os.path.isfile(pickle_file_path):
 
 apply_alias_dict_from_file(pickle_file_path)
 get_global_tags_from_file(pickle_file_path)
+set_log_level_from_file(pickle_file_path)
+
 path = b2pp.get_path_from_file(pickle_file_path)
 
 basf2.print_path(path)
