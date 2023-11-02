@@ -139,7 +139,7 @@ class Gbasf2Process(BatchProcess):
         Other not required, but noteworthy settings are:
 
         - ``gbasf2_setup_path``: Path to gbasf2 environment setup script that needs so be sourced to run gbasf2 commands.
-            Defaults to ``"/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh" ``.
+            Defaults to ``"/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc" ``.
         - ``gbasf2_release``: Defaults to the release of your currently set up basf2 release.
           Set this if you want the jobs to use another release on the grid.
         - ``gbasf2_proxy_lifetime``: Defaults to 24. When initializing a proxy, set the
@@ -234,7 +234,7 @@ class Gbasf2Process(BatchProcess):
 
         self.gbasf2_setup_path = get_setting(
             "gbasf2_setup_path",
-            default="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
+            default="/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc",
             task=self.task,
         )
 
@@ -972,7 +972,7 @@ class Gbasf2GridProjectTarget(Target):
         self,
         project_name,
         dirac_user=None,
-        gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
+        gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc",
     ):
         """
         :param project_name: Name of the gbasf2 grid project that produced the
@@ -1012,7 +1012,7 @@ class Gbasf2GridProjectTarget(Target):
 def check_dataset_exists_on_grid(
     gbasf2_project_name,
     dirac_user=None,
-    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
+    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc",
 ):
     """Check if an output dataset exists for the gbasf2 project."""
     output_lpn_dir = gbasf2_project_name
@@ -1034,7 +1034,7 @@ def check_dataset_exists_on_grid(
 def get_gbasf2_project_job_status_dict(
     gbasf2_project_name,
     dirac_user=None,
-    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
+    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc",
 ):
     """
     Returns a dictionary for all jobs in the project with a structure like the
@@ -1091,7 +1091,7 @@ def get_gbasf2_project_job_status_dict(
 def check_project_exists(
     gbasf2_project_name,
     dirac_user=None,
-    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
+    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc",
 ):
     """Check if we can find the gbasf2 project on the grid with ``gb2_job_status``."""
     try:
@@ -1111,7 +1111,7 @@ def run_with_gbasf2(
     check=True,
     encoding="utf-8",
     capture_output=False,
-    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
+    gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc",
     **kwargs
 ):
     """
@@ -1178,7 +1178,7 @@ def get_gbasf2_env(gbasf2_setup_path):
     return gbasf2_env
 
 
-def get_proxy_info(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh"):
+def get_proxy_info(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc"):
     """Run ``gbasf2_proxy_info.py`` to retrieve a dict of the proxy status."""
     proxy_info_script_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "gbasf2_utils/gbasf2_proxy_info.py"
@@ -1196,7 +1196,7 @@ def get_proxy_info(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.
 
 
 @lru_cache(maxsize=None)
-def get_dirac_user(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh"):
+def get_dirac_user(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc"):
     """Get dirac user name."""
     # ensure proxy is initialized, because get_proxy_info can't do it, otherwise
     # it causes an infinite loop
@@ -1210,7 +1210,7 @@ def get_dirac_user(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.
         ) from err
 
 
-def setup_dirac_proxy(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh"):
+def setup_dirac_proxy(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc"):
     """Run ``gb2_proxy_init -g belle`` if there's no active dirac proxy. If there is, do nothing."""
     # first run script to check if proxy is already alive or needs to be initalized
     try:
@@ -1278,7 +1278,7 @@ def setup_dirac_proxy(gbasf2_setup_path="/cvmfs/belle.kek.jp/grid/gbasf2/pro/set
 def query_lpns(
     ds_query: str,
     dirac_user: Optional[str] = None,
-    gbasf2_setup_path: str = "/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
+    gbasf2_setup_path: str = "/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc",
 ) -> List[str]:
     """
     Query DIRAC for LPNs matching query, and return them as a list.
