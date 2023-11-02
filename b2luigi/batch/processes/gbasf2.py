@@ -231,12 +231,19 @@ class Gbasf2Process(BatchProcess):
         # Setting it via a setting.json file is not supported to make sure users set unique project names
         self.gbasf2_project_name = get_unique_project_name(self.task)
 
-
         self.gbasf2_setup_path = get_setting(
             "gbasf2_setup_path",
             default="/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc",
             task=self.task,
         )
+
+        if not os.path.isfile(self.gbasf2_setup_path):
+            raise FileNotFoundError(
+                errno.ENOENT, os.strerror(errno.ENOENT),
+                f"File not found: {self.gbasf2_setup_path}.\n"
+                "Maybe you need to customize the `gbasf2_setup_path` setting?\n"
+                "That is sometimes necessary when file location changed between gbasf2 releases."
+            )
 
         if get_setting(
             "gbasf2_install_directory",
