@@ -13,7 +13,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   [#203](https://github.com/nils-braun/b2luigi/pull/203) @AlexanderHeidelbach
 * **gbasf2:** Fix `gbasf2_setup_path` setting not being passed through in some function calls.
 
+### Changed
+
+* **gbasf2:** Change the default gbasf2 setup script path to CVMFS location in gbasf2 v5.8.2, i.e.
+  ```
+  /cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc
+  ```
+  Reminder that this can still be customized via the `gbasf2_setup_path` setting. Resolves issue ![#206](https://github.com/nils-braun/b2luigi/issues/206).
+
 ### Removed
+
 * **gbasf2:** Fully deprecate `gbasf2_install_directory` setting. It will be ignored from now on and a warning given if used. Instead please use the `gbasf2_setup_path` setting introduced in v0.10.1 to provide the exact path to the gbasf2 setup script. `gbasf2_install_directory` will not be used as a fall-back anymore as was the case in v0.10.1.
 
 **Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.10.1...main
