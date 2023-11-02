@@ -14,6 +14,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 * **gbasf2:** Fix `gbasf2_setup_path` setting not being passed through in some function calls.
 * **gbasf2:** Local basf2 log level setting is now passed over to the grid jobs. You can now limit the log size of jobs with many warnings via `basf2.set_log_level(basf2.LogLevel.ERROR)`. This could fix some errors due to too large log sizes. Implemented by pickling local `basf2.logging.log_level`.
 
+### Removed
+* **gbasf2:** Fully deprecate `gbasf2_install_directory` setting. It will be ignored from now on and a warning given if used. Instead please use the `gbasf2_setup_path` setting introduced in v0.10.1 to provide the exact path to the gbasf2 setup script. `gbasf2_install_directory` will not be used as a fall-back anymore as was the case in v0.10.1.
+
 **Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.10.1...main
 
 ## [0.10.1] - 2023-04-17
