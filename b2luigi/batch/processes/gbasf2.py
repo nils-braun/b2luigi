@@ -138,7 +138,7 @@ class Gbasf2Process(BatchProcess):
 
         Other not required, but noteworthy settings are:
 
-        - ``gbasf2_setup_path``: Path to directory where gbasf2 is installed.
+        - ``gbasf2_setup_path``: Path to gbasf2 environment setup script that needs so be sourced to run gbasf2 commands.
             Defaults to ``"/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh" ``.
         - ``gbasf2_release``: Defaults to the release of your currently set up basf2 release.
           Set this if you want the jobs to use another release on the grid.
