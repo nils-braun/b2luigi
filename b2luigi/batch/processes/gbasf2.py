@@ -231,42 +231,23 @@ class Gbasf2Process(BatchProcess):
         # Setting it via a setting.json file is not supported to make sure users set unique project names
         self.gbasf2_project_name = get_unique_project_name(self.task)
 
-        gbasf2_setup_path = get_setting(
+
+        self.gbasf2_setup_path = get_setting(
             "gbasf2_setup_path",
-            default=False,
+            default="/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh",
             task=self.task,
         )
-        gbasf2_install_directory = get_setting(
+
+        if get_setting(
             "gbasf2_install_directory",
             default=False,
             task=self.task,
-        )
-        # FIXME: backwards compatibility code to check for the ``gbasf2_install_directory``
-        # setting. Remove this in the future.
-        if gbasf2_install_directory:
-            if gbasf2_setup_path:
-                warnings.warn(
-                    "Both the ``gbasf2_setup_path`` and ``gbasf2_install_directory`` "
-                    "settings are given. Will use ``gbasf2_setup_path``, "
-                    "because ``gbasf2_install_directory`` will be deprecated in "
-                    "future releases.",
-                    PendingDeprecationWarning
-                )
-            else:
-                gbasf2_setup_path = os.path.join(
-                    gbasf2_install_directory, "BelleDIRAC/gbasf2/pro/setup.sh"
-                )
-                warnings.warn(
-                    "The setting ``gbasf2_install_directory`` will be deprecated. "
-                    "Please use the ``gbasf2_setup_path`` setting instead."
-                    "because ``gbasf2_install_directory`` will be deprecated in "
-                    "future releases.",
-                    PendingDeprecationWarning
-                )
-        if gbasf2_setup_path:
-            self.gbasf2_setup_path = gbasf2_setup_path
-        else:
-            self.gbasf2_setup_path = "/cvmfs/belle.kek.jp/grid/gbasf2/pro/setup.sh"
+        ):
+            warnings.warn(
+                "IGNORING deprecated setting `gbasf2_install_directory`" +
+                "Instead set the path to the setup file directly with the `gbasf2_setup_path` setting.",
+                DeprecationWarning
+            )
 
         #: Output file directory of the task to wrap with gbasf2, where we will
         # store the pickled basf2 path and the created steerinfile to execute
