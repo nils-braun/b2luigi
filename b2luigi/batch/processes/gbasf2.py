@@ -1103,6 +1103,10 @@ def get_gbasf2_project_job_status_dict(
             f"\nCould not find any jobs for project {gbasf2_project_name} on the grid.\n"
             + "Probably there was an error during the project submission when running the gbasf2 command.\n"
         )
+    if proc.returncode > 0:
+        raise subprocess.CalledProcessError(
+            proc.returncode, job_status_command, output=proc.stdout, stderr=proc.stderr
+        )
     job_status_json_string = proc.stdout
     return json.loads(job_status_json_string)
 
