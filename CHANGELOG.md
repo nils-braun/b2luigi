@@ -8,19 +8,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Unreleased
 
-### Fixed
+### Added
 
-  [#203](https://github.com/nils-braun/b2luigi/pull/203) @AlexanderHeidelbach
-* **gbasf2:** Fix `gbasf2_setup_path` setting not being passed through in some function calls.
 * **gbasf2:** Local basf2 log level setting is now passed over to the grid jobs. You can now limit the log size of jobs with many warnings via `basf2.set_log_level(basf2.LogLevel.ERROR)`. This could fix some errors due to too large log sizes. Implemented by pickling local `basf2.logging.log_level`.
 
-### Changed
+### Fixed
 
-* **gbasf2:** Change the default gbasf2 setup script path to CVMFS location in gbasf2 v5.8.2, i.e.
-  ```
-  /cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc
-  ```
-  Reminder that this can still be customized via the `gbasf2_setup_path` setting. Resolves issue ![#206](https://github.com/nils-braun/b2luigi/issues/206).
+* **gbasf2**: Make gbasf2 wrapper work with gbasf2 release `v5.8.2`:
+  - Change the default gbasf2 setup script path to CVMFS location in gbasf2 v5.8.2, i.e.
+    ```
+    /cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc
+    ```
+    Reminder that this can still be customized via the `gbasf2_setup_path` setting.
+    [#207](https://github.com/nils-braun/b2luigi/pull/207)
+  - Fix script to get gbasf2 project status as JSON for latest gbasf2 release. [#209](https://github.com/nils-braun/b2luigi/pull/209) @eckerpatrick
+
+* **gbasf2:** Fix `gbasf2_setup_path` setting not being passed through in some function calls. [#203](https://github.com/nils-braun/b2luigi/pull/203) @AlexanderHeidelbach
 
 ### Removed
 
