@@ -18,7 +18,8 @@ import sys
 import datetime
 
 from BelleDIRAC.gbasf2.lib.job.information_collector import InformationCollector
-from BelleDIRAC.Client.helpers.auth import userCreds
+from BelleDIRAC.gbasf2.lib.auth import userCreds
+from BelleDIRAC.Client.helpers.common import initializeCS
 
 
 class JobStatusEncoder(json.JSONEncoder):
@@ -74,5 +75,6 @@ if __name__ == '__main__':
     parser.add_argument('-u', '--user', type=str, default=None, help="grid username")
     parser.add_argument('-g', '--group', type=str, default="belle", help="gbasf2 group name")
     args = parser.parse_args()
+    initializeCS()
     job_status_dict = get_job_status_dict(args.project, args.user, args.group)
     print(json.dumps(job_status_dict, cls=JobStatusEncoder))
