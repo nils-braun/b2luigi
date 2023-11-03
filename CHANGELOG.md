@@ -33,6 +33,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 * **gbasf2:** New setting `gbasf2_setup_path` which can be used to customize the path to the gbasf2 setup file directly (default: `"/cvmfs/belle.kek.jp/grid/gbasf2/pro/tools/setup.sh"`). It is a more flexible replacement for the `gbasf2_install_directory` setting, which will be removed in the future, since we can't predict potential name and path changes of the setup script between gbasf2 releases. @meliache [#162](https://github.com/nils-braun/b2luigi/pull/162)
+* **gbasf2:**  Raise error for all non-zero return codes of ``gbas2_job_status.py``. This should result in better and earlier error messages if getting the job statuses in a gbasf2 project fails due to unexpected reasons.
+
 
 ### Fixed
 
