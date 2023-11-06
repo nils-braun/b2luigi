@@ -135,9 +135,10 @@ Features, fixing, help and testing
     * Matthias Schnepf  (`mschnepf`_)
     * Artur Gottmann (`ArturAkh`_)
     * Caspar Schmitt (`schmitca`_)
-    * Marcel Hohmann (`MarcelHoh_`)
-    * Giacomo De Pietro (`GiacomoXT_`)
-    * Alex Heidelbach (`AlexanderHeidelbach_`)
+    * Marcel Hohmann (`MarcelHoh`_)
+    * Giacomo De Pietro (`GiacomoXT`_)
+    * Alex Heidelbach (`AlexanderHeidelbach`_)
+    * Tristan Fillinger (`0ctagon`_)
 
 Stolen ideas
     * Implementation of SGE batch system (`sge`_).
@@ -163,8 +164,10 @@ Stolen ideas
 .. _`MarcelHoh`: https://github.com/MarcelHoh
 .. _`GiacomoXT`: https://github.com/GiacomoXT
 .. _`AlexanderHeidelbach`: https://github.com/AlexanderHeidelbach
+.. _`0ctagon`: https://github.com/0ctagon
 .. _`sge`: https://github.com/spotify/luigi/blob/master/luigi/contrib/sge.py
 .. _`lsf`: https://github.com/spotify/luigi/pull/2373/files
+
 
 
 .. [1] https://github.com/spotify/luigi/blob/master/luigi/contrib/sge.py
