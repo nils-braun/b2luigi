@@ -12,7 +12,8 @@ import argparse
 import json
 import sys
 
-from BelleDIRAC.Client.helpers.auth import userCreds
+from BelleDIRAC.gbasf2.lib.auth import userCreds
+from BelleDIRAC.Client.helpers.common import initializeCS
 from BelleDIRAC.gbasf2.lib.ds.manager import Manager
 
 
@@ -33,5 +34,6 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", help="Dataset query.")
     parser.add_argument("--user", help="DIRAC username.")
     args = parser.parse_args()
+    initializeCS()
     lfns = get_lfns(args.dataset, args.user)
     print(json.dumps(lfns))
