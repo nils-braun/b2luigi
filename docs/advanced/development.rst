@@ -77,17 +77,21 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
     the created docs now (most likely http://127.0.0.1:8000).
     Please make sure the documentation looks fine before creating a pull request.
 
-7.  Add a summary of your changes to the ``[Unreleased]`` section of the ``CHANGELOG.md``.
+7.  Add a summary of your changes to the ``[Unreleased]`` section of the ``CHANGELOG.md``,
+    following following the `Keep a Changelog`_ format.
 
 8.  If you are a core developer and want to release a new version:
 
     a.  Make sure all changes are committed and merged on main
-    b.  Use the `bump-my-version`_ package to update the version in the python file ``b2luigi/__init__.py`` as well
+
+    b.  Change the the `Unreleased` heading in the `CHANGELOG.md` file to the new version number and commit the change.
+        Then use the `bump-my-version`_ package to update the version in ``b2luigi/__init__.py``, ``.bumpversion.cfg``, ``docs/conf.py`` as well
         as the git tag. ``flit`` will automatically use this.
 
         .. code-block:: bash
 
-            bump-my-version [patch|minor|major]
+            python3 -m pip install --upgrade bump-my-version
+            bump-my-version bump --no-commit [patch|minor|major]
 
     c.  Push the new commit and the tags
 
@@ -96,11 +100,9 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
             git push
             git push --tags
 
-    d.  Update the ``CHANGELOG.md`` following the `Keep a Changelog`_ format.
+    d.  Create a new `release`_ on github, with the description copied from the ``CHANGELOG.md``.
 
-    e.  Create a new `release`_ on github, with the description copied from the ``CHANGELOG.md``.
-
-    f. Check that the new release had been published to PyPi, which should happen automatically via
+    e. Check that the new release had been published to PyPi, which should happen automatically via
        github `actions`_. Alternatively, you can also manually publish a release via
 
         .. code-block:: bash
