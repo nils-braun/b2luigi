@@ -8,6 +8,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Unreleased
 
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.10.2...main
+
+## [0.10.2] - 2023-11-06
+
 ### Added
 
 * **gbasf2:** Local basf2 log level setting is now passed over to the grid jobs. You can now limit the log size of jobs with many warnings via `basf2.set_log_level(basf2.LogLevel.ERROR)`. This could fix some errors due to too large log sizes. Implemented by pickling local `basf2.logging.log_level`.
@@ -32,7 +36,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### New Contributors
 * Tristan Fillinger @0ctagon
 
-**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.10.1...main
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.10.1...v0.10.2
 
 ## [0.10.1] - 2023-04-17
 
