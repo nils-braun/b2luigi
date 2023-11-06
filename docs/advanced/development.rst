@@ -82,12 +82,12 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 8.  If you are a core developer and want to release a new version:
 
     a.  Make sure all changes are committed and merged on main
-    b.  Use the `bump2version`_ package to update the version in the python file ``b2luigi/__init__.py`` as well
+    b.  Use the `bump-my-version`_ package to update the version in the python file ``b2luigi/__init__.py`` as well
         as the git tag. ``flit`` will automatically use this.
 
         .. code-block:: bash
 
-            bumpversion patch/minor/major
+            bump-my-version [patch|minor|major]
 
     c.  Push the new commit and the tags
 
@@ -121,7 +121,7 @@ welcome, so feel free to pick one, e.g. with the ``good first issue`` or ``help 
 .. _pre-commit: https://pre-commit.com
 .. _flake8: https://flake8.pycqa.org
 .. _PEP 8: https://www.python.org/dev/peps/pep-0008/
-.. _bump2version: https://github.com/c4urself/bump2version
+.. _bump-my-version: https://github.com/callowayproject/bump-my-version
 .. _release: https://github.com/nils-braun/b2luigi/releases
 .. _actions: https://github.com/nils-braun/b2luigi/actions
 .. _Keep a Changelog: https://keepachangelog.com/en/1.0.0/
