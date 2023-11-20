@@ -116,12 +116,15 @@ The name
 The team
 --------
 
-Main developer
-    Michael Eliachevitch (`meliache`_)
+Current developer and maintainer
+    The Belle II Collaboration (`belle2`_)
 
 Original author
     Nils Braun (`nils-braun`_)
 
+Former developer and maintainer
+    Michael Eliachevitch (`meliache`_)
+    
 Features, fixing, help and testing
     * Felix Metzner (`FelixMetzner`_)
     * Patrick Ecker (`eckerpatrick`_)
@@ -148,6 +151,7 @@ Stolen ideas
 .. _github: https://github.com/belle2/b2luigi
 .. _`luigi documentation`: https://luigi.readthedocs.io/en/stable
 .. _`Belle II`: https://www.belle2.org
+.. _`belle2`: https://github.com/belle2
 .. _`nils-braun`: https://github.com/nils-braun
 .. _`meliache`: https://github.com/meliache
 .. _`welschma`: https://github.com/welschma

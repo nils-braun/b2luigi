@@ -3,7 +3,10 @@
 Development and TODOs
 =====================
 
-You want to help developing ``b2luigi``? Great! Have your github account ready and let's go!
+You want to help developing ``b2luigi``? Great! Have your GitHub account ready and let's go!
+
+If you are a Belle II collaborator, you can contribute directly on the
+`DESY GitLab <https://gitlab.desy.de/belle2/software/b2luigi>`_.
 
 
 Local Development
@@ -11,17 +14,23 @@ Local Development
 
 You want to help developing ``b2luigi``? Great! Here are some first steps to help you dive in:
 
-1.  Make sure you uninstall ``b2luigi`` if you have installed if from pypi
+1.  Make sure you uninstall ``b2luigi`` if you have installed if from PyPi
 
     .. code-block:: bash
 
         python -m pip uninstall b2luigi
 
-2.  Clone the repository from github
+2.  Clone the repository from GitHub
 
     .. code-block:: bash
 
         git clone https://github.com/belle2/b2luigi
+
+    or, for Belle II collaborators, clone the repository from DESY GitLab
+
+    .. code-block:: bash
+
+        git clone git@gitlab.desy.de:belle2/software/b2luigi.git
 
 3.  ``b2luigi`` is not using ``setuptools`` but the newer (and better) flit_ as a a builder.
     Install it via
@@ -78,13 +87,13 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
     Please make sure the documentation looks fine before creating a pull request.
 
 7.  Add a summary of your changes to the ``[Unreleased]`` section of the ``CHANGELOG.md``,
-    following following the `Keep a Changelog`_ format.
+    following the `Keep a Changelog`_ format.
 
 8.  If you are a core developer and want to release a new version:
 
     a.  Make sure all changes are committed and merged on main
 
-    b.  Change the the `Unreleased` heading in the `CHANGELOG.md` file to the new version number and commit the change.
+    b.  Change the ``[Unreleased]`` heading in the ``CHANGELOG.md`` file to the new version number and commit the change.
         Then use the `bump-my-version`_ package to update the version in ``b2luigi/__init__.py``, ``.bumpversion.cfg``, ``docs/conf.py`` as well
         as the git tag. ``flit`` will automatically use this.
 
@@ -100,10 +109,10 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
             git push
             git push --tags
 
-    d.  Create a new `release`_ on github, with the description copied from the ``CHANGELOG.md``.
+    d.  Create a new `release`_ on GitLab, with the description copied from the ``CHANGELOG.md``.
 
-    e. Check that the new release had been published to PyPi, which should happen automatically via
-       github `actions`_. Alternatively, you can also manually publish a release via
+    e.  Check that the new release had been published to PyPi, which should happen automatically via
+        GitLab `pipeline`_. Alternatively, you can also manually publish a release via
 
         .. code-block:: bash
 
@@ -113,17 +122,18 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 Open TODOs
 ----------
 
-For a list of potential features, improvements and bugfixes see the `github issues`_. Help is
-welcome, so feel free to pick one, e.g. with the ``good first issue`` or ``help wanted`` tags.
+For the Belle II collaborators: for a list of potential features, improvements and bugfixes see the
+`GitLab issues`_. Help is welcome, so feel free to pick one, e.g. with the ``good first issue`` or
+``help wanted`` tags.
 
 .. _flit: https://pypi.org/project/flit/
-.. _github issues: https://github.com/nils-braun/b2luigi/issues
+.. _gitlab issues: https://gitlab.desy.de/belle2/software/b2luigi/-/issues
 .. _unittest: https://docs.python.org/3/library/unittest.html
 .. _readthedocs: https://readthedocs.org
 .. _pre-commit: https://pre-commit.com
 .. _flake8: https://flake8.pycqa.org
 .. _PEP 8: https://www.python.org/dev/peps/pep-0008/
 .. _bump-my-version: https://github.com/callowayproject/bump-my-version
-.. _release: https://github.com/nils-braun/b2luigi/releases
-.. _actions: https://github.com/nils-braun/b2luigi/actions
+.. _release: https://github.com/belle2/b2luigi/releases
+.. _pipeline: https://github.com/belle2/b2luigi/blob/main/.gitlab-ci.yml
 .. _Keep a Changelog: https://keepachangelog.com/en/1.0.0/

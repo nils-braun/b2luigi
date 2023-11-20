@@ -22,8 +22,8 @@
 import os
 
 project = 'b2luigi'
-copyright = '2018, Nils Braun'
-author = 'Nils Braun'
+copyright = '2018-2023, Nils Braun, Michael Eliachevitch, The Belle II Collaboration'
+author = 'Nils Braun, Michael Eliachevitch, The Belle II Collaboration'
 
 # The short X.Y version
 version = ''
