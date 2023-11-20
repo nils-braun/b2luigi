@@ -71,7 +71,7 @@ Any deviation from this is described in the next section.
 By default, ``b2luigi`` needs at least two folders to be accessible from the scheduling as well as worker machine:
 the result folder and the folder of your script(s).
 If possible, use absolute paths for the result and log directory to prevent any problems.
-Some batch systems (e.g. htcondor) support file copy mechanisms from the scheduler to the worker systems.
+Some batch systems (e.g. ``htcondor``) support file copy mechanisms from the scheduler to the worker systems.
 Please checkout the specifics below.
 
 .. hint::
@@ -85,7 +85,7 @@ That is why ``b2luigi`` will change the directory into the path of your called s
 
 In case your script is accessible from a different location on the worker than on the scheduling machine, you can give the setting ``working_dir``
 to specify where the job should run.
-Your script needs to be in this folder and every relative path (e.g. for results or log) will be evaluated from there.
+Your script needs to be in this folder and every relative path (e.g. for results or log files) will be evaluated from there.
 
 Drawbacks of the batch mode
 ---------------------------
@@ -93,7 +93,7 @@ Drawbacks of the batch mode
 Although the batch mode has many benefits, it would be unfair to not mention its downsides:
 
 *   You have to choose the queue/batch settings/etc. depending in your requirements (e.g. wall clock time) by yourself.
-    So you need to make sure that the tasks will actually finish before the batch system kills them because of timeout.
+    So you need to make sure that the tasks will actually finish before the batch system terminates them because of timeout.
     There is just no way for ``b2luigi`` to know this beforehand.
 *   There is currently no resubmission implemented.
     This means dying jobs because of batch system failures are just dead.
@@ -108,6 +108,8 @@ Batch System Specific Settings
 
 Every batch system has special settings.
 You can look them up here:
+
+.. _lsf:
 
 LSF
 ...
@@ -134,4 +136,4 @@ If you want to add a new batch system, all you need to do is to implement the
 abstract functions of ``BatchProcess`` for your system:
 
 .. autoclass:: b2luigi.batch.processes.BatchProcess
-    :members: get_job_status, start_job, kill_job
+    :members: get_job_status, start_job, terminate_job

@@ -18,24 +18,26 @@ class BatchProcess:
     """
     This is the base class for all batch algorithms that allow luigi to run on a specific batch system.
     This is an abstract base class and inheriting classes need to supply functionalities for
-    * starting a job using the commands in self.task_cmd
+
+    * starting a job using the commands in ``self.task_cmd``
     * getting the job status of a running, finished or failed job
-    * and killing a job
+    * and terminating a job
+
     All those commands are called from the main process, which is not running on the batch system.
-    Every batch system that is capable of these functions can in principle work together with b2luigi.
+    Every batch system that is capable of these functions can in principle work together with ``b2luigi``.
 
     Implementation note:
         In principle, using the batch system is transparent to the user. In case of problems, it
         may however be useful to understand how it is working.
 
-        When you start your luigi dependency tree with ``process(..., batch=True)``, the normal
-        luigi process is started looking for unfinished tasks and running them etc.
+        When you start your ``luigi`` dependency tree with ``process(..., batch=True)``, the normal
+        ``luigi`` process is started looking for unfinished tasks and running them etc.
         Normally, luigi creates a process for each running task and runs them either directly
         or on a different core (if you have enabled more than one worker).
         In the batch case, this process is not a normal python multiprocessing process,
-        but this BatchProcess, which has the same interface (one can check the status of the process,
-        start or kill it). The process does not need to wait for the batch job to finish but
-        is asked repeatedly for the job status. By this, most of the core functionality of luigi
+        but this ``BatchProcess``, which has the same interface (one can check the status of the process,
+        start or terminate it). The process does not need to wait for the batch job to finish but
+        is asked repeatedly for the job status. By this, most of the core functionality of ``luigi``
         is kept and reused.
         This also means, that every batch job only includes a single task and is finished whenever
         this task is done decreasing the batch runtime. You will need exactly as many batch jobs
@@ -52,12 +54,12 @@ class BatchProcess:
 
             /<path-to-your-exec>/python /your-project/some-file.py --batch-runner --task-id MyTask_38dsf879w3
 
-        if the batch job should run the MyTask. The implementation of the
+        if the batch job should run the ``MyTask``. The implementation of the
         abstract functions is responsible for creating an running the executable file and writing the log of
         the job into appropriate locations. You can use the functions ``create_executable_wrapper``
         and ``get_log_file_dir`` to get the needed information.
 
-        Checkout the implementation of the lsf task for some implementation example.
+        Checkout the implementation of the ``lsf`` task for some implementation example.
     """
     def __init__(self, task, scheduler, result_queue, worker_timeout):
         self.use_multiprocessing = False
@@ -84,8 +86,8 @@ class BatchProcess:
         Will only be called after the job is started but may also be called when
         the job is finished already.
         If the task status is unknown, return aborted. If the task has not started already but
-        is scheduled, return running nevertheless (for b2luigi it makes no difference).
-        No matter if aborted via a call to kill_job, by the batch system or by an exception in the
+        is scheduled, return running nevertheless (for ``b2luigi`` it makes no difference).
+        No matter if aborted via a call to ``terminate_job``, by the batch system or by an exception in the
         job itself, you should return aborted if the job is not finished successfully
         (maybe you need to check the exit code of your job).
         """
@@ -101,23 +103,23 @@ class BatchProcess:
         ``b2luigi.core.executable.create_executable_wrapper`` functions to get the log base name
         and to create the executable script which you should call in your batch job.
 
-        After the start_job function is called by the framework (and no exception is thrown),
+        After the ``start_job`` function is called by the framework (and no exception is thrown),
         it is assumed that a batch job is started or scheduled.
 
         After the job is finished (no matter if aborted or successful) we assume the stdout and stderr
-        is written into the two files given by b2luigi.core.utils.get_log_file_dir(self.task).
+        is written into the two files given by ``b2luigi.core.utils.get_log_file_dir(self.task)``.
         """
         raise NotImplementedError
 
-    def kill_job(self):
+    def terminate_job(self):
         """
-        This command is used to abort a job started by the start_job function.
+        This command is used to abort a job started by the ``start_job`` function.
         It is only called once to abort a job, so make sure to either block until the job is really
         gone or be sure that it will go down soon. Especially, do not wait until the job is finished.
-        It is called for example when the user presses Ctrl-C.
+        It is called for example when the user presses ``Ctrl-C``.
 
         In some strange corner cases it may happen that this function is called even before the
-        job is started (the start_job function is called). In this case, you do not need to do anything
+        job is started (the ``start_job`` function is called). In this case, you do not need to do anything
         (but also not raise an exception).
         """
         raise NotImplementedError
@@ -126,7 +128,7 @@ class BatchProcess:
         self.start_job()
 
     def terminate(self):
-        self.kill_job()
+        self.terminate_job()
 
     def is_alive(self):
         if self._terminated:

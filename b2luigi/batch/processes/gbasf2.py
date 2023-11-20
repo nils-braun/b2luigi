@@ -37,18 +37,18 @@ class Gbasf2Process(BatchProcess):
           The gbasf2 batch process takes the basf2 path returned by the
           ``create_path()`` method of the task, saves it into a pickle file to
           the disk and creates a wrapper steering file that executes the saved
-          path. Any basf2 variable aliases added in the ``create_path()`` method
+          path. Any basf2 variable aliases added in the ``Path()`` or ``create_path()`` method
           are also stored in the pickle file. It then sends both the pickle file
-          and the steering file wrapper to the grid via the BelleII-specific
-          Dirac-wrapper gbasf2.
+          and the steering file wrapper to the grid via the Belle II-specific
+          DIRAC-wrapper gbasf2.
 
         - **Project status monitoring**
 
           After the project submission, the gbasf batch process regularly checks the status
           of all the jobs belonging to a gbasf2 project returns a success if
           all jobs had been successful, while a single failed job results in a failed project.
-          You can close a running b2luigi process and then start your script again and if a
-          task with the same project name is running, this b2luigi gbasf2 wrapper will recognize that
+          You can close a running ``b2luigi`` process and then start your script again and if a
+          task with the same project name is running, this ``b2luigi`` gbasf2 wrapper will recognize that
           and instead of resubmitting a new project, continue monitoring the running project.
 
           .. hint::
@@ -68,7 +68,7 @@ class Gbasf2Process(BatchProcess):
 
           Whenever a job fails, gbasf2 reschedules it as long as the number of retries is below the
           value of the setting ``gbasf2_max_retries``. It keeps track of the number of retries in a
-          local file in the ``log_file_dir``, so that it does not change if you close b2luigi and start it again.
+          local file in the ``log_file_dir``, so that it does not change if you close ``b2luigi`` and start it again.
           Of course it does not persist if you remove that file or move to a different machine.
 
     .. note::
@@ -138,8 +138,7 @@ class Gbasf2Process(BatchProcess):
 
         Other not required, but noteworthy settings are:
 
-        - ``gbasf2_setup_path``: Path to gbasf2 environment setup script that needs so be sourced to run gbasf2 commands.
-            Defaults to ``"/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc" ``.
+        - ``gbasf2_setup_path``: Path to gbasf2 environment setup script that needs so be sourced to run gbasf2 commands. Defaults to ``/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc``.
         - ``gbasf2_release``: Defaults to the release of your currently set up basf2 release.
           Set this if you want the jobs to use another release on the grid.
         - ``gbasf2_proxy_lifetime``: Defaults to 24. When initializing a proxy, set the
@@ -277,7 +276,7 @@ class Gbasf2Process(BatchProcess):
         self.n_retries_by_job = Counter()
 
         #: Local storage for ``n_retries_by_job`` counter
-        # so that it persists even if luigi process is killed and restarted.
+        # so that it persists even if luigi process is terminated and restarted.
         self.retries_file_path = os.path.join(
             self.log_file_dir, "n_retries_by_grid_job.json"
         )
@@ -503,8 +502,8 @@ class Gbasf2Process(BatchProcess):
         finally:
             os.unlink(pickle_file_symlink_destination)
 
-    def kill_job(self):
-        """Kill gbasf2 project."""
+    def terminate_job(self):
+        """Terminate gbasf2 project."""
         if not check_project_exists(
             self.gbasf2_project_name,
             dirac_user=self.dirac_user,
@@ -512,8 +511,8 @@ class Gbasf2Process(BatchProcess):
         ):
             return
         # Note: The two commands ``gb2_job_delete`` and ``gb2_job_kill`` differ
-        # in that deleted jobs are killed and removed from the job database,
-        # while only killed jobs can be restarted.
+        # in that deleted jobs are terminated and removed from the job database,
+        # while only terminated jobs can be restarted.
         command = shlex.split(
             f"gb2_job_kill --force --user {self.dirac_user} -p {self.gbasf2_project_name}"
         )

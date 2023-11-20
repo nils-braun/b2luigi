@@ -36,7 +36,7 @@ class TestProcess(BatchProcess):
             with open(stderr_log_file, "w") as stderr_file:
                 self._process = subprocess.Popen([executable_file], stdout=stdout_file, stderr=stderr_file)
 
-    def kill_job(self):
+    def terminate_job(self):
         if not self._process:
             return
 

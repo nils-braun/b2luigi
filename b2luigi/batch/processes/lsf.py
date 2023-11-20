@@ -112,7 +112,7 @@ class LSFProcess(BatchProcess):
 
         self._batch_job_id = match.group(0)[1:-1]
 
-    def kill_job(self):
+    def terminate_job(self):
         if not self._batch_job_id:
             return
 
