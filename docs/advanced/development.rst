@@ -21,7 +21,7 @@ You want to help developing ``b2luigi``? Great! Here are some first steps to hel
 
     .. code-block:: bash
 
-        git clone https://github.com/nils-braun/b2luigi
+        git clone https://github.com/belle2/b2luigi
 
 3.  ``b2luigi`` is not using ``setuptools`` but the newer (and better) flit_ as a a builder.
     Install it via
