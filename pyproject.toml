@@ -9,4 +9,4 @@ author-email = "software@belle2.org"
 home-page = "https://github.com/belle2/b2luigi"
 classifiers = ["License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)"]
 
-requires=['luigi>=3.0.2', 'parse>=1.8.4', 'GitPython>=2.1.11', "colorama>=0.3.9", "cachetools>=2.1.0", "jinja2", "retry2>=0.9.3"]
+requires=["luigi>=3.0.2", "parse>=1.8.4", "GitPython>=2.1.11", "colorama>=0.3.9", "cachetools>=2.1.0", "jinja2", "retry2>=0.9.3"]
