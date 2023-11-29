@@ -135,7 +135,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'b2luigi.tex', 'b2luigi Documentation',
-     'Nils Braun', 'manual'),
+     'Nils Braun, Michael Eliachevitch, The Belle II Collaboration', 'manual'),
 ]
 
 
