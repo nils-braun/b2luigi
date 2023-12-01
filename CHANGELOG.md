@@ -141,7 +141,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - **htcondor**: Do up to 3 retries for getting job status with `condor_q` #155
 - **gbasf2**: Add caching and unit tests to `get_dirac_user` #156
-- Add @mschnepf to [the contributors](https://github.com/nils-braun/b2luigi/blob/main/docs/index.rst#the-team) for #158
+- Add @mschnepf to [the contributors](https://b2luigi.readthedocs.io/en/latest/index.html#the-team) for #158
 - Some minor documentation improvements #151 and typo fix in help message #153.
 
 ### Fixed

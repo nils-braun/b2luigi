@@ -4,7 +4,7 @@ b2luigi
 ``b2luigi`` — bringing batch 2 luigi!
 
 
-``b2luigi`` is a helper package for ``luigi`` for scheduling large luigi workflows on a batch system.
+``b2luigi`` is a helper package for ``luigi`` for scheduling large ``luigi`` workflows on a batch system.
 It is as simple as
 
 .. code-block:: python
@@ -38,11 +38,11 @@ But you can learn most of the nice features also from this documentation!
 Why not use the already created batch tasks?
 --------------------------------------------
 
-Luigi already contains a large set of tasks for scheduling and monitoring batch jobs [1]_.
+``luigi`` already contains a large set of tasks for scheduling and monitoring batch jobs [1]_.
 But for thousands of tasks in very large projects with different task-defining libraries, you have some problems:
 
 *   **You want to run many (many many!) batch jobs in parallel**
-    In other luigi batch implementations, for every running batch job you also need a running task that monitors it.
+    In other ``luigi`` batch implementations, for every running batch job you also need a running task that monitors it.
     On most of the systems, the maximal number of processes is limited per user, so you will not be able to run more
     batch jobs than this.
     But what do you do if you have thousands of tasks to do?
@@ -65,10 +65,10 @@ Entering ``b2luigi``, which tries to solve all this (but was heavily inspired by
     In the future, there will even be an automatic discovery of the batch system to use.
 
 
-Is this the only thing I can do with b2luigi?
----------------------------------------------
+Is this the only thing I can do with ``b2luigi``?
+-------------------------------------------------
 
-As ``b2luigi`` should help you with large luigi projects, we have also included some helper functionalities for
+As ``b2luigi`` should help you with large ``luigi`` projects, we have also included some helper functionalities for
 ``luigi`` tasks and task handling.
 ``b2luigi`` task is a super-hero version of ``luigi`` task, with simpler handling for output and input files.
 Also, we give you working examples and best-practices for better data management and how to accomplish your goals,
@@ -80,7 +80,7 @@ Why are you still talking, lets use it!
 
 Have a look into the :ref:`quick-start-label`.
 
-You can also start reading the :ref:`api-documentation-label` or the code on github_.
+You can also start reading the :ref:`api-documentation-label` or the code on GitHub_.
 
 If you find any bugs or want to improve the documentation, please send me a pull request.
 
@@ -108,20 +108,23 @@ The name
 
 ``b2luigi`` stands for multiple things at the same time:
 
-*   It brings **b**\ atch to (**2**\ ) luigi.
-*   It helps you with the **b**\ read and **b**\ utter work in luigi (e.g. proper data management)
+*   It brings **b**\ atch to (**2**\ ) ``luigi``.
+*   It helps you with the **b**\ read and **b**\ utter work in ``luigi`` (e.g. proper data management)
 *   It was developed for the `Belle II`_ experiment.
 
 
 The team
 --------
 
-Main developer
-    Michael Eliachevitch (`meliache`_)
+Current developer and maintainer
+    The Belle II Collaboration (`belle2`_)
 
 Original author
     Nils Braun (`nils-braun`_)
 
+Former developer and maintainer
+    Michael Eliachevitch (`meliache`_)
+    
 Features, fixing, help and testing
     * Felix Metzner (`FelixMetzner`_)
     * Patrick Ecker (`eckerpatrick`_)
@@ -145,9 +148,10 @@ Stolen ideas
     * Implementation of LSF batch system (`lsf`_).
 
 
-.. _github: https://github.com/nils-braun/b2luigi
+.. _github: https://github.com/belle2/b2luigi
 .. _`luigi documentation`: https://luigi.readthedocs.io/en/stable
 .. _`Belle II`: https://www.belle2.org
+.. _`belle2`: https://github.com/belle2
 .. _`nils-braun`: https://github.com/nils-braun
 .. _`meliache`: https://github.com/meliache
 .. _`welschma`: https://github.com/welschma

@@ -3,12 +3,8 @@ b2luigi
 
 .. image:: https://img.shields.io/readthedocs/b2luigi
            :target: https://b2luigi.readthedocs.io/en/stable/
-.. image:: https://img.shields.io/github/license/nils-braun/b2luigi
-           :target: https://github.com/nils-braun/b2luigi/blob/main/LICENSE
-.. image:: https://img.shields.io/codecov/c/github/nils-braun/b2luigi?logo=codecov
-           :target: https://codecov.io/gh/nils-braun/b2luigi
-.. image:: https://img.shields.io/github/workflow/status/nils-braun/b2luigi/Test%20Default%20Branch?logo=github
-           :target: https://github.com/nils-braun/b2luigi/actions
+.. image:: https://img.shields.io/github/license/belle2/b2luigi
+           :target: https://github.com/belle2/b2luigi/blob/main/LICENSE
 .. image:: https://img.shields.io/pypi/v/b2luigi?logo=pypi
            :target: https://pypi.python.org/pypi/b2luigi/
 
@@ -34,5 +30,5 @@ This project is in still beta. Please be extra cautious when using in production
 To get notified about new features, (potentially breaking) changes, bugs and
 their fixes, I recommend using the ``Watch`` button on github to get
 notifications for new releases and/or issues or to subscribe the `releases feed
-<https://github.com/nils-braun/b2luigi/releases.atom>`_ (requires no github
+<https://github.com/belle2/b2luigi/releases.atom>`_ (requires no github
 account, just a feed reader).

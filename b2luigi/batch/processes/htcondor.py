@@ -131,7 +131,7 @@ class HTCondorProcess(BatchProcess):
       submission file. For an overview of possible settings refer to the `HTCondor documentation
       <https://htcondor.readthedocs.io/en/latest/users-manual/submitting-a-job.html#>`_.
 
-    * Same as for the :ref:`LSF`, the ``job_name`` setting allows giving a meaningful name to a
+    * Same as for the :ref:`lsf`, the ``job_name`` setting allows giving a meaningful name to a
       group of jobs. If you want to be htcondor-specific, you can provide the ``JobBatchName`` as an
       entry in the ``htcondor_settings`` dict, which will override the global ``job_name`` setting.
       This is useful for manually checking the status of specific jobs with
@@ -183,7 +183,7 @@ class HTCondorProcess(BatchProcess):
 
         self._batch_job_id = int(match.group(0)[:-1])
 
-    def kill_job(self):
+    def terminate_job(self):
         if not self._batch_job_id:
             return
 

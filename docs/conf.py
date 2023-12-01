@@ -22,8 +22,8 @@
 import os
 
 project = 'b2luigi'
-copyright = '2018, Nils Braun'
-author = 'Nils Braun'
+copyright = '2018-2023, Nils Braun, Michael Eliachevitch, The Belle II Collaboration'
+author = 'Nils Braun, Michael Eliachevitch, The Belle II Collaboration'
 
 # The short X.Y version
 version = ''
@@ -79,7 +79,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'sphinx_book_theme'
 
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -135,7 +135,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'b2luigi.tex', 'b2luigi Documentation',
-     'Nils Braun', 'manual'),
+     'Nils Braun, Michael Eliachevitch, The Belle II Collaboration', 'manual'),
 ]
 
 

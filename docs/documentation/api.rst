@@ -22,7 +22,7 @@ If you want to use the default ``luigi.Task`` class or any derivative of it,
 you are totally fine.
 No need to change any of your scripts!
 But if you want to take advantage of some of the recipies we have developed
-to work with large luigi task sets, you can use the drop in replacements
+to work with large ``luigi`` task sets, you can use the drop in replacements
 from the ``b2luigi`` package.
 All task classes (except the :class:`b2luigi.DispatchableTask`, see below) are superclasses of
 a ``luigi`` class.
