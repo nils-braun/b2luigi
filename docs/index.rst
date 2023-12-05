@@ -29,10 +29,19 @@ Jump right into it with out :ref:`quick-start-label`.
 If you have never worked with ``luigi`` before, you may want to have a look into the `luigi documentation`_.
 But you can learn most of the nice features also from this documentation!
 
+
 .. attention::
 
-    The API of ``b2luigi`` is still under construction.
-    Please remember this when using the package in production!
+   As of December 2023 ``b2luigi`` is no longer actively maintained
+   under `gitlab.desy.de/nils-braun/b2luigi <https://gitlab.desy.de/nils-braun/b2luigi>`_.
+   ``b2luigi`` is now maintained by the Belle II collaboration under
+   `gitlab.desy.de/belle2/b2luigi <https://gitlab.desy.de/belle2/b2luigi>`_
+   (internal) with a public mirror at
+   `github.com/belle2/b2luigi <https://github.com/belle2/b2luigi>`_.
+
+   This documentation is still built from the original repository by Nils Braun
+   and thus likely out of date. In the future the documentation will likely be
+   published under `b2luigi.belle2.org <https://b2luigi.belle2.org>`_.
 
 
 Why not use the already created batch tasks?

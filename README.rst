@@ -12,6 +12,20 @@ b2luigi
 .. image:: https://img.shields.io/pypi/v/b2luigi?logo=pypi
            :target: https://pypi.python.org/pypi/b2luigi/
 
+Disclaimer: Transferred maintainership ⚠️
+-----------------------------------------------
+
+As of December 2023 this repository is no longer be actively maintained.
+``b2luigi`` is now maintained by the Belle II collaboration under
+`gitlab.desy.de/belle2/b2luigi <https://gitlab.desy.de/belle2/b2luigi>`_
+(internal) with a public mirror at
+`github.com/belle2/b2luigi <https://github.com/belle2/b2luigi>`_.
+If you are not a Belle II member and find issues or want to submit PR's,
+please do so under the Belle II github mirror.
+This repository will likely be archived soon.
+
+Original README
+-----------------
 
 ``b2luigi`` is a helper package constructed around ``luigi`` that helps you schedule working packages (so-called tasks)
 locally or on a batch system.
