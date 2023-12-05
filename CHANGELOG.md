@@ -10,6 +10,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 **Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.10.2...main
 
+## Added
+
+* Add disclaimers that `b2luigi` will from now on be maintained by the Belle II collaboration
+  under [gitlab.desy.de/belle2/b2luigi](https://gitlab.desy.de/belle2/b2luigi) with a public mirror on [github.com/belle2/b2luigi](https://github.com/belle2/b2luigi).
+
 ## [0.10.2] - 2023-11-06
 
 ### Added
