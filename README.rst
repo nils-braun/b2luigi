@@ -17,7 +17,7 @@ Disclaimer: Transferred maintainership ⚠️
 
 As of December 2023 this repository is no longer be actively maintained.
 ``b2luigi`` is now maintained by the Belle II collaboration under
-`gitlab.desy.de/belle2/b2luigi <https://gitlab.desy.de/belle2/b2luigi>`_
+`gitlab.desy.de/belle2/software/b2luigi <https://gitlab.desy.de/belle2/software/b2luigi>`_
 (internal) with a public mirror at
 `github.com/belle2/b2luigi <https://github.com/belle2/b2luigi>`_.
 If you are not a Belle II member and find issues or want to submit PR's,

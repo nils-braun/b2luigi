@@ -35,7 +35,7 @@ But you can learn most of the nice features also from this documentation!
    As of December 2023 ``b2luigi`` is no longer actively maintained
    under `gitlab.desy.de/nils-braun/b2luigi <https://gitlab.desy.de/nils-braun/b2luigi>`_.
    ``b2luigi`` is now maintained by the Belle II collaboration under
-   `gitlab.desy.de/belle2/b2luigi <https://gitlab.desy.de/belle2/b2luigi>`_
+   `gitlab.desy.de/belle2/software/b2luigi <https://gitlab.desy.de/belle2/software/b2luigi>`_
    (internal) with a public mirror at
    `github.com/belle2/b2luigi <https://github.com/belle2/b2luigi>`_.
 
