@@ -6,7 +6,6 @@ import os
 import collections
 import sys
 import types
-import warnings
 
 import colorama
 
@@ -245,10 +244,14 @@ def create_output_file_name(task, base_filename, result_dir=None):
         result_dir = map_folder(get_setting("result_dir", task=task, default=".", deprecated_keys=["result_path"]))
 
     for key, value in serialized_parameters.items():
-        if isinstance(key, str) and "/" in value:
-            warnings.warn(f"Value of parameter ``{key}`` contains forward slash \"/\". "
-                          "This will result in an additional subdirectory in the output path. "
-                          "Consider using a hashed parameter (e.g. ``b2luigi.Parameter(hashed=True)``)")
+        # Raise error if parameter value contains path separator "/" ("\" on Windows)
+        # or is not interpretable as basename due to other reasons.
+        if value != os.path.basename(value):
+            raise ValueError(
+                f"Parameter `{key}={value}` cannot be interpreted as directory name. "
+                f"Make sure it does not contain the path separators ``{os.path.sep}``. "
+                "Consider using a hashed parameter (e.g. ``b2luigi.Parameter(hashed=True)``)."
+            )
 
     param_list = [f"{key}={value}" for key, value in serialized_parameters.items()]
     output_path = os.path.join(result_dir, *param_list)
