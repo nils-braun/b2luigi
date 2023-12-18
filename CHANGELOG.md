@@ -6,14 +6,14 @@ Older entries have been generated from github releases.
 New entries aim to adhere to the format proposed by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.10.2-archived] - 2023-12-18
 
-**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.10.2...main
-
-## Added
+### Added
 
 * Add disclaimers that `b2luigi` will from now on be maintained by the Belle II collaboration
   under [gitlab.desy.de/belle2/b2luigi](https://gitlab.desy.de/belle2/b2luigi) with a public mirror on [github.com/belle2/b2luigi](https://github.com/belle2/b2luigi).
+
+**Full Changelog**: https://github.com/nils-braun/b2luigi/compare/v0.10.2...v0.10.2-archived
 
 ## [0.10.2] - 2023-11-06
 
@@ -25,11 +25,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 * **gbasf2**: Fixes to make gbasf2 wrapper work with gbasf2 release `v5.8.2`:
   - Change the default gbasf2 setup script path to CVMFS location in gbasf2 v5.8.2, i.e.
-    ```
-    /cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc
-    ```
-    Reminder that this can still be customized via the `gbasf2_setup_path` setting.
-    [#207](https://github.com/nils-braun/b2luigi/pull/207)
+	```
+	/cvmfs/belle.kek.jp/grid/gbasf2/pro/bashrc
+	```
+	Reminder that this can still be customized via the `gbasf2_setup_path` setting.
+	[#207](https://github.com/nils-braun/b2luigi/pull/207)
   - Fix to gbasf2-interacting scripts for querying project status and listing datasets. [#209](https://github.com/nils-braun/b2luigi/pull/209) @eckerpatrick and [#210](https://github.com/nils-braun/b2luigi/pull/210) @0ctagon.
 
 * **gbasf2:** Fix `gbasf2_setup_path` setting not being passed through in some function calls. [#203](https://github.com/nils-braun/b2luigi/pull/203) @AlexanderHeidelbach
