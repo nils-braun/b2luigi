@@ -20,6 +20,7 @@ As of December 2023 this repository is no longer be actively maintained.
 `gitlab.desy.de/belle2/software/b2luigi <https://gitlab.desy.de/belle2/software/b2luigi>`_
 (internal) with a public mirror at
 `github.com/belle2/b2luigi <https://github.com/belle2/b2luigi>`_.
+The new documentation is now at `b2luigi.belle2.org <https://b2luigi.belle2.org>`_.
 If you are not a Belle II member and find issues or want to submit PR's,
 please do so under the Belle II github mirror.
 This repository will likely be archived soon.

@@ -40,7 +40,7 @@ But you can learn most of the nice features also from this documentation!
    `github.com/belle2/b2luigi <https://github.com/belle2/b2luigi>`_.
 
    This documentation is still built from the original repository by Nils Braun
-   and thus likely out of date. In the future the documentation will likely be
+   and thus likely out of date. The new documentation is
    published under `b2luigi.belle2.org <https://b2luigi.belle2.org>`_.
 
 
